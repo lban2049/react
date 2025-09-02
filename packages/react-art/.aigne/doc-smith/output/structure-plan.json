@@ -1,0 +1,239 @@
+[
+  {
+    "description": "Provides a high-level introduction to React ART, its core purpose, and what developers can achieve with it, along with an overview of its architecture.",
+    "parentId": null,
+    "path": "/overview",
+    "sourceIds": [
+      "README.md",
+      "package.json",
+      "index.js",
+      "src/ReactART.js",
+      "src/ReactARTInternals.js",
+      "src/ReactFiberConfigART.js",
+      "npm/index.js"
+    ],
+    "title": "Overview"
+  },
+  {
+    "description": "Guides users through setting up React ART, including installation steps and creating a minimal working example to quickly get started with drawing basic graphics.",
+    "parentId": null,
+    "path": "/getting-started",
+    "sourceIds": [
+      "README.md",
+      "package.json",
+      "index.js",
+      "src/ReactART.js",
+      "npm/index.js",
+      "npm/Circle.js",
+      "npm/Rectangle.js",
+      "npm/Wedge.js"
+    ],
+    "title": "Getting Started"
+  },
+  {
+    "description": "Explains the fundamental concepts behind React ART, including how it integrates with React, its rendering modes, and internal architecture for advanced understanding.",
+    "parentId": null,
+    "path": "/core-concepts",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactARTInternals.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Core Concepts"
+  },
+  {
+    "description": "Details how React ART integrates with the React reconciliation process and the component lifecycle, crucial for understanding its declarative nature.",
+    "parentId": "/core-concepts",
+    "path": "/core-concepts/integration-with-react",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Integration with React"
+  },
+  {
+    "description": "Explains the different rendering backends supported by ART (Canvas, SVG, VML) and how `react-art` utilizes them for cross-platform vector graphics.",
+    "parentId": "/core-concepts",
+    "path": "/core-concepts/rendering-modes",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Rendering Modes"
+  },
+  {
+    "description": "Outlines the internal ART types (Shape, Group, Text, ClippingRectangle) and event handling mechanisms within `react-art` for custom implementations.",
+    "parentId": "/core-concepts",
+    "path": "/core-concepts/internal-types-events",
+    "sourceIds": [
+      "src/ReactARTInternals.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Internal Types and Events"
+  },
+  {
+    "description": "Provides detailed documentation and examples for each of the pre-built drawing components available in React ART, facilitating rapid graphic development.",
+    "parentId": null,
+    "path": "/drawing-components",
+    "sourceIds": [
+      "Circle.js",
+      "Rectangle.js",
+      "Wedge.js",
+      "src/ReactART.js",
+      "src/ReactARTInternals.js",
+      "npm/Circle.js",
+      "npm/Rectangle.js",
+      "npm/Wedge.js"
+    ],
+    "title": "Drawing Components"
+  },
+  {
+    "description": "Explains the `Surface` component, the root container for all ART elements, including its properties and usage for rendering graphics.",
+    "parentId": "/drawing-components",
+    "path": "/drawing-components/surface",
+    "sourceIds": [
+      "src/ReactART.js"
+    ],
+    "title": "Surface"
+  },
+  {
+    "description": "Details the generic `Shape` component for drawing custom paths, including path data (`d` prop) and flexible fill/stroke properties.",
+    "parentId": "/drawing-components",
+    "path": "/drawing-components/shape",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactARTInternals.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Shape"
+  },
+  {
+    "description": "Describes the `Group` component for grouping multiple ART elements, enabling common transformations and property applications.",
+    "parentId": "/drawing-components",
+    "path": "/drawing-components/group",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactARTInternals.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Group"
+  },
+  {
+    "description": "Explains how to use `ClippingRectangle` to clip other ART elements to a specific rectangular region, useful for complex layouts.",
+    "parentId": "/drawing-components",
+    "path": "/drawing-components/clipping-rectangle",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactARTInternals.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Clipping Rectangle"
+  },
+  {
+    "description": "Documents the `Text` component for rendering text within ART graphics, including font styling and alignment options.",
+    "parentId": "/drawing-components",
+    "path": "/drawing-components/text",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactARTInternals.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Text"
+  },
+  {
+    "description": "Provides usage and examples for the `Circle` component, including radius, stroke, and fill properties for drawing circular shapes.",
+    "parentId": "/drawing-components",
+    "path": "/drawing-components/circle",
+    "sourceIds": [
+      "Circle.js",
+      "npm/Circle.js"
+    ],
+    "title": "Circle"
+  },
+  {
+    "description": "Offers details and examples for the `Rectangle` component, covering width, height, and various border-radius properties.",
+    "parentId": "/drawing-components",
+    "path": "/drawing-components/rectangle",
+    "sourceIds": [
+      "Rectangle.js",
+      "npm/Rectangle.js"
+    ],
+    "title": "Rectangle"
+  },
+  {
+    "description": "Documents the `Wedge` component for drawing arcs, circles, and partial shapes, including detailed control over angles and radii.",
+    "parentId": "/drawing-components",
+    "path": "/drawing-components/wedge",
+    "sourceIds": [
+      "Wedge.js",
+      "npm/Wedge.js"
+    ],
+    "title": "Wedge"
+  },
+  {
+    "description": "Covers how to apply styling (fills, strokes, transformations) and handle user interactions (events) within React ART graphics for dynamic visuals.",
+    "parentId": null,
+    "path": "/styling-interactivity",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactARTInternals.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Styling and Interactivity"
+  },
+  {
+    "description": "Explains how to use solid colors, linear gradients, radial gradients, and patterns for filling and stroking shapes effectively.",
+    "parentId": "/styling-interactivity",
+    "path": "/styling-interactivity/fills-strokes",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Fills and Strokes"
+  },
+  {
+    "description": "Details how to apply transformations like translation, rotation, and scaling using the `Transform` object and component properties for dynamic layouts.",
+    "parentId": "/styling-interactivity",
+    "path": "/styling-interactivity/transformations",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Transformations"
+  },
+  {
+    "description": "Guides on how to attach and handle user interaction events (click, mousemove, etc.) on ART elements for interactive graphics.",
+    "parentId": "/styling-interactivity",
+    "path": "/styling-interactivity/event-handling",
+    "sourceIds": [
+      "src/ReactARTInternals.js",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Event Handling"
+  },
+  {
+    "description": "Comprehensive reference for all public APIs exposed by `react-art`, including components, utilities, and their detailed properties for in-depth usage.",
+    "parentId": null,
+    "path": "/api-reference",
+    "sourceIds": [
+      "src/ReactART.js",
+      "src/ReactARTInternals.js",
+      "src/ReactFiberConfigART.js",
+      "Circle.js",
+      "Rectangle.js",
+      "Wedge.js",
+      "package.json"
+    ],
+    "title": "API Reference"
+  },
+  {
+    "description": "Provides guidance on common issues, debugging techniques, and resources for getting help and reporting bugs with React ART.",
+    "parentId": null,
+    "path": "/troubleshooting",
+    "sourceIds": [
+      "package.json",
+      "src/ReactFiberConfigART.js"
+    ],
+    "title": "Troubleshooting and Support"
+  }
+]

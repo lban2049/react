@@ -1,0 +1,167 @@
+[
+  {
+    "description": "Briefly describes react-client's role as an experimental package for streaming React models, its purpose in bridging server and client data flow, and its core functionalities.",
+    "parentId": null,
+    "path": "/overview",
+    "sourceIds": [
+      "package.json",
+      "README.md",
+      "npm/flight.js",
+      "flight.js",
+      "src/ReactFlightClient.js"
+    ],
+    "title": "Overview"
+  },
+  {
+    "description": "Provides a practical guide on initializing react-client in a project, detailing essential setup for consuming a basic streaming React model.",
+    "parentId": null,
+    "path": "/getting-started",
+    "sourceIds": [
+      "package.json",
+      "npm/flight.js",
+      "flight.js",
+      "src/ReactFlightClient.js",
+      "src/ReactFlightClientStreamConfigWeb.js",
+      "src/ReactFlightClientStreamConfigNode.js"
+    ],
+    "title": "Getting Started"
+  },
+  {
+    "description": "Explores the foundational principles and architectural patterns underpinning react-client's operation, crucial for understanding its design and advanced usage.",
+    "parentId": null,
+    "path": "/core-concepts",
+    "sourceIds": [],
+    "title": "Core Concepts"
+  },
+  {
+    "description": "Details the mechanisms react-client employs for efficient, asynchronous data transmission and processing between server and client, covering various data chunk types and stream management.",
+    "parentId": "/core-concepts",
+    "path": "/core-concepts/streaming-data-flow",
+    "sourceIds": [
+      "src/ReactFlightClient.js",
+      "src/ReactFlightClientStreamConfigWeb.js",
+      "src/ReactFlightClientStreamConfigNode.js",
+      "shared/ReactSymbols.js"
+    ],
+    "title": "Streaming Data Flow"
+  },
+  {
+    "description": "Explains react-client's internal data representation and transformation logic for serializing complex JavaScript types and React elements across the network boundary.",
+    "parentId": "/core-concepts",
+    "path": "/core-concepts/serialization-protocol",
+    "sourceIds": [
+      "src/ReactFlightReplyClient.js",
+      "src/ReactFlightClient.js",
+      "shared/ReactSymbols.js",
+      "shared/isArray.js",
+      "shared/getPrototypeOf.js",
+      "shared/ReactSerializationErrors.js",
+      "react/src/ReactLazy.js"
+    ],
+    "title": "Serialization Protocol"
+  },
+  {
+    "description": "Unpacks the architecture enabling seamless communication, including how server functions are invoked from the client and the underlying processes for managing references and form actions.",
+    "parentId": "/core-concepts",
+    "path": "/core-concepts/server-client-interaction",
+    "sourceIds": [
+      "src/ReactFlightReplyClient.js",
+      "src/ReactFlightClient.js",
+      "shared/ReactTypes.js",
+      "src/ReactFlightTemporaryReferences.js"
+    ],
+    "title": "Server-Client Interaction"
+  },
+  {
+    "description": "Focuses on the utilities and integrations available to architects and developers for analyzing, debugging, and optimizing react-client applications.",
+    "parentId": null,
+    "path": "/developer-tools",
+    "sourceIds": [],
+    "title": "Developer Tools & Debugging"
+  },
+  {
+    "description": "Describes how react-client hooks into React DevTools, enabling deep inspection and profiling of server component rendering.",
+    "parentId": "/developer-tools",
+    "path": "/developer-tools/devtools-integration",
+    "sourceIds": [
+      "src/ReactFlightClientDevToolsHook.js",
+      "src/ReactFlightClient.js"
+    ],
+    "title": "DevTools Integration"
+  },
+  {
+    "description": "Illuminates the performance measurement and logging capabilities for server components and I/O operations, detailing how to interpret profiling data for optimization.",
+    "parentId": "/developer-tools",
+    "path": "/developer-tools/performance-tracking",
+    "sourceIds": [
+      "src/ReactFlightPerformanceTrack.js",
+      "src/ReactFlightClient.js",
+      "shared/ReactFeatureFlags.js",
+      "shared/ReactTypes.js",
+      "shared/ReactPerformanceTrackProperties.js",
+      "shared/ReactIODescription.js"
+    ],
+    "title": "Performance Tracking"
+  },
+  {
+    "description": "Explains the mechanism for replaying server-side console logs and their associated stack traces directly within the client's development environment.",
+    "parentId": "/developer-tools",
+    "path": "/developer-tools/console-replay",
+    "sourceIds": [
+      "src/ReactClientConsoleConfigPlain.js",
+      "src/ReactClientConsoleConfigBrowser.js",
+      "src/ReactClientConsoleConfigServer.js",
+      "src/ReactFlightClient.js",
+      "shared/ReactComponentInfoStack.js",
+      "shared/ReactTypes.js"
+    ],
+    "title": "Console Replay"
+  },
+  {
+    "description": "Covers the robust strategies for managing and reporting errors and content postponements originating from the server, including specific debug information.",
+    "parentId": "/developer-tools",
+    "path": "/developer-tools/error-postponement-handling",
+    "sourceIds": [
+      "src/ReactFlightClient.js",
+      "react/src/ReactPostpone.js",
+      "shared/ReactTypes.js"
+    ],
+    "title": "Error & Postponement Handling"
+  },
+  {
+    "description": "Provides an in-depth look at the advanced internal workings, such as chunk parsing, reference resolution, and dynamic module loading, for those seeking a deeper understanding.",
+    "parentId": null,
+    "path": "/internal-mechanisms",
+    "sourceIds": [
+      "src/ReactFlightClient.js",
+      "src/ReactFlightTemporaryReferences.js"
+    ],
+    "title": "Internal Mechanisms"
+  },
+  {
+    "description": "Outlines react-client's behavior and configuration adjustments across diverse runtime environments, including Node.js and browser contexts, particularly concerning Server-Side Rendering (SSR).",
+    "parentId": null,
+    "path": "/compatibility-environments",
+    "sourceIds": [
+      "src/ReactFlightClientConfig.js",
+      "src/ReactFlightClient.js",
+      "src/forks/ReactFlightClientConfig.dom-node-turbopack.js",
+      "src/forks/ReactFlightClientConfig.dom-node.js",
+      "src/forks/ReactFlightClientConfig.dom-node-webpack.js",
+      "src/forks/ReactFlightClientConfig.dom-node-parcel.js",
+      "src/forks/ReactFlightClientConfig.dom-node-esm.js",
+      "src/forks/ReactFlightClientConfig.markup.js",
+      "src/forks/ReactFlightClientConfig.dom-legacy.js",
+      "src/forks/ReactFlightClientConfig.dom-edge-webpack.js",
+      "src/forks/ReactFlightClientConfig.dom-bun.js",
+      "src/forks/ReactFlightClientConfig.dom-edge-turbopack.js",
+      "src/forks/ReactFlightClientConfig.dom-edge-parcel.js",
+      "src/forks/ReactFlightClientConfig.dom-browser-turbopack.js",
+      "src/forks/ReactFlightClientConfig.dom-browser.js",
+      "src/forks/ReactFlightClientConfig.dom-browser-esm.js",
+      "src/forks/ReactFlightClientConfig.dom-browser-parcel.js",
+      "src/forks/ReactFlightClientConfig.custom.js"
+    ],
+    "title": "Compatibility & Environments"
+  }
+]

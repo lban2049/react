@@ -1,0 +1,101 @@
+[
+  {
+    "description": "Provides a high-level introduction to react-cache, its purpose as an experimental React caching utility, and its intended use as a reference for more advanced implementations.",
+    "parentId": null,
+    "path": "/Overview",
+    "sourceIds": [
+      "package.json",
+      "README.md",
+      "index.js",
+      "npm/index.js"
+    ],
+    "title": "Overview"
+  },
+  {
+    "description": "Guides developers on how to get started with react-cache for demonstration and experimentation purposes, emphasizing its pre-release status.",
+    "parentId": null,
+    "path": "/Getting-Started",
+    "sourceIds": [
+      "README.md",
+      "package.json",
+      "index.js",
+      "src/ReactCacheOld.js"
+    ],
+    "title": "Getting Started"
+  },
+  {
+    "description": "Explores the foundational principles and internal mechanisms that power react-cache, including its caching strategy and resource management.",
+    "parentId": null,
+    "path": "/Core-Concepts",
+    "sourceIds": [
+      "src/LRU.js",
+      "src/ReactCacheOld.js"
+    ],
+    "title": "Core Concepts"
+  },
+  {
+    "description": "Details the Least Recently Used (LRU) cache algorithm used to manage cached data, including how entries are added, updated, accessed, and cleaned up.",
+    "parentId": "/Core-Concepts",
+    "path": "/Core-Concepts/LRU-Cache-Implementation",
+    "sourceIds": [
+      "src/LRU.js"
+    ],
+    "title": "LRU Cache Implementation"
+  },
+  {
+    "description": "Explains how react-cache manages resources, including the states of data (Pending, Resolved, Rejected) and the role of Suspender and Thenable types.",
+    "parentId": "/Core-Concepts",
+    "path": "/Core-Concepts/Resource-Management",
+    "sourceIds": [
+      "src/ReactCacheOld.js"
+    ],
+    "title": "Resource Management"
+  },
+  {
+    "description": "Describes the integration with React's internal dispatcher and the use of CacheContext for enforcing usage within React's render phase.",
+    "parentId": "/Core-Concepts",
+    "path": "/Core-Concepts/Context-and-Internal-Dispatcher",
+    "sourceIds": [
+      "src/ReactCacheOld.js"
+    ],
+    "title": "Context and Internal Dispatcher"
+  },
+  {
+    "description": "Provides detailed documentation for the public APIs exposed by react-cache, including their functionality, parameters, and return types.",
+    "parentId": null,
+    "path": "/API-Reference",
+    "sourceIds": [
+      "src/ReactCacheOld.js",
+      "src/LRU.js"
+    ],
+    "title": "API Reference"
+  },
+  {
+    "description": "Comprehensive guide to unstable_createResource, explaining how to define cacheable resources, handle data fetching, and manage keys.",
+    "parentId": "/API-Reference",
+    "path": "/API-Reference/unstable_createResource",
+    "sourceIds": [
+      "src/ReactCacheOld.js"
+    ],
+    "title": "unstable_createResource"
+  },
+  {
+    "description": "Documentation for unstable_setGlobalCacheLimit, explaining how to adjust the global LRU cache size and its implications.",
+    "parentId": "/API-Reference",
+    "path": "/API-Reference/unstable_setGlobalCacheLimit",
+    "sourceIds": [
+      "src/ReactCacheOld.js",
+      "src/LRU.js"
+    ],
+    "title": "unstable_setGlobalCacheLimit"
+  },
+  {
+    "description": "Highlights the experimental nature of react-cache, its instability, and critical warnings against using it in production environments.",
+    "parentId": null,
+    "path": "/Experimental-Status-and-Warnings",
+    "sourceIds": [
+      "README.md"
+    ],
+    "title": "Experimental Status and Warnings"
+  }
+]

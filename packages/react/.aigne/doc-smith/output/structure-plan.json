@@ -1,0 +1,361 @@
+[
+  {
+    "description": "Provides a high-level introduction to React, its purpose, core principles, and the distinct client and server-side runtimes.",
+    "parentId": null,
+    "path": "/overview",
+    "sourceIds": [
+      "package.json",
+      "README.md",
+      "index.js",
+      "react.react-server.js",
+      "src/ReactClient.js",
+      "src/ReactServer.js",
+      "src/ReactSharedInternalsClient.js",
+      "src/ReactSharedInternalsServer.js"
+    ],
+    "title": "Overview"
+  },
+  {
+    "description": "Guides developers through setting up a basic React project, including installation and running a minimal example to quickly get started with client-side development.",
+    "parentId": null,
+    "path": "/getting-started",
+    "sourceIds": [
+      "package.json",
+      "README.md",
+      "index.js",
+      "npm/index.js",
+      "src/ReactClient.js",
+      "src/ReactHooks.js"
+    ],
+    "title": "Getting Started"
+  },
+  {
+    "description": "Explains fundamental React concepts such as components, JSX, state, props, and element types, essential for building robust UIs.",
+    "parentId": null,
+    "path": "/core-concepts",
+    "sourceIds": [
+      "index.js",
+      "jsx-runtime.js",
+      "jsx-dev-runtime.js",
+      "src/ReactBaseClasses.js",
+      "src/ReactChildren.js",
+      "src/ReactContext.js",
+      "src/ReactCreateRef.js",
+      "src/ReactForwardRef.js",
+      "src/ReactLazy.js",
+      "src/ReactMemo.js",
+      "src/jsx/ReactJSX.js",
+      "src/jsx/ReactJSXElement.js"
+    ],
+    "title": "Core Concepts"
+  },
+  {
+    "description": "A comprehensive guide to React APIs and Hooks available for building interactive client-side applications.",
+    "parentId": null,
+    "path": "/client-apis",
+    "sourceIds": [
+      "index.js",
+      "index.development.js",
+      "index.experimental.js",
+      "index.experimental.development.js",
+      "index.fb.js",
+      "index.stable.development.js",
+      "index.stable.js",
+      "src/ReactClient.js",
+      "src/ReactHooks.js",
+      "src/ReactBaseClasses.js",
+      "src/ReactContext.js",
+      "src/ReactCreateRef.js",
+      "src/ReactForwardRef.js",
+      "src/ReactLazy.js",
+      "src/ReactMemo.js",
+      "src/ReactChildren.js",
+      "src/ReactCacheClient.js",
+      "src/ReactCacheImpl.js",
+      "src/ReactStartTransition.js",
+      "src/ReactTransitionType.js",
+      "src/ReactAct.js",
+      "src/ReactSharedInternalsClient.js"
+    ],
+    "title": "Client-side APIs"
+  },
+  {
+    "description": "Detailed documentation for all standard and experimental React Hooks for state management, side effects, context, and performance optimization in client components.",
+    "parentId": "/client-apis",
+    "path": "/client-apis/hooks",
+    "sourceIds": [
+      "src/ReactHooks.js",
+      "src/ReactClient.js",
+      "index.js",
+      "index.development.js",
+      "index.experimental.js",
+      "index.experimental.development.js",
+      "index.fb.js",
+      "index.stable.development.js",
+      "index.stable.js",
+      "src/ReactContext.js",
+      "src/ReactStartTransition.js",
+      "src/ReactTransitionType.js"
+    ],
+    "title": "Hooks Reference"
+  },
+  {
+    "description": "Documentation for built-in React components like Fragment, Profiler, StrictMode, and Suspense, along with utilities for creating and manipulating React elements.",
+    "parentId": "/client-apis",
+    "path": "/client-apis/components-elements",
+    "sourceIds": [
+      "src/ReactBaseClasses.js",
+      "src/ReactContext.js",
+      "src/ReactCreateRef.js",
+      "src/ReactForwardRef.js",
+      "src/ReactLazy.js",
+      "src/ReactMemo.js",
+      "src/jsx/ReactJSXElement.js",
+      "src/ReactClient.js",
+      "index.js",
+      "index.development.js",
+      "index.experimental.js",
+      "index.experimental.development.js",
+      "index.fb.js",
+      "index.stable.development.js",
+      "index.stable.js"
+    ],
+    "title": "Components and Elements"
+  },
+  {
+    "description": "Explains React's utility functions, including methods for iterating and transforming children, and accessing version information.",
+    "parentId": "/client-apis",
+    "path": "/client-apis/utilities",
+    "sourceIds": [
+      "src/ReactChildren.js",
+      "src/ReactClient.js",
+      "index.js",
+      "index.development.js",
+      "index.experimental.js",
+      "index.experimental.development.js",
+      "index.fb.js",
+      "index.stable.development.js",
+      "index.stable.js"
+    ],
+    "title": "Utilities"
+  },
+  {
+    "description": "Explains React APIs and functionalities specifically designed for building performant React Server Components.",
+    "parentId": null,
+    "path": "/server-components-apis",
+    "sourceIds": [
+      "react.react-server.js",
+      "jsx-runtime.react-server.js",
+      "jsx-dev-runtime.react-server.js",
+      "src/ReactServer.js",
+      "src/ReactServer.experimental.js",
+      "src/ReactServer.experimental.development.js",
+      "src/ReactServer.fb.js",
+      "src/ReactHooks.js",
+      "src/ReactChildren.js",
+      "src/jsx/ReactJSXServer.js",
+      "src/ReactCreateRef.js",
+      "src/ReactForwardRef.js",
+      "src/ReactLazy.js",
+      "src/ReactMemo.js",
+      "src/ReactCacheServer.js",
+      "src/ReactCacheImpl.js",
+      "src/ReactTaint.js",
+      "src/ReactTaintRegistry.js",
+      "src/ReactSharedInternalsServer.js"
+    ],
+    "title": "Server Components APIs"
+  },
+  {
+    "description": "Detailed documentation for React Hooks available for server-side component development, including data fetching and caching hooks.",
+    "parentId": "/server-components-apis",
+    "path": "/server-components-apis/hooks",
+    "sourceIds": [
+      "src/ReactHooks.js",
+      "src/ReactServer.js",
+      "react.react-server.js",
+      "src/ReactServer.experimental.js",
+      "src/ReactServer.experimental.development.js",
+      "src/ReactServer.fb.js"
+    ],
+    "title": "Server Hooks"
+  },
+  {
+    "description": "Covers utilities such as Children, createElement, cloneElement, isValidElement, createRef, lazy, and memo, optimized for React Server Component environments.",
+    "parentId": "/server-components-apis",
+    "path": "/server-components-apis/utilities",
+    "sourceIds": [
+      "src/ReactChildren.js",
+      "src/jsx/ReactJSXElement.js",
+      "src/ReactCreateRef.js",
+      "src/ReactForwardRef.js",
+      "src/ReactLazy.js",
+      "src/ReactMemo.js",
+      "src/ReactCacheServer.js",
+      "src/ReactCacheImpl.js",
+      "src/jsx/ReactJSXServer.js",
+      "src/ReactServer.js",
+      "react.react-server.js",
+      "jsx-runtime.react-server.js",
+      "jsx-dev-runtime.react-server.js"
+    ],
+    "title": "Server Utilities"
+  },
+  {
+    "description": "Explains the Taint Registry's role in securing data flow by preventing sensitive server-side values from leaking to client components.",
+    "parentId": "/server-components-apis",
+    "path": "/server-components-apis/taint-registry",
+    "sourceIds": [
+      "src/ReactTaintRegistry.js",
+      "src/ReactTaint.js",
+      "src/ReactSharedInternalsServer.js",
+      "src/ReactServer.experimental.js",
+      "src/ReactServer.experimental.development.js"
+    ],
+    "title": "Taint Registry"
+  },
+  {
+    "description": "Explores React's advanced capabilities like concurrent rendering, transitions, caching, and mechanisms for pausing or postponing UI updates.",
+    "parentId": null,
+    "path": "/concurrency-features",
+    "sourceIds": [
+      "src/ReactStartTransition.js",
+      "src/ReactTransitionType.js",
+      "src/ReactHooks.js",
+      "src/ReactCacheImpl.js",
+      "src/ReactCacheClient.js",
+      "src/ReactCacheServer.js",
+      "src/ReactPostpone.js",
+      "src/ReactAct.js",
+      "src/ReactClient.js",
+      "src/ReactServer.experimental.js",
+      "src/ReactServer.experimental.development.js",
+      "src/ReactSharedInternalsClient.js"
+    ],
+    "title": "Concurrency and Advanced Features"
+  },
+  {
+    "description": "Details the `startTransition` API and `useTransition` Hook for managing non-urgent UI updates, improving user experience by keeping the UI responsive.",
+    "parentId": "/concurrency-features",
+    "path": "/concurrency-features/transitions",
+    "sourceIds": [
+      "src/ReactStartTransition.js",
+      "src/ReactTransitionType.js",
+      "src/ReactHooks.js",
+      "src/ReactClient.js",
+      "index.js",
+      "index.development.js",
+      "index.experimental.js",
+      "index.experimental.development.js",
+      "index.fb.js",
+      "index.stable.development.js",
+      "index.stable.js"
+    ],
+    "title": "Transitions"
+  },
+  {
+    "description": "Explains the `cache` and `cacheSignal` APIs for optimizing data fetching and rendering, enhancing application performance.",
+    "parentId": "/concurrency-features",
+    "path": "/concurrency-features/caching",
+    "sourceIds": [
+      "src/ReactCacheImpl.js",
+      "src/ReactCacheClient.js",
+      "src/ReactCacheServer.js",
+      "src/ReactHooks.js",
+      "src/ReactClient.js",
+      "src/ReactServer.js",
+      "index.js",
+      "index.development.js",
+      "index.experimental.js",
+      "index.experimental.development.js",
+      "index.fb.js",
+      "index.stable.development.js",
+      "index.stable.js",
+      "react.react-server.js"
+    ],
+    "title": "Caching APIs"
+  },
+  {
+    "description": "Introduces the `unstable_postpone` API, allowing developers to intentionally defer rendering of parts of the UI, particularly useful for server-side rendering.",
+    "parentId": "/concurrency-features",
+    "path": "/concurrency-features/postpone",
+    "sourceIds": [
+      "src/ReactPostpone.js",
+      "src/ReactServer.experimental.js",
+      "src/ReactServer.experimental.development.js",
+      "src/ReactClient.js",
+      "index.experimental.js",
+      "index.experimental.development.js"
+    ],
+    "title": "Postponing Rendering"
+  },
+  {
+    "description": "Provides guidance on using the `act` utility to ensure predictable behavior in React tests, especially when dealing with asynchronous updates and side effects.",
+    "parentId": "/concurrency-features",
+    "path": "/concurrency-features/act-testing",
+    "sourceIds": [
+      "src/ReactAct.js",
+      "src/ReactSharedInternalsClient.js",
+      "index.development.js",
+      "index.experimental.development.js",
+      "index.fb.js",
+      "index.stable.development.js"
+    ],
+    "title": "Act for Testing"
+  },
+  {
+    "description": "Offers guidance on optimizing React applications for performance and debugging in development environments, including specific tools and build considerations.",
+    "parentId": null,
+    "path": "/development-optimization",
+    "sourceIds": [
+      "package.json",
+      "README.md",
+      "src/ReactOwnerStack.js",
+      "src/ReactSharedInternalsClient.js",
+      "src/ReactSharedInternalsServer.js",
+      "src/ReactHooks.js",
+      "compiler-runtime.js",
+      "src/ReactCompilerRuntime.js",
+      "index.development.js",
+      "index.experimental.development.js",
+      "index.fb.js",
+      "index.stable.development.js"
+    ],
+    "title": "Development and Optimization"
+  },
+  {
+    "description": "Documents development-only tools like `useDebugValue` and `captureOwnerStack` for inspecting component behavior and identifying rendering issues.",
+    "parentId": "/development-optimization",
+    "path": "/development-optimization/debugging",
+    "sourceIds": [
+      "src/ReactHooks.js",
+      "src/ReactOwnerStack.js",
+      "src/ReactSharedInternalsClient.js",
+      "src/ReactSharedInternalsServer.js",
+      "index.development.js",
+      "index.experimental.development.js",
+      "index.fb.js",
+      "index.stable.development.js"
+    ],
+    "title": "Debugging Utilities"
+  },
+  {
+    "description": "Covers the React Compiler Runtime, detailing its function and specific exports like `useMemoCache` for compile-time performance optimizations.",
+    "parentId": "/development-optimization",
+    "path": "/development-optimization/compiler-runtime",
+    "sourceIds": [
+      "compiler-runtime.js",
+      "npm/compiler-runtime.js",
+      "src/ReactCompilerRuntime.js",
+      "src/ReactHooks.js",
+      "index.js",
+      "index.development.js",
+      "index.experimental.js",
+      "index.experimental.development.js",
+      "index.fb.js",
+      "index.stable.development.js",
+      "index.stable.js"
+    ],
+    "title": "Compiler Runtime"
+  }
+]
