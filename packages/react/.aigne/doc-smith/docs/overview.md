@@ -1,71 +1,89 @@
 # Overview
 
-React is a JavaScript library designed for efficiently building user interfaces. It enables developers to create interactive UIs by focusing on individual, reusable components.
+React is a JavaScript library for creating user interfaces. Its primary purpose is to allow developers to build encapsulated components that manage their own state, which can then be composed to create complex and interactive UIs. The core package, `react`, contains only the functionality necessary to define components and is typically used with a renderer like `react-dom` for web applications or `react-native` for native environments.
 
 ## Core Principles
 
-The `react` package provides the essential functionality for defining React components. It is typically used in conjunction with a specific renderer, such as `react-dom` for web applications or `react-native` for native mobile environments. This separation allows React to be a flexible foundation for various platforms, with the core logic for component definition remaining consistent across environments.
+React is designed around several key ideas that make UI development predictable and efficient.
 
-By default, React operates in a development mode, which includes helpful warnings for common mistakes. For deploying applications, it is crucial to use the production build, which includes performance optimizations and removes development-only error messages.
+<x-cards data-columns="3">
+  <x-card data-title="Declarative" data-icon="lucide:glasses">
+    Describe what your UI should look like for any given state, and React will manage the updates when the data changes.
+  </x-card>
+  <x-card data-title="Component-Based" data-icon="lucide:blocks">
+    Build UIs from small, isolated pieces of code called “components.” This makes your code more reusable and easier to reason about.
+  </x-card>
+  <x-card data-title="Platform Agnostic" data-icon="lucide:globe">
+    The core React logic can be used with different renderers, allowing you to share code between the web, mobile, and other environments.
+  </x-card>
+</x-cards>
 
-## Client-side and Server-side Runtimes
+### The React Ecosystem
 
-React applications can operate in distinct client-side and server-side runtimes, each optimized for its environment. The `react` package exports functionalities tailored to these specific contexts:
+The `react` package provides the core APIs for defining components, while renderers handle the platform-specific logic of displaying them. This separation allows React to be adapted to new platforms.
 
-*   **Client-side Runtime**: Primarily used in web browsers, this runtime provides the standard set of React Hooks (like `useState`, `useEffect`) and component definitions necessary for building interactive user interfaces. It's the environment where UI updates respond directly to user interactions.
-*   **Server-side Runtime**: Designed for React Server Components (RSC) and server-side rendering, this runtime offers specific hooks and utilities optimized for server-side operations, such as data fetching and initial page rendering. This allows for improved performance and SEO by pre-rendering parts of the UI on the server.
+```d2
+direction: down
 
-The `react` package intelligently exports the appropriate APIs based on whether it's imported in a client or server environment, ensuring that only relevant functionalities are available.
-
-```mermaid
-graph LR
-    subgraph "React Ecosystem Overview"
-        ClientApp["Client-side Application"] -- "Renders with" --> ReactDOM["react-dom"];
-        ClientApp -- "Uses client APIs from" --> ReactPackage["react npm package"];
-
-        ServerApp["Server-side Application"] -- "Uses server APIs from" --> ReactPackage;
-        ServerApp -- "Leverages" --> RSC["React Server Components"];
-
-        ReactPackage -- "Provides" --> ClientSideAPIs["Client-side Hooks & Components"];
-        ReactPackage -- "Provides" --> ServerSideAPIs["Server-side Hooks & Utilities"];
-
-        ClientSideAPIs --> ReactDOM;
-        ServerSideAPIs --> RSC;
-    end
-```
-
-## Basic Usage
-
-The following example demonstrates a minimal React component using the `useState` Hook from the `react` package and rendering it to the DOM using `react-dom`:
-
-```js
-import { useState } from 'react';
-import { createRoot } from 'react-dom/client';
-
-function Counter() {
-  const [count, setCount] = useState(0);
-  return (
-    <>
-      <h1>{count}</h1>
-      <button onClick={() => setCount(count + 1)}>
-        Increment
-      </button>
-    </>
-  );
+"react": {
+  label: "React Core\n(Defines components & state)"
+  shape: package
 }
 
-const root = createRoot(document.getElementById('root'));
-root.render(<Counter />);
+renderers: {
+  label: "Renderers"
+  "react-dom": {
+    label: "React DOM\n(Renders to the browser)"
+    shape: package
+  }
+  "react-native": {
+    label: "React Native\n(Renders to native platforms)"
+    shape: package
+  }
+}
+
+platforms: {
+  label: "Platforms"
+  "Web Application (Browser)"
+  "Mobile Application (iOS/Android)"
+}
+
+"react" -> renderers: "Used by"
+renderers."react-dom" -> platforms."Web Application (Browser)": Renders
+renderers."react-native" -> platforms."Mobile Application (iOS/Android)": Renders
+
 ```
-This code defines a `Counter` component that manages a `count` state, displays it, and provides a button to increment it. The component is then rendered into an HTML element with the ID `root`.
 
-## Further Information
+**Note on Environment Modes**
 
-For more in-depth information, including comprehensive guides and detailed API references, visit the official React documentation:
+By default, React runs in development mode, which includes extra warnings about common mistakes. When deploying your application, it's important to use the [production build](https://reactjs.org/docs/optimizing-performance.html#use-the-production-build), which includes performance optimizations and removes development-only messages.
 
-*   [React Official Documentation](https://react.dev/)
-*   [React API Reference](https://react.dev/reference/react)
+## How This Documentation is Structured
 
----
+This documentation is organized to help you find information efficiently, whether you're just starting or exploring advanced topics. 
 
-This overview has introduced React's core purpose and its dual runtime architecture. To begin building your first React application, proceed to the [Getting Started](./getting-started.md) section.
+<x-cards data-columns="2">
+  <x-card data-title="Getting Started" data-icon="lucide:rocket" data-href="/getting-started">
+    A step-by-step guide to setting up a new project and creating your first React component.
+  </x-card>
+  <x-card data-title="Core APIs" data-icon="lucide:puzzle" data-href="/core-apis">
+    Understand the fundamental building blocks of React applications, from components and JSX to context and refs.
+  </x-card>
+  <x-card data-title="Hooks" data-icon="lucide:anchor" data-href="/hooks">
+    A detailed guide to all the built-in Hooks that let you use state and other React features without writing a class.
+  </x-card>
+  <x-card data-title="Advanced Guides" data-icon="lucide:graduation-cap" data-href="/advanced">
+    Dive deeper into more complex React features, patterns, and environments.
+  </x-card>
+  <x-card data-title="API Reference" data-icon="lucide:book-open" data-href="/api-reference">
+    A comprehensive, A-Z reference for all public React APIs, including components, hooks, and utilities.
+  </x-card>
+  <x-card data-title="Package Exports" data-icon="lucide:package" data-href="/package-exports">
+    Details on the different entry points provided by the 'react' package, such as `jsx-runtime` and `compiler-runtime`.
+  </x-card>
+</x-cards>
+
+
+## Next Steps
+
+Ready to start building? The best place to begin is the [Getting Started](./getting-started.md) guide, which will walk you through creating your first React application.
