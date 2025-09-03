@@ -1,49 +1,32 @@
-# 其他 Hook
+# 其他 Hooks
 
-除了管理状态、副作用和性能，React 还提供了几个专门的 Hook 来解决其他常见问题。本指南涵盖了一系列用于读取 context、生成稳定标识符、调试自定义 Hook 以及与外部数据源集成的 Hook。
-
-<x-cards data-columns="2">
-  <x-card data-title="useContext" data-icon="lucide:arrow-down-to-dot">
-    无需逐层传递 prop 即可访问父组件中的数据。
-  </x-card>
-  <x-card data-title="useId" data-icon="lucide:fingerprint">
-    为无障碍属性生成唯一的、稳定的 ID。
-  </x-card>
-  <x-card data-title="useDebugValue" data-icon="lucide:bug">
-    在 React DevTools 中为你的自定义 Hook 显示自定义标签。
-  </x-card>
-  <x-card data-title="useSyncExternalStore" data-icon="lucide:link-2">
-    以支持并发特性的方式订阅外部存储。
-  </x-card>
-</x-cards>
+本节介绍了一组专门的 Hooks，用于处理各种任务，包括读取上下文、生成唯一 ID、与外部数据源集成以及调试自定义 Hooks。虽然 [State Hooks](./hooks-state.md) 负责管理组件数据，[Effect Hooks](./hooks-effect.md) 负责处理副作用，但本节介绍的 Hooks 为 React 应用程序中的其他常见需求提供了解决方案。
 
 ---
 
-## useContext
+## `useContext`
 
-`useContext` Hook 接受一个 context 对象（`React.createContext` 的返回值）并返回该 context 的当前值。这是在函数组件中使用 context 的主要方式，可以避免通过组件树的多个层级手动传递 props。
+接受一个上下文对象（`React.createContext` 的返回值）并返回当前的上下文值。当前上下文值由组件树中，离调用组件最近的 `<MyContext.Provider>` 的 `value` prop 决定。
 
-有关 context 概念的更多信息，请参阅 [Context](./core-apis-context.md) 指南。
+当组件上方最近的 `<MyContext.Provider>` 更新时，此 Hook 会使用最新的上下文 `value` 来触发重新渲染。
 
-**语法**
+### API
 
 ```javascript
 const value = useContext(SomeContext);
 ```
 
-**参数**
+### 参数
 
-| 名称 | 类型 | 描述 |
+| 参数 | 类型 | 描述 |
 |---|---|---|
-| `Context` | `ReactContext` | 由 `React.createContext` 返回的 context 对象。 |
+| `Context` | React Context 对象 | 从 `React.createContext` 返回的上下文对象。 |
 
-**返回值**
+### 返回值
 
-当前的 context 值，该值由组件树中上层最近的 `<MyContext.Provider>` 的 `value` prop 决定。
+返回调用组件的上下文值。
 
-**示例**
-
-此示例展示了 `ThemedButton` 组件如何在不接收 prop 的情况下访问当前主题。
+### 示例
 
 ```javascript
 import React, { createContext, useContext } from 'react';
@@ -54,7 +37,7 @@ const ThemeContext = createContext('light');
 // 2. 一个使用 context 的组件
 function ThemedButton() {
   const theme = useContext(ThemeContext);
-  return <button className={`theme-${theme}`}>A {theme} button</button>;
+  return <button>Current theme is: {theme}</button>;
 }
 
 // 3. 一个提供 context 的组件
@@ -69,112 +52,128 @@ export default function App() {
 
 ---
 
-## useId
+## `useId`
 
-`useId` 是一个用于生成在服务器和客户端渲染中都保持稳定的唯一 ID 的 Hook。这对于避免 hydration 不匹配问题很有用，特别是对于像 `htmlFor` 和 `id` 这样的无障碍属性。
+`useId` 是一个用于生成在服务端和客户端之间保持稳定的唯一 ID 的 Hook，这对于防止在服务端渲染应用中出现 hydration 不匹配至关重要。它主要用于需要关联两个元素（例如 `<label>` 和 `<input>`）的可访问性属性。
 
-**语法**
+### API
 
 ```javascript
-const id = useId();
+const uniqueId = useId();
 ```
 
-**参数**
+### 参数
 
-无。
+此 Hook 没有参数。
 
-**返回值**
+### 返回值
 
-一个唯一的字符串 ID。对于给定的组件，该 ID 在多次渲染中保持稳定。
+一个唯一且稳定的字符串 ID。该 ID 以 `:r` 为前缀，以确保它不会与 CSS 选择器冲突。
 
-**示例**
-
-在这里，`useId` 生成一个匹配的 ID 来连接标签和输入字段，这对于屏幕阅读器至关重要。
+### 示例
 
 ```javascript
-import React, { useId } from 'react';
+import { useId } from 'react';
 
-function EmailField() {
+function FormField() {
   const id = useId();
   return (
     <div>
-      <label htmlFor={id}>Email Address</label>
+      <label htmlFor={id}>Your Email:</label>
       <input id={id} type="email" name="email" />
     </div>
   );
 }
+
+export default function SignupForm() {
+  return (
+    <form>
+      <p>Sign up for our newsletter:</p>
+      <FormField />
+      <FormField />
+    </form>
+  );
+}
 ```
+在上面的示例中，每个 `FormField` 实例都会获得自己的唯一 ID，从而将每个 label 与其 input 正确关联。
 
 ---
 
-## useDebugValue
+## `useDebugValue`
 
-`useDebugValue` 是一个允许你在 React DevTools 中为你的自定义 Hook 显示自定义标签的 Hook。这使得检查和调试自定义 Hook 的内部状态变得更加容易。
+`useDebugValue` 可用于在 React DevTools 中为自定义 Hooks 显示标签。这有助于检查和调试自定义 Hooks 的内部状态。
 
-**语法**
+**注意：**此 Hook 仅在开发模式下生效，在生产构建中会被忽略。
+
+### API
 
 ```javascript
-useDebugValue(value, format?);
+useDebugValue(value, formatFn?);
 ```
 
-**参数**
+### 参数
 
-| 名称 | 类型 | 描述 |
+| 参数 | 类型 | 描述 |
 |---|---|---|
-| `value` | `any` | 要在 React DevTools 中显示的值。 |
-| `formatterFn`| `function` | 可选。一个用于格式化显示值的函数。它接收值作为参数，并应返回一个格式化后的值。这对于避免昂贵的格式化操作很有用，除非 Hook 真的被检查。 |
+| `value` | `any` | 要在 React DevTools 中自定义 Hook 旁边显示的值。 |
+| `formatFn` | `function` | （可选）一个格式化函数，仅在 DevTools 打开时调用。它接收 `value` 并应返回一个格式化后的显示值。这样可以推迟可能开销很大的格式化操作。 |
 
-**示例**
+### 返回值
 
-在这个自定义 Hook 中，`useDebugValue` 在 DevTools 的组件检查器中提供了一个人类可读的状态。
+此 Hook 不返回任何内容（`void`）。
+
+### 示例
 
 ```javascript
 import { useState, useDebugValue } from 'react';
 
 function useOnlineStatus() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  // ... 检查在线状态的逻辑将放在这里 ...
+  // ... 监听在线/离线事件的逻辑 ...
 
-  // 在 React DevTools 中此 Hook 旁边显示一个可读的标签
+  // 此标签将显示在 React DevTools 中
   useDebugValue(isOnline ? 'Online' : 'Offline');
 
   return isOnline;
 }
 
-export default function App() {
+export default function ChatApp() {
   const isOnline = useOnlineStatus();
-  return <h1>{isOnline ? '✅ Online' : '❌ Disconnected'}</h1>;
+  return <h1>{isOnline ? '✅ Connected' : '❌ Disconnected'}</h1>;
 }
 ```
-
-当你在 React DevTools 中检查 `App` 组件时，你会看到 `OnlineStatus` Hook 的标签显示为“Online”或“Offline”。
+当你在 React DevTools 中检查 `ChatApp` 组件时，你将看到一个 `OnlineStatus` Hook，旁边带有“Online”或“Offline”的标签。
 
 ---
 
-## useSyncExternalStore
+## `useSyncExternalStore`
 
-`useSyncExternalStore` 是一个用于读取和订阅外部数据源的 Hook，它与 React 的并发渲染特性兼容。它能确保在外部数据发生变化时组件会重新渲染，并防止在并发更新期间出现视觉撕裂。
+`useSyncExternalStore` 是一个用于订阅外部数据源的 Hook。它旨在与并发渲染功能兼容，并确保在外部数据变化时组件能正确地重新渲染，从而避免出现视觉撕裂。
 
-它通常由与 React 集成的库使用，而不是直接在应用程序代码中使用。
+这对于与非 React 状态构建的第三方状态管理库或浏览器 API 进行集成非常有用。
 
-**语法**
+### API
 
 ```javascript
-const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?);
+const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?);
 ```
 
-**参数**
+### 参数
 
-| 名称 | 类型 | 描述 |
+| 参数 | 类型 | 描述 |
 |---|---|---|
-| `subscribe` | `function` | 一个将回调函数订阅到 store 的函数。它必须返回一个取消订阅的函数。 |
-| `getSnapshot`| `function` | 一个返回 store 中当前数据快照的函数。 |
-| `getServerSnapshot` | `function` | 可选。一个为服务器端渲染返回数据快照的函数。 |
+| `subscribe` | `function` | 一个将回调函数订阅到 store 的函数。它必须返回一个 `unsubscribe` 函数。 |
+| `getSnapshot` | `function` | 一个返回 store 中当前数据值（快照）的函数。 |
+| `getServerSnapshot`| `function` | （可选）一个为服务端渲染 (SSR) 返回数据初始快照的函数。 |
 
-**示例**
+### 返回值
 
-此示例演示了如何订阅浏览器的 `window.innerWidth` 属性。
+来自外部 store 的当前值。
+
+### 示例
+
+此示例订阅浏览器的 `window.innerWidth` 以显示当前窗口宽度。
 
 ```javascript
 import { useSyncExternalStore } from 'react';
@@ -192,14 +191,10 @@ function getSnapshot() {
 
 export default function App() {
   const width = useSyncExternalStore(subscribe, getSnapshot);
-
-  return <h1>Window width: {width}</h1>;
+  return <p>Window width: {width}px</p>;
 }
 ```
-现在，每当浏览器窗口大小调整时，此组件都将正确地重新渲染。
 
 ---
 
-### 后续步骤
-
-你现在已经探索了处理 context、唯一 ID、调试和外部状态的各种专用 Hook。要更深入地了解更复杂的 React 特性和模式，请继续阅读我们的[高级指南](./advanced.md)。
+这些实用工具 Hooks 解决了 React 生态系统中的一系列特定需求。如果遇到更复杂的挑战，可以探索[高级指南](./advanced.md)或查阅完整的[API 参考](./api-reference.md)。

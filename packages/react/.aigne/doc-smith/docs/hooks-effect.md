@@ -2,60 +2,31 @@
 
 Effect Hooks allow you to perform side effects in function components. Side effects are operations that can affect other components and can't be done during rendering, such as data fetching, setting up a subscription, or manually changing the DOM.
 
-These hooks provide a way to synchronize a component with an external system. This section covers the three primary effect hooks, each designed for a specific timing in the component lifecycle:
-
-- `useEffect`: For the majority of side effects. It runs *after* render and browser paint.
-- `useLayoutEffect`: For effects that need to run synchronously after DOM mutations but *before* the browser paints. This is useful for measuring layout.
-- `useInsertionEffect`: A specialized hook for CSS-in-JS libraries to inject styles *before* DOM mutations.
-
-```d2
-direction: down
-
-"Start Render": {
-  shape: circle
-}
-
-"Render Phase": "React renders components"
-
-"Commit Phase": {
-  "1. useInsertionEffect": "Fires before DOM mutations"
-  "2. DOM Mutations": "React updates the DOM"
-  "3. useLayoutEffect": "Fires after DOM mutations"
-}
-
-"Browser Paint": "Browser paints the screen"
-
-"useEffect": "Fires after paint"
-
-"End": {
-  shape: circle
-}
-
-"Start Render" -> "Render Phase"
-"Render Phase" -> "Commit Phase"
-"Commit Phase" -> "Browser Paint"
-"Browser Paint" -> "useEffect"
-"useEffect" -> "End"
-```
+This section covers the three primary effect hooks provided by React, each designed for a different timing within the component lifecycle: `useEffect`, `useLayoutEffect`, and `useInsertionEffect`.
 
 ## useEffect
 
-`useEffect` is the most common hook for managing side effects. It runs asynchronously after the render is committed to the screen, ensuring that the effect code doesn't block the browser painting process.
+The `useEffect` hook is the most common tool for handling side effects. It runs asynchronously *after* the render is committed to the screen and the browser has painted the result. This ensures that your effect code doesn't block the browser from updating the display.
 
 ### Syntax
 
 ```javascript
-useEffect(create, deps);
+useEffect(
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
+): void
 ```
 
 ### Parameters
 
-| Parameter | Type | Description |
-|---|---|---|
-| `create` | `() => (() => void) \| void` | A function that contains the side effect logic. It can optionally return a cleanup function, which React runs before the component unmounts or before the effect is re-run. |
-| `deps` | `Array<mixed> \| void \| null` | An array of dependencies. The effect will only re-run if one of these dependencies has changed since the last render. If you pass an empty array (`[]`), the effect runs only once after the initial render. If omitted, the effect runs after every render. |
+| Name     | Type                | Description                                                                                                                                                                                                                                                        | 
+| :------- | :------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | 
+| `create`   | `function`          | A function that contains the side effect logic. It can optionally return a cleanup function, which React will run when the component unmounts or before the effect runs again.                                                                                           | 
+| `deps`     | `Array<any>` (optional) | An array of dependencies. The effect will re-run only if one of these dependencies has changed since the last render. If omitted, the effect runs after every render. If an empty array `[]` is provided, the effect runs only once after the initial render. | 
 
 ### Example: Fetching Data
+
+Here's an example of using `useEffect` to fetch data from an API when the component mounts.
 
 ```javascript
 import React, { useState, useEffect } from 'react';
@@ -64,123 +35,181 @@ function UserProfile({ userId }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Effect to fetch user data
-    const fetchUser = async () => {
+    // This function runs after the component renders
+    const fetchUserData = async () => {
       const response = await fetch(`https://api.example.com/users/${userId}`);
       const data = await response.json();
       setUser(data);
     };
 
-    fetchUser();
+    fetchUserData();
 
-    // Cleanup function
+    // Optional cleanup function
     return () => {
+      // This code would run if the component unmounts or if userId changes.
+      // For example, you could cancel a pending API request here.
       console.log(`Cleaning up effect for user ${userId}`);
-      // Here you could cancel the fetch request if it's still pending
     };
-  }, [userId]); // Re-run the effect only if userId changes
+  }, [userId]); // The effect re-runs only if userId changes
 
   if (!user) {
     return <div>Loading...</div>;
   }
 
-  return <h1>{user.name}</h1>;
+  return <div>{user.name}</div>;
 }
 ```
-In this example, the component fetches user data when it mounts and whenever the `userId` prop changes. The cleanup function ensures that any stale operations are handled before the component unmounts or the effect re-runs.
 
 ## useLayoutEffect
 
-`useLayoutEffect` has the same signature as `useEffect`, but it fires synchronously after all DOM mutations are complete and before the browser paints the result. This is useful for reading layout from the DOM and synchronously re-rendering to prevent a visual "flicker."
+`useLayoutEffect` has the same signature as `useEffect`, but it fires synchronously *after* all DOM mutations have been applied, but *before* the browser has a chance to paint the changes. This is useful for reading layout from the DOM (like getting an element's size or position) and synchronously re-rendering to apply changes before the user sees them.
+
+Use this hook with caution, as synchronous execution can block visual updates.
 
 ### Syntax
 
 ```javascript
-useLayoutEffect(create, deps);
+useLayoutEffect(
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
+): void
 ```
 
-### When to use `useLayoutEffect`
+### Example: Measuring a DOM Element
 
-You should only use `useLayoutEffect` when your effect needs to perform DOM measurements and trigger a re-render based on those measurements. For example, calculating the position of a tooltip after the content has rendered. Using it for standard effects like data fetching can hurt performance by blocking visual updates.
-
-### Example: Measuring Element Layout
+Imagine you need to position a tooltip based on the dimensions of a button. `useLayoutEffect` ensures you measure the button after it has been rendered but before it's painted, preventing any visual flicker.
 
 ```javascript
 import React, { useState, useLayoutEffect, useRef } from 'react';
 
-function Tooltip({ children, targetRef }) {
-  const tooltipRef = useRef(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+function Tooltip() {
+  const buttonRef = useRef(null);
+  const [tooltipWidth, setTooltipWidth] = useState(0);
 
   useLayoutEffect(() => {
-    if (targetRef.current && tooltipRef.current) {
-      const targetRect = targetRef.current.getBoundingClientRect();
-      const tooltipRect = tooltipRef.current.getBoundingClientRect();
-
-      // Position the tooltip above the target element
-      setPosition({
-        top: targetRect.top - tooltipRect.height - 5,
-        left: targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2),
-      });
+    if (buttonRef.current) {
+      // Measure the button's width after it's in the DOM but before paint
+      const width = buttonRef.current.offsetWidth;
+      setTooltipWidth(width);
     }
-  }, [targetRef]); // Re-calculate when the target changes
+  }, []); // Runs only once after initial layout
 
   return (
-    <div ref={tooltipRef} style={{ ...position, position: 'fixed' }}>
-      {children}
+    <div>
+      <button ref={buttonRef}>Hover over me</button>
+      <div style={{ width: tooltipWidth, marginTop: '10px', border: '1px solid black' }}>
+        This tooltip has the same width as the button.
+      </div>
     </div>
   );
 }
 ```
-Here, `useLayoutEffect` guarantees that by the time the user sees the tooltip, it's already in its correct, calculated position, avoiding any jarring visual jumps.
 
 ## useInsertionEffect
 
-`useInsertionEffect` is a specialized hook for CSS-in-JS library authors. It fires synchronously *before* React makes any changes to the DOM. This allows libraries to inject dynamic styles into the document head and ensure they are available before the browser calculates the layout for the new DOM tree.
+`useInsertionEffect` is a specialized hook that runs synchronously *before* any DOM mutations are made. Its primary use case is for CSS-in-JS libraries to inject dynamic styles into the DOM. Application developers will rarely need to use this hook.
 
-Application developers should generally not use this hook. Prefer `useEffect` or `useLayoutEffect` for application-level logic.
+Since it runs before DOM updates, it is the ideal place to inject `<style>` tags without forcing the browser to recalculate styles multiple times in one render cycle.
 
 ### Syntax
 
 ```javascript
-useInsertionEffect(create, deps);
+useInsertionEffect(
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
+): void
 ```
 
-### Example: Basic Style Injection
+### Conceptual Example
 
-This is a simplified conceptual example of how a CSS-in-JS library might use this hook.
+This is a simplified example of how a styling library might use `useInsertionEffect`.
 
 ```javascript
-import React, { useInsertionEffect } from 'react';
+// Inside a hypothetical CSS-in-JS library
+let ruleCache = new Set();
 
-// A global cache for styles to avoid duplicates
-const styleCache = new Map();
-
-function useDynamicStyle(className, cssRule) {
+function useCSS(rule) {
   useInsertionEffect(() => {
-    if (!styleCache.has(className)) {
+    // Inject styles before the browser sees the new DOM nodes.
+    if (!ruleCache.has(rule)) {
       const styleElement = document.createElement('style');
-      styleElement.innerHTML = `.${className} { ${cssRule} }`;
+      styleElement.innerHTML = rule;
       document.head.appendChild(styleElement);
-      styleCache.set(className, styleElement);
+      ruleCache.add(rule);
     }
-
-    return () => {
-      // Cleanup logic would be more complex in a real library
-    };
-  }, [className, cssRule]);
+  }, [rule]);
 }
 
-function StyledButton() {
-  useDynamicStyle('my-button', 'color: white; background-color: blue;');
-
-  return <button className="my-button">Click Me</button>;
+// Application code using the library
+function MyComponent() {
+  useCSS(`.my-component { color: blue; }`);
+  return <div className="my-component">This is blue</div>;
 }
 ```
-By running before the DOM is updated, `useInsertionEffect` ensures that the `.my-button` class is defined before the `<button>` element is rendered, preventing a flash of unstyled content.
 
-## Summary
+## Comparison and Execution Order
 
-Choosing the right Effect Hook depends on the timing of your side effect. For most cases, `useEffect` is the correct choice. When you need to interact with the DOM layout before the browser paints, `useLayoutEffect` is available. For the specific niche of CSS-in-JS style injection, `useInsertionEffect` provides the necessary timing.
+The key difference between these hooks is their timing within the React render-commit lifecycle. The following diagram illustrates the sequence of events.
 
-Next, let's explore how to manage references to values and DOM nodes without triggering re-renders in the [Ref Hooks](./hooks-ref.md) section.
+```d2
+direction: down
+
+"Render Phase": {
+  shape: rectangle
+  label: "React renders your components"
+}
+
+"Commit Phase": {
+  shape: package
+  grid-columns: 1
+  style.stroke-dash: 2
+
+  "1. Before DOM Mutations": {
+    shape: rectangle
+    
+    "useInsertionEffect runs": {
+      shape: oval
+      style.fill: "#fffbe6"
+    }
+  }
+
+  "2. DOM Mutations & Layout Calculation": {
+    shape: rectangle
+
+    "useLayoutEffect runs": {
+      shape: oval
+      style.fill: "#e6f7ff"
+    }
+  }
+
+  "3. Browser Painting": {
+    shape: rectangle
+    label: "Browser paints the screen"
+  }
+  
+  "4. After Paint": {
+    shape: rectangle
+    
+    "useEffect runs": {
+      shape: oval
+      style.fill: "#f6ffed"
+    }
+  }
+}
+
+"Render Phase" -> "Commit Phase": "Triggers commit"
+"Commit Phase"."1. Before DOM Mutations" -> "Commit Phase"."2. DOM Mutations & Layout Calculation"
+"Commit Phase"."2. DOM Mutations & Layout Calculation" -> "Commit Phase"."3. Browser Painting"
+"Commit Phase"."3. Browser Painting" -> "Commit Phase"."4. After Paint"
+
+```
+
+| Hook                 | Timing                                                    | Use Case                                                    |
+| -------------------- | --------------------------------------------------------- | ----------------------------------------------------------- |
+| `useInsertionEffect` | Synchronous, before DOM mutations                         | Injecting styles for CSS-in-JS libraries.                   |
+| `useLayoutEffect`    | Synchronous, after DOM mutations, before browser paint    | Measuring DOM elements, synchronous re-renders.             |
+| `useEffect`          | Asynchronous, after render is committed and browser paint | Data fetching, subscriptions, and most other side effects.  |
+
+---
+
+Understanding the different Effect Hooks allows you to manage side effects precisely and efficiently. To learn how to interact directly with DOM nodes or component instances, proceed to the next section on [Ref Hooks](./hooks-ref.md).

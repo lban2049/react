@@ -1,13 +1,16 @@
-# 服务器环境与客户端环境
+# 服务器与客户端环境
 
-React 旨在用于在各种环境中构建用户界面。主要区别在于**服务器**和**客户端**（浏览器）。这种分离实现了强大的渲染策略，例如服务器端渲染 (SSR) 和 React Server Components 的使用。虽然大部分 React API 是通用的，但某些函数和钩子是特定环境独有的。本指南将探讨这些差异以及 React 是如何管理它们的。
+React 旨在不同的 JavaScript 环境中运行，主要包括客户端（在网页浏览器中）和服务器（使用 Node.js 或类似的运行时）。为实现这一目的，`react` 包为每个环境提供了量身定制的、独特的 API 集合。这种分离有助于优化构建过程，并能防止在错误的环境中使用特定于环境的 API。
 
-## 条件包导出
+`react` 包通过其 `package.json` 文件中的条件导出来正式管理这种区别。
 
-环境之间的区别通过条件导出在包级别进行管理。当你从 `react` 包导入时，你的构建工具或运行时会根据是为服务器环境还是客户端环境构建，解析到不同的文件。这个逻辑定义在 React 的 `package.json` 文件中：
+## 条件导出
+
+`react` 包使用一种名为“条件导出”的现代模块功能，根据环境来提供不同的文件。当 Webpack 或 Next.js 等构建工具或运行时检测到服务器环境时，便可以使用 `"react-server"` 条件来导入服务器专用的 React 版本及其 API。
+
+下方是 `react/package.json` 中相关定义的简化示例：
 
 ```json
-// A simplified view of react/package.json
 {
   "exports": {
     ".": {
@@ -22,91 +25,97 @@ React 旨在用于在各种环境中构建用户界面。主要区别在于**服
 }
 ```
 
-`react-server` 条件指向服务器专用的构建版本，而 `default` 通常解析为用于浏览器的客户端构建版本。
-
-这种机制允许 React 为每种上下文提供一组优化的 API。
+这一机制是 React 实现关注点分离的关键。`default` 导出指向客户端构建版本，其中包含在浏览器中实现交互性所需的所有功能。`react-server` 导出则指向为服务器端渲染而精简的构建版本，其中排除了在服务器上不相关或可能导致错误的 API。
 
 ```d2
 direction: down
 
-Bundler: "构建工具或运行时"
-
-package_json: {
-  shape: document
-  label: "react/package.json"
+"打包工具 / 运行时": {
+  shape: rectangle
 }
 
-condition_check: {
-  shape: diamond
-  label: "这是 'react-server' 环境吗？"
-}
+"react 包": {
+  shape: package
+  grid-columns: 2
+  grid-gap: 80
 
-server_entry: {
-  label: "加载 './react.react-server.js' (服务器 API)"
-  style: {
-    fill: "#d3e5ff"
+  "客户端入口 (`index.js`)": {
+    label: "客户端环境\n(默认导出)"
+    shape: document
+    "APIs": {
+      "useState": "有状态逻辑"
+      "useEffect": "副作用"
+      "Component": "类组件"
+      "startTransition": "并发 UI"
+    }
+  }
+
+  "服务器入口 (`react.react-server.js`)": {
+    label: "服务器环境\n('react-server' 导出)"
+    shape: document
+    "APIs": {
+      "cache": "服务器端数据缓存"
+      "use": "读取 promise/context"
+      "Fragment": "分组元素"
+      "createElement": "核心元素工厂"
+    }
   }
 }
 
-client_entry: {
-  label: "加载 './index.js' (客户端 API)"
-  style: {
-    fill: "#d0f0c0"
-  }
-}
-
-Bundler -> package_json: "读取 'exports' 字段"
-package_json -> condition_check: "评估条件"
-condition_check -> server_entry: "是"
-condition_check -> client_entry: "否 (使用 'default')"
+"打包工具 / 运行时" -> "react 包": "根据环境解析模块"
 ```
 
-## API 可用性
+## API 可用性比较
 
-虽然许多核心概念（如组件、元素和一些钩子）是通用的，但有相当数量的 API 是特定于环境的。客户端环境拥有一套更丰富的 API，用于实现交互性、状态管理以及直接操作 DOM 的副作用。
+这两种环境最显著的区别在于可用的 API 集合。客户端环境包含用于交互、有状态逻辑和浏览器特定副作用的 API。而服务器环境提供的 API 集合则更为有限，主要专注于渲染和数据管理。
 
-| API | Environment(s) | Description |
-|---|---|---|
-| **Universal APIs** | | |
-| `createElement`, `cloneElement`, `isValidElement` | Server & Client | 用于创建和使用 React 元素的核心函数。 |
-| `Fragment`, `Profiler`, `StrictMode`, `Suspense` | Server & Client | 用于构建 UI 和管理渲染行为的内置组件。 |
-| `useMemo`, `useCallback`, `useDebugValue` | Server & Client | 用于优化和调试的钩子，在两个运行时中都可用。 |
-| `useId` | Server & Client | 生成稳定、唯一的 ID，可安全地用于服务器渲染。 |
-| `use` | Server & Client | 读取 Promise 或上下文等资源的值。 |
-| `lazy`, `memo`, `forwardRef` | Server & Client | 用于优化组件和转发 ref 的实用工具。 |
-| **Client-Only APIs** | | |
-| `useState`, `useReducer`, `useRef`, `useActionState`, `useOptimistic` | Client | 用于管理状态、复杂状态逻辑以及对 DOM 元素或值的引用的钩子。 |
-| `useEffect`, `useLayoutEffect`, `useInsertionEffect`| Client | 用于执行与浏览器环境交互的副作用（例如，数据获取、订阅、DOM 修改）的钩子。 |
-| `useContext` | Client | 用于读取和订阅上下文的钩子。 |
-| `startTransition`, `useTransition` | Client | 用于将 UI 更新标记为非紧急，以避免阻塞用户输入的 API。 |
-| `Component`, `PureComponent` | Client | 用于创建有状态类组件的基类。 |
-| `createContext` | Client | 创建一个 Context 对象，用于在不使用 prop 逐层传递的情况下共享数据。 |
-| `act` | Client | 一种测试实用工具，可确保在进行断言之前处理完更新。 |
-| **Server-Only APIs** | | |
-| `cache`, `cacheSignal` | Server | 一个用于在单次服务器请求中跨组件渲染对数据获取或计算进行记忆化的函数。`cacheSignal` 是一个相关的实用工具。 |
-| `__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE` | Server | 一个暴露服务器特定状态的内部对象，不应直接使用。 |
+下方是关键 API 及其可用性的比较。
 
-## 内部状态差异
+| API | 客户端环境 | 服务器环境 | 说明 |
+|---|---|---|---|
+| **State Hooks** | | | |
+| `useState`, `useReducer` | ✅ 可用 | ❌ 不可用 | 管理组件状态，这是一个与用户交互和重新渲染相关的客户端概念。 |
+| `useActionState`, `useOptimistic` | ✅ 可用 | ❌ 不可用 | 用于管理表单状态和客户端上待处理的 UI 更新的 Hooks。 |
+| **Effect Hooks** | | | |
+| `useEffect`, `useLayoutEffect`, `useInsertionEffect` | ✅ 可用 | ❌ 不可用 | 用于执行与浏览器 DOM 和生命周期交互的副作用，这些在服务器上不存在。 |
+| **组件类型** | | | |
+| `Component`, `PureComponent` | ✅ 可用 | ❌ 不可用 | 类组件及其生命周期方法是客户端组件模型的一部分。 |
+| **并发 API** | | | |
+| `startTransition`, `useTransition`, `useDeferredValue` | ✅ 可用 | ❌ 不可用 | 用于管理并发渲染转换的 API，主要用于在客户端更新期间保持 UI 的响应性。 |
+| **共享 Hooks 和 API** | | | |
+| `use`, `useId`, `useMemo`, `useCallback`, `useDebugValue` | ✅ 可用 | ✅ 可用 | 不依赖于特定客户端或服务器生命周期的 Hooks。 |
+| `cache`, `cacheSignal` | ✅ 可用 | ✅ 可用 | 提供了一种用于记忆化和缓存的机制。其底层实现针对每个特定环境进行了优化。 |
+| `createElement`, `cloneElement`, `isValidElement` | ✅ 可用 | ✅ 可用 | 用于创建和操作 React 元素的基础 API 在所有环境中都可用。 |
+| `Fragment`, `Profiler`, `StrictMode`, `Suspense` | ✅ 可用 | ✅ 可用 | 用于构建和调试应用程序的核心组件。 |
 
-除了公开的 API，React 管理的内部状态也有所不同。每个环境都有一个独特的 `ReactSharedInternals` 对象，以满足其特定需求。
+## 共享内部构件
 
-- **服务器内部 (`ReactSharedInternalsServer`)**: 关注请求级别的问题。例如，当 `enableTaint` 激活时，它会包含用于实验性安全功能的注册表 (`TaintRegistryObjects`, `TaintRegistryValues`)，这有助于防止服务器数据泄露。
+React 内部为每个环境维护了独立的共享状态对象：`ReactSharedInternalsClient` 和 `ReactSharedInternalsServer`。这些对象保存了 Hooks 及其他功能所需的当前状态，例如 Hooks 的活动分发器或当前的过渡状态。
 
-- **客户端内部 (`ReactSharedInternalsClient`)**: 管理与浏览器交互性和渲染相关的状态。这包括用于 `act` 测试实用工具的队列 (`actQueue`)、用于并发转换的状态 (`asyncTransitions`) 以及用于在渲染批处理中跟踪异步工作的标志 (`didUsePromise`)。
+例如，`ReactSharedInternalsClient` 包含 `actQueue`（用于测试）和 `isBatchingLegacy`（用于旧版模式）等属性，这些属性与服务器无关。相反，`ReactSharedInternalsServer` 则被配置为在启用时处理 Taint API 等安全功能。
 
-## 总结
+虽然你不会直接与这些内部对象交互，但它们的存在对于 React 隔离特定于环境的逻辑并保持清晰的关注点分离至关重要。
 
-理解 React 的服务器和客户端环境之间的区别是构建现代化、高性能应用程序的关键。这种双运行时架构使你能够充分利用两者的优势：服务器的快速初始页面加载和客户端的丰富交互性。通过了解在每种上下文中哪些 API 可用，你可以编写出更高效、更健壮的代码。
+## 实际影响
+
+在开发使用服务器端渲染或 React Server Components 的应用程序时，理解这种分离至关重要。当编写一个旨在同时在服务器和客户端上运行的组件时，必须只使用共享的 API 集合。
+
+- **避免在服务器上使用仅限客户端的 API**：在仅于服务器上渲染的组件中尝试使用 `useState` 或 `useEffect` 等 Hook 会导致错误。
+- **优化的服务器构建**：这种分离可以实现更小、更高效的服务器构建，因为它排除了用于客户端交互、状态管理和副作用的代码。
+
+通过遵循这些环境边界，你可以构建出既健壮又高效的应用程序，从而充分利用 React 在服务器和客户端上的全部功能。
+
+---
 
 ### 后续步骤
 
-要了解更多利用此架构的功能，请浏览以下指南：
+探索以下相关主题，进一步了解 React 如何利用不同环境。
 
-<x-cards>
-  <x-card data-title="缓存" data-icon="lucide:database-zap" data-href="/advanced/caching">
-    深入了解 React 的缓存机制，这些机制在服务器和客户端上都可用，但有不同的用例。
+<x-cards data-columns="2">
+  <x-card data-title="缓存" data-icon="lucide:database" data-href="/advanced/caching">
+    了解 React 的缓存功能如何在客户端和服务器上用于数据获取和记忆化。
   </x-card>
-  <x-card data-title="使用 lazy 和 Suspense 进行代码分割" data-icon="lucide:split" data-href="/advanced/code-splitting">
-    学习如何使用 `Suspense` 来处理服务器上的数据获取等异步操作，以及客户端上的代码分割。
+  <x-card data-title="使用 lazy 和 Suspense 进行代码分割" data-icon="lucide:splitsquare-horizontal" data-href="/advanced/code-splitting">
+    探索如何通过仅在需要时加载组件来提高应用性能，这是一种在两种环境中都与 Suspense 配合使用的模式。
   </x-card>
 </x-cards>

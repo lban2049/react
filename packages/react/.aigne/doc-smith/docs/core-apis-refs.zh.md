@@ -1,144 +1,148 @@
-# Refs
+# Ref
 
-Refs 提供了一种访问在 render 方法中创建的 DOM 节点或 React 元素的方式。虽然通常你会让 React 处理所有的 DOM 操作，但有时你可能需要以命令式的方式修改典型数据流之外的子元素。Refs 是完成此操作的推荐方式。
+Ref 提供了一种访问在渲染方法中创建的 DOM 节点或 React 元素的方法。当你需要管理焦点、触发动画或与第三方 DOM 库集成时，Ref 非常有用——这些操作超出了 React 的典型数据流范围。
 
-Refs 的常见用例包括：
-- 管理焦点、文本选择或媒体播放。
-- 触发命令式动画。
-- 与第三方 DOM 库集成。
+虽然功能强大，但应谨慎使用 ref，因为它们会破坏自上而下的数据流，使代码更难理解。在使用 ref 之前，请考虑是否可以通过 state 和 props 实现所需的行为。
 
-避免将 refs 用于任何可以通过声明式方式完成的事情。例如，不要在 `Dialog` 组件上暴露 `open()` 和 `close()` 方法，而是向其传递一个 `isOpen` prop。
+本指南涵盖了 ref 的核心 API：`createRef` 和 `forwardRef`。对于现代函数组件，推荐使用 `useRef` Hook。更多详情请参阅 [Ref Hooks](./hooks-ref.md) 指南。
 
-本节介绍了用于创建和转发 refs 的核心 API，这些 API 通常在类组件中使用。对于函数组件，[`useRef`](./hooks-ref.md) Hook 是现代的标准。
+## createRef
 
----
+`createRef` 函数创建一个 ref 对象。它的主要特性是一个 `.current` 属性，React 会用相应的 DOM 元素或类组件实例来填充它。
 
-## `createRef`
+`createRef` 最常用于类组件。
 
-`React.createRef()` 函数会创建一个 ref 对象，该对象可以通过 `ref` 属性附加到 React 元素上。该 ref 对象有一个可变的 `current` 属性，用于保存相应的 DOM 节点或组件实例。
-
-从其实现中可以看出，它创建了一个简单的对象，其中包含一个初始化为 `null` 的 `current` 属性。
+### 语法
 
 ```javascript
-// src/ReactCreateRef.js 的简化视图
-export function createRef(): RefObject {
-  const refObject = {
-    current: null,
-  };
-  return refObject;
-}
+const refObject = React.createRef();
 ```
 
-当 `ref` 属性用于 HTML 元素时，一旦组件挂载，`ref` 的 `current` 属性就会接收底层的 DOM 元素作为其值。当组件卸载时，React 会将其更新为 `null`。
+该函数返回一个包含单个可变属性 `current` 的 ref 对象。最初，`refObject.current` 为 `null`。当 ref 在 `render` 方法中附加到一个元素时，React 会将该 DOM 元素赋值给 `current` 属性。
 
-### 在类组件中的用法
+### 示例：访问 DOM 节点
 
-一个常见的模式是在类组件的构造函数中创建一个 ref，并将其附加到 `render` 方法中的一个元素上。
+这是一个典型的用例：在组件挂载时自动聚焦输入字段。
 
 ```javascript
 import React, { Component, createRef } from 'react';
 
-class MyComponent extends Component {
+class MyInput extends Component {
   constructor(props) {
     super(props);
-    // 创建一个 ref 来存储 textInput DOM 元素
+    // 1. 创建一个 ref 来存储 textInput DOM 元素
     this.textInput = createRef();
   }
 
   componentDidMount() {
-    // 现在组件已经挂载，我们可以通过 'current' 属性访问 DOM 节点
-    // 并让输入框获得焦点。
-    if (this.textInput.current) {
-      this.textInput.current.focus();
-    }
+    // 3. 通过 .current 属性访问 DOM 节点并调用 focus()
+    this.textInput.current.focus();
   }
 
   render() {
-    // 将 ref 附加到 <input> 元素。当此元素挂载到
-    // DOM 中时，React 会将 DOM 节点赋值给 this.textInput.current。
+    // 2. 将 ref 附加到 <input> 元素
     return <input type="text" ref={this.textInput} />;
   }
 }
 ```
-在此示例中，组件挂载后，`this.textInput.current` 将指向 `<input>` DOM 节点，从而允许我们调用其 `focus()` 方法。
 
----
+在此示例中：
+1.  我们在构造函数中使用 `createRef()` 创建了一个名为 `this.textInput` 的 ref。
+2.  我们通过将其传递给 `ref` 属性，在 `render` 方法中将此 ref 附加到 `<input>` 元素。
+3.  组件挂载后，React 会更新 `this.textInput` 的 `current` 属性。在 `componentDidMount` 中，我们就可以直接访问输入框的 DOM 节点并调用其 `focus()` 方法。
 
-## `forwardRef`
+## forwardRef
 
-Ref 转发是一种将 ref 自动地通过组件传递到其子组件之一的技术。这对于可重用组件尤其有用，因为它允许父组件获取对子组件渲染树深处的 DOM 节点的引用。
+默认情况下，你不能将 `ref` prop 传递给函数组件，因为它们没有实例。Ref 转发是一项功能，它允许组件接收一个 ref 并将其向下传递给子组件。
 
-`ref` 属性不是一个标准的 prop，它由 React 特别处理。如果你向自定义组件添加 `ref`，你将无法获得对其 DOM 节点的引用。`React.forwardRef` 通过创建一个可以接受 `ref` 并将其转发的组件来解决这个问题。
+这对于创建可重用组件（如样式化按钮或输入字段）特别有用，因为父组件可能需要直接访问底层的 DOM 节点。
 
-`forwardRef` 接受一个渲染函数，该函数接收 `props` 和 `ref` 作为参数。然后，你可以将 `ref` 参数转发给组件内部的一个元素。
+### 语法
 
 ```javascript
-// src/ReactForwardRef.js 的简化视图
-export function forwardRef<Props, ElementType: React$ElementType>(
-  render: (
-    props: Props,
-    ref: React$RefSetter<React$ElementRef<ElementType>>,
-  ) => React$Node,
-) {
-  // ... 内部逻辑 ...
-  const elementType = {
-    $$typeof: REACT_FORWARD_REF_TYPE,
-    render,
-  };
-  return elementType;
-}
+const MyComponent = React.forwardRef((props, ref) => {
+  // 使用 props 和 ref 的渲染逻辑
+});
 ```
 
-### 示例
+`React.forwardRef` 接受一个渲染函数，该函数接收 `props` 和 `ref` 作为参数。然后，你可以将接收到的 `ref`“转发”给组件内部的一个元素。
 
-让我们创建一个 `FancyButton` 组件，它将其接收到的任何 refs 转发到底层的 DOM `<button>` 元素。
+### 示例：将 Ref 转发到 DOM 元素
+
+让我们创建一个 `FancyButton` 组件，它将其接收到的任何 ref 转发给底层的 DOM `<button>` 元素。
 
 ```javascript
-import React, { forwardRef, createRef } from 'react';
+import React, { createRef, forwardRef } from 'react';
 
-// 创建一个将 ref 转发到 DOM 按钮的组件
+// 1. 使用 forwardRef 创建一个组件
 const FancyButton = forwardRef((props, ref) => (
   <button ref={ref} className="FancyButton">
     {props.children}
   </button>
 ));
 
-// 使用 FancyButton 的父组件
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    // 创建一个将指向按钮 DOM 元素的 ref
-    this.buttonRef = createRef();
-  }
+function App() {
+  // 2. 创建一个 ref 以附加到 DOM 按钮
+  const buttonRef = createRef();
 
-  componentDidMount() {
-    // ref 现在指向由 FancyButton 渲染的 <button> 元素
-    if (this.buttonRef.current) {
-      this.buttonRef.current.style.backgroundColor = 'lightblue';
-      this.buttonRef.current.focus();
-    }
-  }
+  const handleClick = () => {
+    // 4. 访问按钮的 DOM 节点以聚焦它
+    buttonRef.current.focus();
+  };
 
-  render() {
-    return (
-      <FancyButton ref={this.buttonRef}>Click me!</FancyButton>
-    );
-  }
+  return (
+    <>
+      {/* 3. 将 ref 向下传递给 FancyButton */}
+      <FancyButton ref={buttonRef}>Click me!</FancyButton>
+      <button onClick={handleClick}>Focus Fancy Button</button>
+    </>
+  );
 }
 ```
-如果没有 `forwardRef`，`<FancyButton>` 上的 `ref` 将为 `null`。有了它，`App` 组件中的 `this.buttonRef.current` 会正确地指向 `<button>` DOM 节点，从而允许父组件直接与其交互。
+
+流程如下：
+1.  我们用 `forwardRef` 包装 `FancyButton` 组件。
+2.  `forwardRef` 将父组件传递的 `ref` 作为第二个参数提供给我们的渲染函数。
+3.  我们将此 `ref` 传递或“转发”给 `<button>` 元素。
+4.  这使得父组件 `App` 可以创建一个 `buttonRef`，将其传递给 `<FancyButton>`，并直接访问底层的 `<button>` DOM 节点。
+
+### Ref 转发流程
+
+下图说明了 ref 如何从父组件传递，经过一个转发组件，并附加到一个 DOM 节点上。
+
+```d2
+direction: down
+
+"父组件": {
+  shape: rectangle
+  "const myRef = createRef()"
+
+  "render()": {
+    "<FancyButton ref={myRef} />"
+  }
+}
+
+"FancyButton = forwardRef((props, ref) => ...)": {
+  shape: package
+  "render()": {
+    "<button ref={ref} />"
+  }
+}
+
+"DOM": {
+  shape: cylinder
+  "<button>"
+}
+
+"父组件" -> "FancyButton = forwardRef((props, ref) => ...)": "1. 传递 ref"
+"FancyButton = forwardRef((props, ref) => ...)" -> "DOM": "2. 将 ref 转发到 <button>"
+"父组件" -> "DOM": "3. myRef.current 现在指向 <button> 节点" {
+  style.stroke-dash: 4
+}
+```
 
 ---
 
-### 后续步骤
+这涵盖了创建和转发 ref 的基本 API。虽然对于某些用例（尤其是在类组件和组件库中）至关重要，但现代 React 应用程序通常依赖于 Hook。
 
-对于某些命令式操作，Refs 是一个必要的工具，但应作为一种应急方案使用。理解它们的工作原理是掌握 React 组件模型的关键部分。
-
-<x-cards>
-  <x-card data-title="Ref Hooks" data-icon="lucide:hook" data-href="/hooks/ref">
-    对于使用函数组件的现代 React 应用程序，请学习 `useRef` 和 `useImperativeHandle` Hooks，它们是管理 refs 的标准。
-  </x-card>
-  <x-card data-title="Context" data-icon="lucide:box" data-href="/core-apis/context">
-    探索 Context，这是一种在组件树中传递数据的不同方式，无需在每一层手动传递 props。
-  </x-card>
-</x-cards>
+要了解现代方法，请继续阅读 [Ref Hooks](./hooks-ref.md) 指南。

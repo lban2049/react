@@ -1,94 +1,118 @@
 # API Reference
 
-This page provides a comprehensive, A-Z reference for all public APIs exported from the `react` package. It's designed for quick lookups of function signatures, parameters, and return values. 
+This section provides a comprehensive reference for all public APIs in React. It's designed to help you quickly find details about any React feature you need to use. The APIs are grouped by category for easier navigation.
 
-For more detailed explanations, usage patterns, and practical examples, please refer to the main documentation sections, such as [Core APIs](./core-apis.md) and [Hooks](./hooks.md).
+For a more guided introduction, see the [Core APIs](./core-apis.md) and [Hooks](./hooks.md) sections.
 
-## Components & Fragments
+<x-cards data-columns="2">
+  <x-card data-title="Core Components & APIs" data-icon="lucide:box" data-href="#core-components-apis">
+    Fundamental building blocks like Components, Fragments, and Suspense.
+  </x-card>
+  <x-card data-title="Hooks" data-icon="lucide:anchor" data-href="#hooks">
+    Functions that let you hook into React state and lifecycle features.
+  </x-card>
+  <x-card data-title="Utilities" data-icon="lucide:wrench" data-href="#utilities">
+    Helper functions for working with elements, children, and more.
+  </x-card>
+  <x-card data-title="Unstable & Experimental APIs" data-icon="lucide:flask-conical" data-href="#unstable--experimental-apis">
+    APIs that are in development and subject to change.
+  </x-card>
+</x-cards>
 
-These are the core building blocks for creating user interfaces in React. They include base classes and special components for structuring your UI.
+
+## Core Components & APIs
+
+These are the primary exports you'll use to define and structure your application's UI.
 
 | API | Description |
 |---|---|
-| `Component` | The base class for React components defined using ES6 classes. | 
-| `PureComponent` | Similar to `Component`, but it performs a shallow comparison of props and state to prevent unnecessary re-renders. | 
-| `Fragment` | Lets you group a list of children without adding extra nodes to the DOM. Can be written as `<>...</>`. | 
-| `Profiler` | A component that measures the rendering performance of a React tree to help identify bottlenecks. | 
-| `StrictMode` | A tool for highlighting potential problems in an application. It activates additional checks and warnings for its descendants. | 
-| `Suspense` | Lets you specify a loading indicator (fallback) while its child components are being loaded asynchronously. | 
+| `Component` | The base class for React components when using ES6 classes. |
+| `PureComponent` | Similar to `Component` but implements `shouldComponentUpdate()` with a shallow prop and state comparison. |
+| `Fragment` | Lets you group a list of children without adding extra nodes to the DOM. |
+| `Profiler` | Measures rendering performance of a React component tree. |
+| `StrictMode` | A tool for highlighting potential problems in an application. It activates additional checks and warnings for its descendants. |
+| `Suspense` | Lets you display a fallback UI while your components are loading data. See the guide on [Code Splitting](./advanced-code-splitting.md). |
+| `lazy` | Lets you define a component that is loaded dynamically. |
+| `memo` | A higher-order component for memoizing a component, preventing re-renders if its props haven't changed. |
 
 ## Hooks
 
-Hooks let you use state and other React features in function components. They must be called at the top level of your components.
+Hooks allow you to use state and other React features in function components. They can only be called at the top level of your function components or from your own custom Hooks. For detailed usage, see the main [Hooks documentation](./hooks.md).
 
-For a complete guide, see the [Hooks](./hooks.md) documentation.
-
-| API | Description | Related Docs |
-|---|---|---|
-| `useState` | Adds state to a function component. | [State Hooks](./hooks-state.md) |
-| `useEffect` | Performs side effects in function components (e.g., data fetching, subscriptions). | [Effect Hooks](./hooks-effect.md) |
-| `useContext` | Accepts a context object and returns the current context value for that context. | [Other Hooks](./hooks-other.md) |
-| `useReducer` | An alternative to `useState` for managing more complex state logic. | [State Hooks](./hooks-state.md) |
-| `useCallback` | Returns a memoized version of a callback function to prevent unnecessary re-renders. | [Performance Hooks](./hooks-performance.md) |
-| `useMemo` | Returns a memoized value, re-computing it only when one of the dependencies has changed. | [Performance Hooks](./hooks-performance.md) |
-| `useRef` | Returns a mutable ref object that can hold a value across component renders. | [Ref Hooks](./hooks-ref.md) |
-| `useImperativeHandle` | Customizes the instance value that is exposed to parent components when using `ref`. | [Ref Hooks](./hooks-ref.md) |
-| `useLayoutEffect` | Similar to `useEffect`, but it fires synchronously after all DOM mutations. | [Effect Hooks](./hooks-effect.md) |
-| `useInsertionEffect` | Fires synchronously before DOM mutations are painted, primarily for CSS-in-JS libraries. | [Effect Hooks](./hooks-effect.md) |
-| `useDebugValue` | Displays a label for custom hooks in React DevTools. | [Other Hooks](./hooks-other.md) |
-| `useDeferredValue` | Defers updating a non-critical part of the UI. | [Performance Hooks](./hooks-performance.md) |
-| `useTransition` | Manages state updates without blocking the UI, useful for keeping the UI responsive during slow renders. | [Performance Hooks](./hooks-performance.md) |
-| `useId` | Generates unique IDs that are stable on both the server and client, preventing hydration mismatches. | [Other Hooks](./hooks-other.md) |
-| `useSyncExternalStore` | A hook for subscribing to an external data source (e.g., a third-party state manager). | [Other Hooks](./hooks-other.md) |
-| `useOptimistic` | Manages optimistic UI updates that revert if the underlying asynchronous action fails. | [State Hooks](./hooks-state.md) |
-| `useActionState` | Manages the pending and returned value of a form action. | [State Hooks](./hooks-state.md) |
-| `use` | A hook for reading the value of a resource, such as a Promise or a context. | [Advanced Guides](./advanced.md) |
+| Hook | Description |
+|---|---|
+| [`useState`](./hooks-state.md) | Adds state to a function component. |
+| [`useEffect`](./hooks-effect.md) | Lets you perform side effects in function components. |
+| [`useContext`](./hooks-other.md) | Accepts a context object and returns the current context value. |
+| [`useReducer`](./hooks-state.md) | An alternative to `useState` for managing complex state logic. |
+| [`useCallback`](./hooks-performance.md) | Returns a memoized callback function. |
+| [`useMemo`](./hooks-performance.md) | Returns a memoized value. |
+| [`useRef`](./hooks-ref.md) | Returns a mutable ref object. |
+| [`useImperativeHandle`](./hooks-ref.md) | Customizes the instance value that is exposed to parent components when using `ref`. |
+| [`useLayoutEffect`](./hooks-effect.md) | Fires synchronously after all DOM mutations. |
+| [`useInsertionEffect`](./hooks-effect.md) | Fires synchronously before all DOM mutations, typically for CSS-in-JS libraries. |
+| [`useDebugValue`](./hooks-other.md) | Can be used to display a label for custom hooks in React DevTools. |
+| [`useTransition`](./hooks-performance.md) | Lets you update the state without blocking the UI. |
+| [`useDeferredValue`](./hooks-performance.md) | Lets you defer updating a part of the UI. |
+| [`useId`](./hooks-other.md) | Generates unique IDs that are stable across the server and client. |
+| [`useSyncExternalStore`](./hooks-other.md) | A hook for subscribing to an external store. |
+| [`useActionState`](./hooks-state.md) | A hook to manage the state of a form action. |
+| [`useOptimistic`](./hooks-state.md) | A hook that lets you optimistically update the UI. |
+| `use` | A hook for reading the value of a resource, like a Promise or context. |
 
 ## Utilities
 
-These functions help you work with React elements, context, and children.
+React provides a set of utility functions to help you work with elements, children, and other core concepts.
 
-| API | Description | Related Docs |
-|---|---|---|
-| `Children` | Provides utilities (`map`, `forEach`, `count`, etc.) for working with the `props.children` data structure. | [Children Utilities](./core-apis-children-utilities.md) |
-| `cloneElement` | Clones and returns a new React element using an existing element as a starting point. | [Creating & Manipulating Elements](./core-apis-creating-elements.md) |
-| `createContext` | Creates a Context object for passing data through the component tree without prop-drilling. | [Context](./core-apis-context.md) |
-| `createElement` | Creates and returns a new React element. JSX compiles to this function call. | [Creating & Manipulating Elements](./core-apis-creating-elements.md) |
-| `createRef` | Creates a ref object that can be attached to elements via the `ref` attribute. | [Refs](./core-apis-refs.md) |
-| `forwardRef` | Creates a component that can forward a `ref` it receives down to one of its children. | [Refs](./core-apis-refs.md) |
-| `isValidElement` | Verifies if an object is a valid React element. | [Creating & Manipulating Elements](./core-apis-creating-elements.md) |
-| `lazy` | Defines a component that can be loaded dynamically (code-splitting). Used with `Suspense`. | [Code Splitting](./advanced-code-splitting.md) |
-| `memo` | A higher-order component that memoizes a component, preventing re-renders if its props are unchanged. | [Performance Hooks](./hooks-performance.md) |
-| `startTransition` | A function to wrap state updates that may cause slow renders, keeping the UI responsive. | [Transitions](./advanced-transitions.md) |
+### Element Manipulation
 
-## Caching APIs
+| Utility | Description |
+|---|---|
+| `createElement` | Creates and returns a new React element of the given type. |
+| `cloneElement` | Clones and returns a new React element using an element as the starting point. |
+| `isValidElement` | Verifies the object is a React element. |
 
-These APIs are primarily used for caching data, especially in server environments.
+### Refs & Context
 
-| API | Description | Related Docs |
-|---|---|---|
-| `cache` | A function to memoize the result of data fetching or computation. | [Caching](./advanced-caching.md) |
-| `unstable_getCacheForType` | (Unstable) Retrieves a cache instance for a given resource type. | [Caching](./advanced-caching.md) |
-| `unstable_useCacheRefresh` | (Unstable) A hook that returns a function to invalidate the React cache. | [Caching](./advanced-caching.md) |
+| Utility | Description |
+|---|---|
+| `createRef` | Creates a ref object that can be attached to React elements. |
+| `forwardRef` | Creates a React component that forwards the ref it receives to another component below in the tree. |
+| `createContext` | Creates a Context object. See the guide on [Context](./core-apis-context.md). |
 
-## Experimental & Unstable APIs
+### Children Utilities
+
+The `React.Children` object provides utilities for dealing with the `props.children` data structure.
+
+| Utility | Description |
+|---|---|
+| `Children.map` | Invokes a function on every immediate child contained within `children`. |
+| `Children.forEach` | Like `Children.map()` but does not return an array. |
+| `Children.count` | Returns the total number of components in `children`. |
+| `Children.toArray` | Returns the `children` opaque data structure as a flat array. |
+| `Children.only` | Verifies that `children` has only one child and returns it. |
+
+### Other Utilities
+
+| Utility | Description |
+|---|---|
+| `version` | A string containing the current React version. |
+| `act` | A helper for testing components that wraps renders and updates in a way that is closer to how React works in the browser. (DEV-only) |
+| `cache` | A utility for memoizing data-fetching functions. See [Caching](./advanced-caching.md). |
+
+## Unstable & Experimental APIs
 
 > **Warning**
-> These APIs are experimental and may change or be removed in future releases. Use them with caution and only for testing or evaluation purposes.
-
-| API | Description | Related Docs |
-|---|---|---|
-| `experimental_useEffectEvent` | (Experimental) A hook for defining an event handler that does not re-trigger effects. | [Experimental APIs](./advanced-experimental.md) |
-| `unstable_Activity` | (Unstable) A component for managing offscreen UI state. | [Experimental APIs](./advanced-experimental.md) |
-| `unstable_postpone` | (Unstable) A function that postpones the rendering of a component tree. | [Experimental APIs](./advanced-experimental.md) |
-| `unstable_SuspenseList` | (Unstable) A component that coordinates the loading order of multiple `Suspense` boundaries. | [Experimental APIs](./advanced-experimental.md) |
-| `unstable_ViewTransition` | (Unstable) A hook for creating animated view transitions. | [Experimental APIs](./advanced-experimental.md) |
-
-## Other Exports
-
-Miscellaneous exports that provide version information or are intended for specific environments.
+> These APIs are not yet stable and may be changed or removed in a future release. Use them at your own risk in production applications.
 
 | API | Description |
 |---|---|
-| `version` | A string representing the current version of React (e.g., "18.3.0"). |
-| `act` | A testing utility that ensures updates are processed before assertions are made. Available only in development and test builds. |
+| `unstable_SuspenseList` | Coordinates the loading order of multiple Suspense components. |
+| `unstable_LegacyHidden` | A component for hiding a subtree from rendering. |
+| `unstable_Activity` | A component used to indicate that a subtree is currently active or visible. |
+| `unstable_Scope` | Provides a way to scope event listeners to a particular subtree. |
+| `unstable_TracingMarker` | An internal component used for performance tracing. |
+| `unstable_ViewTransition` | A component to enable view transitions for navigations. |
+| `unstable_useCacheRefresh` | A hook to invalidate the React cache. |
+| `unstable_getCacheForType` | Retrieves a cache instance for a given type. |
+| `experimental_useEffectEvent` | A hook for declaring an Effect Event, which is a non-reactive piece of logic inside an Effect. |

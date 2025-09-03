@@ -1,139 +1,119 @@
 # Context
 
-Context 提供了一种在组件树中传递数据的方式，而无需在每一层手动向下传递 props。它旨在共享那些对于 React 组件树而言可以被视为“全局”的数据，例如当前已认证的用户、主题或首选语言。
+Context 提供了一种在组件树中传递数据的方法，无需在每个层级手动传递 props。它旨在共享那些对于 React 组件树而言可以被视为“全局”的数据，例如当前已认证的用户、主题或偏好语言。
 
-当你有许多不同嵌套层级的组件都需要某个数据时，你可能会发现自己需要通过一些本身并不需要该数据的组件来传递 props。这种情况通常被称为“prop drilling”，它会降低组件的可复用性，并增加重构的难度。Context 解决了这个问题，它允许父组件将某些数据提供给其下组件树中的任何组件，无论嵌套多深，都无需显式地传递 prop。
+尽管将 context 用于所有状态管理可能很诱人，但请务必记住，这会降低组件的可重用性。对于更简单的情况，应首先考虑[组件组合](./core-apis-components-and-props.md)。然而，对于需要被不同嵌套层级的多个组件访问的状态管理，Context 是一种有效的解决方案。
 
-### Context 如何工作
+## 核心概念
 
-Context 的流程涉及三个主要部分：
-1.  **`React.createContext()`**：创建一个 Context 对象。
+Context API 由三个主要部分组成：
+
+1.  **`createContext`**：一个用于创建 context 对象的函数。
 2.  **`Context.Provider`**：一个向其后代组件提供 context 值的组件。
-3.  **`Context.Consumer` 或 `useContext()`**：订阅 context 变化并接收其值的组件。
+3.  **`useContext` Hook / `Context.Consumer`**：组件订阅和读取 context 值的几种方式。
+
+下图说明了 provider 如何直接将数据传递给深度嵌套的 consumer，从而绕过中间组件。
 
 ```d2
 direction: down
 
 "App": {
-  label: "App"
   shape: rectangle
-  style: {
-    fill: "#f0f0f0"
-  }
 
-  "Provider": {
-    label: "<ThemeContext.Provider value='dark'>"
-    shape: rectangle
-    style: {
-      fill: "#c5e1a5"
-    }
+  "ThemeContext.Provider value='dark'": {
+    shape: package
+    grid-columns: 1
 
-    "IntermediateComponent": {
-      label: "中间组件\n(不需要 theme)"
+    "Layout": {
       shape: rectangle
-      style: {
-        fill: "#fff9c4"
-      }
-
-      "ConsumingComponent": {
-        label: "消费组件\n(通过 useContext 使用 theme)"
-        shape: rectangle
-        style: {
-          fill: "#b3e5fc"
-        }
-      }
+      label: "Layout\n(不需要主题)"
     }
+
+    "ThemedButton": {
+      shape: rectangle
+      label: "ThemedButton\n(使用主题)"
+    }
+
+    "Layout" -> "ThemedButton": "渲染"
   }
 }
 
-"Provider" -> "ConsumingComponent": "Context 值 ('dark') 直接传递" {
-  style: {
-    stroke-dash: 4
-    animated: true
-  }
-}
-
-"App"."Provider"."IntermediateComponent" -> "App"."Provider"."IntermediateComponent"."ConsumingComponent": "标准的 Prop 传递 (被 Context 绕过)" {
-  style: {
-    stroke: "#cccccc"
-  }
+"ThemeContext.Provider value='dark'" -> "ThemedButton": "直接提供 'dark' 值" {
+  style.stroke-dash: 4
 }
 ```
 
-## `createContext(defaultValue)`
+---
 
-此函数是创建新 context 的入口点。它返回一个包含 `Provider` 和 `Consumer` 组件的 context 对象。
+## API 参考
+
+### `createContext(defaultValue)`
+
+该函数创建一个 Context 对象。当 React 渲染一个订阅此 Context 对象的组件时，它会从组件树中上层最近的 `Provider` 中读取当前的 context 值。
+
+`defaultValue` 参数**仅**在组件树中其上层没有匹配的 `Provider` 时使用。这对于在不封装组件的情况下进行独立测试很有帮助。
 
 **Parameters**
 
 | Name | Type | Description |
 |---|---|---|
-| `defaultValue` | `T` | 当一个 consumer 没有在匹配的 `Provider` 内部渲染时，它将收到的默认值。这对于在不包装组件的情况下进行隔离测试非常有用。 |
+| `defaultValue` | `T` | 如果组件树中没有 provider，context 将使用的值。 |
 
 **Returns**
 
-一个 `ReactContext` 对象，包含以下属性：
-
-| Property | Type | Description |
-|---|---|---|
-| `Provider` | `React.ComponentType` | 一个允许消费组件订阅 context 变化的组件。 |
-| `Consumer` | `React.ComponentType` | 一个订阅 context 变化的组件。需要一个函数作为其子组件 (render prop)。 |
+一个包含 `Provider` 和 `Consumer` 属性的 context 对象。
 
 **Example**
 
-在这里，我们为当前 UI 主题创建了一个 context，并将 `'light'` 作为默认值。
-
 ```javascript
+// src/ThemeContext.js
 import { createContext } from 'react';
 
-// 只有当组件在组件树中没有找到匹配的 Provider 时，
-// 才会使用这个默认值。
+// 默认值为 'light'
 export const ThemeContext = createContext('light');
 ```
 
-## `Context.Provider`
+### `Context.Provider`
 
-每个 Context 对象都附带一个 `Provider` 组件，允许消费组件订阅 context 的变化。
+每个 Context 对象都附带一个 `Provider` React 组件，允许消费组件订阅 context 的变化。
 
-`Provider` 组件接受一个 `value` prop，用于传递给该 `Provider` 的后代消费组件。每当 `Provider` 的 `value` prop 发生变化时，所有作为其后代的 consumer 都会重新渲染。
+`Provider` 组件接受一个 `value` prop，该 prop 会被传递给该 `Provider` 的所有后代消费组件。每当 `Provider` 的 `value` prop 发生变化时，其所有后代 consumer 都将重新渲染。
 
 **Props**
 
 | Name | Type | Description |
 |---|---|---|
-| `value` | `T` | 提供给该 provider 所有后代 consumer 的值。 |
-| `children` | `React.Node` | 能够访问 context 值的组件树部分。 |
+| `value` | `T` | 要传递给组件树深层所有消费组件的值。 |
+| `children` | `ReactNode` | 可以访问 context 值的组件。 |
 
 **Example**
 
-使用 provider 包装组件树，以使其中的任何组件都可以使用 theme 值。
-
 ```javascript
-import React, { useState } from 'react';
+import React from 'react';
 import { ThemeContext } from './ThemeContext';
 import Toolbar from './Toolbar';
 
 function App() {
-  const [theme, setTheme] = useState('dark');
-
-  // 值 'dark' 将被传递给任何消费 ThemeContext 的后代组件
+  // 此 provider 内的任何组件现在都可以读取 'dark' 这个值
   return (
-    <ThemeContext.Provider value={theme}>
+    <ThemeContext.Provider value="dark">
       <Toolbar />
     </ThemeContext.Provider>
   );
 }
 ```
 
-## 消费 Context
+### 消费 Context
 
-读取 context 值有两种方法：现代的基于 hook 的方法和传统的 render-prop 组件。
+消费 context 值主要有两种方式。
 
-### `useContext` (推荐)
+#### `useContext(Context)`
 
-The `useContext` hook 是在函数组件中消费 context 的现代化首选方法。它接受一个 context 对象（即 `React.createContext` 的返回值），并返回该 context 的当前值。
+读取 context 值的现代推荐方法是使用 `useContext` Hook。它很简洁，并且能自然地融入函数组件中。
 
-这使得消费 context 值变得简洁明了。如需完整指南，请参阅 [useContext Hook 文档](./hooks-other.md)。
+该 hook 接受一个 context 对象（即 `React.createContext` 的返回值），并返回该 context 的当前值。
+
+有关详细指南，请参阅 [`useContext` Hook 文档](./hooks-other.md)。
 
 **Example**
 
@@ -142,18 +122,22 @@ import React, { useContext } from 'react';
 import { ThemeContext } from './ThemeContext';
 
 function ThemedButton() {
-  // useContext 返回最近的 ThemeContext.Provider 的值
+  // useContext hook 从最近的 Provider 获取值
   const theme = useContext(ThemeContext);
 
-  return <button style={{ background: theme === 'dark' ? '#333' : '#FFF' }}>A Themed Button</button>;
+  return (
+    <button style={{ background: theme === 'dark' ? '#333' : '#FFF', color: theme === 'dark' ? 'white' : 'black' }}>
+      当前主题是 {theme}
+    </button>
+  );
 }
 ```
 
-### `Context.Consumer`
+#### `Context.Consumer`
 
-`Context.Consumer` 是一个订阅 context 变化的组件。在类组件或无法使用 Hook 的旧代码库中，它非常有用。
+在类组件或无法使用 Hook 的场景中，可以使用 `Consumer` 组件。
 
-它需要一个函数作为其子组件。该函数接收当前的 context 值并返回一个 React 节点。
+它需要一个函数作为子组件（即“render prop”）。该函数接收当前的 context 值并返回一个 React 节点。
 
 **Example**
 
@@ -166,8 +150,8 @@ class ThemedButton extends React.Component {
     return (
       <ThemeContext.Consumer>
         {theme => (
-          <button style={{ background: theme === 'dark' ? '#333' : '#FFF' }}>
-            A Themed Button (Class Component)
+          <button style={{ background: theme === 'dark' ? '#333' : '#FFF', color: theme === 'dark' ? 'white' : 'black' }}>
+            当前主题是 {theme}
           </button>
         )}
       </ThemeContext.Consumer>
@@ -178,4 +162,10 @@ class ThemedButton extends React.Component {
 
 ---
 
-Context 是一个在应用程序中共享状态的强大工具。要了解其最常见的使用方式，请继续阅读 [`useContext` Hook](./hooks-other.md) 的文档。
+## 后续步骤
+
+现在你已经了解如何使用 Context 在应用程序中传递数据，接下来可以探索用于处理组件子元素的工具。
+
+<x-card data-title="Children 工具" data-icon="lucide:box" data-href="/core-apis/children-utilities" data-cta="了解更多">
+  学习如何使用 React.Children API 辅助函数来处理 props.children 数据结构。
+</x-card>

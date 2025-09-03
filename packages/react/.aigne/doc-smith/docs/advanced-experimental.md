@@ -1,153 +1,125 @@
 # Experimental APIs
 
-This guide covers experimental and unstable APIs in React. These APIs are intended for testing and feedback purposes. They may change significantly or be removed in future releases without following the usual deprecation cycle. Use them with caution, especially in production environments.
+**Warning: The APIs documented on this page are experimental and are not yet available in a stable release. They may change significantly or be removed entirely in a future version of React.**
 
-For more stable advanced features, you might be interested in [Server vs. Client Environments](./advanced-server-vs-client.md) or [Caching](./advanced-caching.md).
+This section provides an overview of experimental features that are under active development. They are intended for early adopters and library authors to experiment with and provide feedback. We strongly advise against using these APIs in production applications.
 
-## Server-Side Security with Taint APIs
+## Security: Tainting API
 
-When building applications with React Server Components, it's critical to prevent sensitive server-only data from accidentally being passed to the client. The Taint APIs provide a mechanism to mark specific data as "tainted," causing React to throw an error if it attempts to serialize this data in a client-bound payload.
+In server environments, it is crucial to prevent sensitive data, such as API keys or user session tokens, from being inadvertently passed to client-side code. The Tainting API is a server-only feature designed to create a security boundary, throwing an error if a "tainted" value is serialized and sent to the client.
 
-This security feature is only available in server environments.
+This mechanism helps prevent data leaks when using React Server Components or Server Actions.
 
-```d2
-direction: down
+### `experimental_taintUniqueValue(message, lifetime, value)`
 
-Server: {
-  "Server Component": {
-    "1. Taint sensitive data": {
-      shape: step
-      "experimental_taintUniqueValue('api_key', ...)"
-    }
-    "2. Prepare props for Client Component" : { shape: step }
-  }
-}
-
-"Serialization Boundary": {
-  shape: hexagon
-  "3. Check for tainted values"
-}
-
-Client: {
-  "Client Component"
-}
-
-Server -> "Serialization Boundary": "Pass props"
-
-subgraph {
-  direction: right
-  "Serialization Boundary" -- "Data is clean" --> Client: "4a. Send payload"
-  "Serialization Boundary" -- "Tainted value detected" --> Server: "4b. Throw Error (Leak prevented)" {
-    style.stroke: red
-  }
-}
-```
-
-### `experimental_taintUniqueValue`
-
-This function taints a unique primitive value, such as a secret key or token. It can be used with strings, bigints, and ArrayBuffer views.
+This function taints a unique primitive value, such as a secret token or key. React will prevent this specific value from being passed to any Client Component or Server Action closure.
 
 **Parameters**
 
-| Name      | Type                                | Description                                                                                                                            |
-|-----------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| `message` | `string` (optional)                 | A custom error message to be thrown if the tainted value is serialized. Defaults to a generic warning.                                 |
-| `lifetime`| `object`                            | An object that holds the value. The taint is considered valid for the lifetime of this object.                                       |
-| `value`   | `string` \| `bigint` \| `ArrayBufferView` | The unique, sensitive value to taint. It cannot be a general object or function.                                                       |
+| Name | Type | Description |
+|---|---|---|
+| `message` | `string` | An optional custom error message to be thrown if the taint is violated. |
+| `lifetime` | `object` | An object reference. The taint is removed when this object is garbage collected. This helps manage the memory used by the taint registry. |
+| `value` | `string` \| `bigint` \| `$ArrayBufferView` | The unique, sensitive primitive value to taint. |
 
-**Example**
+**Example: Tainting a User's API Key**
 
 ```javascript
-// In a Server Component or Server Action
+// Located in a server-only file
 import { experimental_taintUniqueValue } from 'react';
+import { getUserData } from './database';
 
-async function processUserData(user) {
-  const userSecrets = { apiKey: process.env.USER_API_KEY };
+export async function getTaintedUserData(userId) {
+  const user = await getUserData(userId);
 
-  // Taint the API key to prevent it from ever leaving the server.
-  // The 'userSecrets' object defines the lifetime of the taint.
+  // This object's lifetime is tied to the request
+  const requestLifetime = {}; 
+
+  // Taint the user's secret API key
   experimental_taintUniqueValue(
-    'API key should not be sent to the client.',
-    userSecrets,
-    userSecrets.apiKey
+    'API key must not be exposed to the client.',
+    requestLifetime,
+    user.apiKey
   );
 
-  // ... if userSecrets were passed to a Client Component, React would throw an error.
+  return user;
+}
+
+// In a Server Component:
+async function UserProfile({ userId }) {
+  const user = await getTaintedUserData(userId);
+
+  // This is safe because `user.apiKey` is not being passed to the client.
+  const serverSideData = await fetchDataWithKey(user.apiKey);
+
+  return (
+    // If you were to pass `user.apiKey` to ClientInfo, React would throw an error.
+    <ClientInfo name={user.name} />
+  );
 }
 ```
 
-### `experimental_taintObjectReference`
+### `experimental_taintObjectReference(message, object)`
 
-This function taints an entire object or function reference. This is useful for things like database connections or session objects that should never be serialized.
+This function taints an entire object or function reference. Any attempt to serialize this object and send it to the client will result in an error.
 
 **Parameters**
 
-| Name      | Type                  | Description                                                                                             |
-|-----------|-----------------------|---------------------------------------------------------------------------------------------------------|
-| `message` | `string` (optional)   | A custom error message to be thrown if the tainted object is serialized. Defaults to a generic warning. |
-| `object`  | `object` \| `function`  | The object or function reference to taint.                                                              |
+| Name | Type | Description |
+|---|---|---|
+| `message` | `string` | An optional custom error message to be thrown if the taint is violated. |
+| `object` | `object` \| `function` | The object or function reference to taint. |
 
-**Example**
+**Example: Tainting a Database Connection**
 
 ```javascript
-// In a server-side module
+// Located in a server-only file
 import { experimental_taintObjectReference } from 'react';
+import { createDbConnection } from './db';
 
-// Imagine this is your database connection pool
-const dbConnection = createDatabaseConnection();
+const db = createDbConnection();
 
-// Taint the entire connection object.
-experimental_taintObjectReference('Database connection cannot be serialized.', dbConnection);
+// Taint the database connection object to prevent it from ever leaving the server.
+experimental_taintObjectReference(
+  'The database connection object cannot be sent to the client.',
+  db
+);
 
-export function getData() {
-  // This function can use dbConnection safely on the server.
-  // But if it or the connection were passed to the client, React would throw.
-  return dbConnection.query('SELECT * FROM users');
-}
+export default db;
 ```
 
-## Declarative Rendering Postponement with `unstable_postpone`
+## Rendering: `postpone(reason)`
 
-The `unstable_postpone` function allows a Server Component to pause its rendering declaratively. When called, React stops the current render pass and waits for a new one to be initiated, at which point it will try to render again from the root. This can be useful in scenarios where some prerequisite for rendering is not yet met, and you prefer to wait instead of showing a `Suspense` fallback.
+The `postpone` function allows a React Server Component to interrupt its rendering process without causing a server error. When called, it signals to the React renderer that the component is not yet ready to render and that the rendering should be retried later. This is useful for scenarios where data is not yet available, and you prefer to wait rather than render a `Suspense` fallback.
 
-**Usage**
+It works by throwing a special object that the renderer catches and interprets as a signal to pause.
 
-`unstable_postpone` is called with a single string argument that provides a reason for the postponement. This reason is used for debugging purposes.
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `reason` | `string` | A descriptive string explaining why the rendering was postponed. This is used for debugging. |
+
+**Example: Postponing for a Personalized Greeting**
 
 ```javascript
-import { unstable_postpone as postpone } from 'react';
+import { postpone } from 'react';
+import { getPersonalizedContent } from './contentApi';
 
-function FeatureGate({ featureFlag }) {
-  if (!featureFlag.isLoaded) {
-    // If the feature flag data isn't ready, postpone rendering this tree.
-    // React will wait and retry the render later.
-    postpone('Feature flags are not loaded yet.');
+async function PersonalizedGreeting({ userId }) {
+  // Fetch personalized content, which might be slow to generate initially.
+  const content = await getPersonalizedContent(userId);
+
+  if (content.status === 'PENDING') {
+    // If the content isn't ready, postpone rendering.
+    // React will hold the connection and retry rendering this component.
+    postpone(`Personalized content for user ${userId} is not ready.`);
   }
 
-  if (!featureFlag.isEnabled) {
-    return null; // Don't render if the feature is disabled
-  }
-
-  return <MyNewFeature />;
+  return <h1>{content.greeting}</h1>;
 }
 ```
-
-## Other Experimental APIs
-
-Several other APIs are available under `experimental` or `unstable` prefixes. They provide access to new capabilities that are still under active development.
-
-| API                                | Description                                                                                 |
-|------------------------------------|---------------------------------------------------------------------------------------------|
-| `experimental_useOptimistic`       | An older alias for `useOptimistic`. Now stable, using this will produce a developer warning.|
-| `unstable_Activity`                | Scopes components to transitions, preventing fallbacks from being shown outside the scope.|
-| `unstable_SuspenseList`            | Coordinates the loading sequence of multiple `Suspense` boundaries.                         |
-| `unstable_ViewTransition`          | A component to manage CSS View Transitions for SPA navigations.                             |
-| `unstable_startGestureTransition`  | Starts a transition specifically for gesture-based interactions.                            |
-| `unstable_useCacheRefresh`         | Provides a mechanism to refresh data in the React Cache.                                    |
-| `unstable_getCacheForType`         | A server-only API to access a cache instance for a specific type.                           |
 
 ---
 
-By exploring these APIs, you can get a glimpse into the future direction of React and provide valuable feedback. However, always be prepared for breaking changes when using them.
-
-Next, you can learn more about how React handles different environments in [Server vs. Client Environments](./advanced-server-vs-client.md).
+These experimental APIs provide powerful new capabilities for building secure and dynamic applications. As they mature, they may be integrated into the stable React API. For now, use them to explore and provide feedback. For production-ready features, please consult the main [API Reference](./api-reference.md).

@@ -1,47 +1,48 @@
-# State Hook
+# 状态 Hook
 
-State Hook 允许你向函数组件添加有状态的逻辑，使其能够记住信息并响应变化重新渲染。本节介绍了管理组件 state 的主要 Hook，从简单的值到复杂的状态转换和表单交互。
+State 是组件的记忆。它通过跟踪随时间变化的数据，使组件能够进行交互。State Hook 提供了在函数组件中声明、更新和管理这些数据的工具。本节涵盖了管理组件状态的主要 Hook，从简单值到复杂逻辑和异步操作。
 
-要了解 React 中的 state 概念，你可能需要回顾一下 [组件和 Props](./core-apis-components-and-props.md) 指南中的核心概念。
+有关状态变化相关的副作用，请参阅 [Effect Hook](./hooks-effect.md)。
 
 <x-cards data-columns="2">
   <x-card data-title="useState" data-icon="lucide:variable">
-    用于基础的 state 管理，例如数字、字符串或布尔值。
+    为组件添加 state 的最基础的 Hook。适用于数字、字符串或布尔值等简单 state 值。
   </x-card>
-  <x-card data-title="useReducer" data-icon="lucide:workflow">
-    适用于管理具有多个子值的复杂 state 逻辑，或下一个 state 依赖于前一个 state 的情况。
-  </x-card>
-  <x-card data-title="useOptimistic" data-icon="lucide:fast-forward">
-    用于通过在底层异步操作完成前立即更新 UI 来创建响应迅速的用户界面。
+  <x-card data-title="useReducer" data-icon="lucide:git-commit-vertical">
+    `useState` 的替代方案，用于管理更复杂的 state 逻辑，尤其是在下一个 state 依赖于前一个 state 时。
   </x-card>
   <x-card data-title="useActionState" data-icon="lucide:form-input">
-    专为处理表单提交而设计，提供对表单的 pending 状态和 action 结果的访问。
+    专为处理表单提交和其他操作、管理待定状态以及处理操作返回结果而设计。
+  </x-card>
+  <x-card data-title="useOptimistic" data-icon="lucide:fast-forward">
+    允许你在异步操作完成前立即显示操作结果，从而提供更好的用户体验。
   </x-card>
 </x-cards>
 
+
 ## useState
 
-`useState` 是为函数组件添加 state 最常用的 Hook。它声明一个“state 变量”，并返回一个包含两个值的数组：当前 state 和一个让你更新它的函数。
+`useState` 是管理 state 最常用的 Hook。你在组件的顶层调用它来声明一个 state 变量。
 
-### 签名
-`useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>]`
+```javascript
+function useState<S>(
+  initialState: (() => S) | S,
+): [S, Dispatch<BasicStateAction<S>>]
+```
 
-### 参数
+**参数**
 
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `initialState` | `S` or `(() => S)` | state 的初始值。它可以是任何类型的值，也可以是一个返回初始值的函数。该函数仅在初始渲染期间执行。 |
+| Name | Type | Description |
+|---|---|---|
+| `initialState` | `S` or `() => S` | state 的初始值。它可以是任何类型的值，也可以是返回初始值的函数。该函数仅在初始渲染期间执行。 |
 
-### 返回值
-一个包含两个元素的数组：
+**返回值**
 
-| Index | Name | Type | Description |
-| --- | --- | --- | --- |
-| 0 | `state` | `S` | state 的当前值。在首次渲染时，它将等于 `initialState`。 |
-| 1 | `setState` | `Dispatch<BasicStateAction<S>>` | setter 函数。你可以调用它来更新 state，这将触发组件的重新渲染。它接受一个新值或一个接收前一个 state 的函数。 |
+一个包含两个元素（不多不少）的数组：
+1.  当前的 state 值。
+2.  一个 `dispatch` 函数，可让你将 state 更新为新值并触发重新渲染。
 
-### 示例
-这是一个简单的计数器组件，使用 `useState` 来跟踪点击次数。
+**示例：一个简单的计数器**
 
 ```javascript
 import { useState } from 'react';
@@ -59,184 +60,195 @@ function Counter() {
   );
 }
 ```
-在此示例中，`useState(0)` 将 `count` state 初始化为 `0`。每次点击按钮时，都会调用 `setCount(count + 1)`，更新 state 并导致组件使用新的计数值重新渲染。
+
+在此示例中，`useState(0)` 将 `count` state 变量初始化为 `0`。点击按钮会使用新值调用 `setCount`，这会更新 state 并重新渲染组件以显示新的计数值。
 
 ## useReducer
 
-`useReducer` 是 `useState` 的替代方案，用于管理更复杂的 state 逻辑。当你有涉及多个子值的复杂 state 逻辑，或者下一个 state 依赖于前一个 state 时，它特别有用。
+当你有涉及多个子值的复杂 state 逻辑，或者当下一个 state 依赖于前一个 state 时，通常首选 `useReducer` 而不是 `useState`。
 
-### 签名
-`useReducer<S, I, A>(reducer: (S, A) => S, initialArg: I, init?: I => S): [S, Dispatch<A>]`
+```javascript
+function useReducer<S, I, A>(
+  reducer: (S, A) => S,
+  initialArg: I,
+  init?: I => S,
+): [S, Dispatch<A>]
+```
 
-### 参数
+**参数**
 
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `reducer` | `(S, A) => S` | 一个纯函数，接受当前 state 和一个 action，并返回新的 state。 |
+| Name | Type | Description |
+|---|---|---|
+| `reducer` | `(S, A) => S` | 一个指定 state 如何更新的函数。它必须是纯函数，接收 state 和 action 作为参数，并返回下一个 state。 |
 | `initialArg` | `I` | 用于计算初始 state 的值。 |
-| `init` | `(I) => S` | *可选。* 一个返回初始 state 的初始化函数。如果未提供，`initialArg` 将用作初始 state。 |
+| `init` | `I => S` | (可选) 一个返回初始 state 的初始化函数。如果未提供，则 `initialArg` 将用作初始 state。 |
 
-### 返回值
-一个包含两个元素的数组：
+**返回值**
 
-| Index | Name | Type | Description |
-| --- | --- | --- | --- |
-| 0 | `state` | `S` | 当前 state 值。 |
-| 1 | `dispatch` | `Dispatch<A>` | 一个函数，你可以使用 `action` 调用它来更新 state。 |
+一个包含两个元素（不多不少）的数组：
+1.  当前的 state 值。
+2.  一个 `dispatch` 函数，你可以向其传递一个 `action` 并触发 state 更新。
 
-### 示例
-一个可以使用 reducer 进行递增或递减的计数器。
+**示例：管理复杂 State**
 
 ```javascript
 import { useReducer } from 'react';
 
-const initialState = { count: 0 };
+const initialState = {count: 0};
 
 function reducer(state, action) {
   switch (action.type) {
     case 'increment':
-      return { count: state.count + 1 };
+      return {count: state.count + 1};
     case 'decrement':
-      return { count: state.count - 1 };
+      return {count: state.count - 1};
     default:
-      throw new Error('Unsupported action type');
+      throw new Error();
   }
 }
 
-function ReducerCounter() {
+function Counter() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   return (
-    <div>
-      <p>Count: {state.count}</p>
-      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
-      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
-    </div>
+    <>
+      Count: {state.count}
+      <button onClick={() => dispatch({type: 'decrement'})}>-</button>
+      <button onClick={() => dispatch({type: 'increment'})}>+</button>
+    </>
   );
 }
 ```
-在这里，所有 state 更新逻辑都集中在 `reducer` 函数中。组件使用一个 action 对象调用 `dispatch`，以表示其更改 state 的意图。
-
-## useOptimistic
-
-`useOptimistic` 是一个 Hook，它允许你在异步 action 正在进行时显示一个不同的 state。它接受当前 state 并返回它的一个副本，这个副本在 action 持续期间可以有所不同。
-
-### 签名
-`useOptimistic<S, A>(passthrough: S, reducer: ?(S, A) => S): [S, (A) => void]`
-
-### 参数
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `passthrough` | `S` | 当没有待处理的 action 时，默认将返回的 state 值。 |
-| `reducer` | `?(S, A) => S` | *可选。* 一个函数，它接受当前 state 和 action 的有效负载，并返回新的乐观 state。如果未提供，则 action 的有效负载本身将成为乐观 state。 |
-
-### 返回值
-一个包含两个元素的数组：
-
-| Index | Name | Type | Description |
-| --- | --- | --- | --- |
-| 0 | `optimisticState` | `S` | 乐观 state。除非有待处理的 action，否则它将等于 `passthrough`，在这种情况下，它由 `reducer` 计算得出。 |
-| 1 | `addOptimistic` | `(A) => void` | 一个 dispatch 函数，用于在你想触发乐观更新时调用。它接受一个类型为 `A` 的 action 有效负载。 |
-
-### 示例
-一个消息列表示例，它在向服务器发送新消息时会乐观地添加该消息。
-
-```javascript
-import { useOptimistic, useState, useRef } from 'react';
-
-async function sendMessage(message) {
-  // Simulate a network delay
-  await new Promise(res => setTimeout(res, 1000));
-  return message;
-}
-
-function MessageList() {
-  const formRef = useRef(null);
-  const [messages, setMessages] = useState([]);
-  const [optimisticMessages, addOptimisticMessage] = useOptimistic(
-    messages,
-    (currentMessages, newMessage) => [
-      ...currentMessages,
-      { text: newMessage, sending: true },
-    ]
-  );
-
-  const formAction = async (formData) => {
-    const message = formData.get('message');
-    addOptimisticMessage(message);
-    formRef.current.reset();
-    await sendMessage(message);
-    setMessages(prev => [...prev, { text: message }]);
-  };
-
-  return (
-    <div>
-      {optimisticMessages.map((msg, index) => (
-        <div key={index}>
-          {msg.text}
-          {msg.sending && <small> (Sending...)</small>}
-        </div>
-      ))}
-      <form action={formAction} ref={formRef}>
-        <input type="text" name="message" placeholder="Your message" />
-        <button type="submit">Send</button>
-      </form>
-    </div>
-  );
-}
-```
-当用户提交表单时，会调用 `addOptimisticMessage`，立即在 UI 中添加一条带有“Sending...”标签的新消息。一旦 `sendMessage` 函数完成，实际的 state 会通过 `setMessages` 进行更新，乐观的 UI 会与最终的 state 合并。
+此示例将所有 state 更新逻辑集中到 `reducer` 函数中，使组件的事件处理程序更清晰，因为它们只需要 `dispatch` action。
 
 ## useActionState
 
-`useActionState` 是一个 Hook，它允许你根据表单 action 的结果更新 state。它对于处理表单提交、管理 pending 状态和服务器 action 的响应非常有用。
+此 Hook 专为管理操作（例如表单提交）的 state 而设计。它提供有关操作的待定状态和操作完成后返回的数据的信息。
 
-### 签名
-`useActionState<S, P>(action: (S, P) => S, initialState: S, permalink?: string): [S, (P) => void, boolean]`
+```javascript
+function useActionState<S, P>(
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
+  permalink?: string,
+): [Awaited<S>, (P) => void, boolean]
+```
 
-### 返回值
+**参数**
+
+| Name | Type | Description |
+|---|---|---|
+| `action` | `(S, P) => S` | 要执行的函数。它接收先前的 state 和操作的有效负载。 |
+| `initialState` | `S` | 初始 state 值。 |
+| `permalink` | `string` | (可选) 用于渐进增强场景的 URL。 |
+
+**返回值**
+
 一个包含三个元素的数组：
+1.  操作的当前 state。在调用操作之前，它是 `initialState`，在操作完成后，它是操作的返回值。
+2.  一个用于调用操作的 `dispatch` 函数。
+3.  一个布尔值 `isPending`，在操作执行期间为 `true`。
 
-| Index | Name | Type | Description |
-| --- | --- | --- | --- |
-| 0 | `state` | `S` | 当前 state。在初始渲染时，它是 `initialState`。在 action 运行后，它是 action 的返回值。 |
-| 1 | `formAction` | `(P) => void` | 一个新的 action，你可以将其传递给你 `<form>` 组件的 `action` 属性。 |
-| 2 | `isPending` | `boolean` | 一个布尔值，指示表单 action 当前是否处于 pending 状态（即 action 函数正在执行中）。 |
-
-### 示例
-一个使用 `useActionState` 管理其提交状态并显示响应的表单。
-
+**示例：表单提交**
 ```javascript
 import { useActionState } from 'react';
 
-async function addToCart(previousState, formData) {
-  const itemId = formData.get('itemId');
-  // Simulate an API call
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  if (itemId === '123') {
-    return { success: true, message: 'Item added to cart!' };
+async function updateUser(previousState, formData) {
+  // Simulate a network request
+  await new Promise(res => setTimeout(res, 500)); 
+  const name = formData.get('name');
+  if (name.length < 3) {
+    return { success: false, message: 'Name must be longer.' };
   }
-  return { success: false, message: 'Failed to add item. Please try again.' };
+  return { success: true, message: `Welcome, ${name}!` };
 }
 
-function AddToCartForm() {
-  const [state, formAction, isPending] = useActionState(addToCart, { success: null, message: '' });
+function ChangeNameForm() {
+  const [state, submitAction, isPending] = useActionState(
+    updateUser,
+    { success: null, message: '' }
+  );
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="itemId" value="123" />
+    <form action={submitAction}>
+      <input type="text" name="name" />
       <button type="submit" disabled={isPending}>
-        {isPending ? 'Adding...' : 'Add to Cart'}
+        {isPending ? 'Saving...' : 'Update'}
       </button>
       {state.message && <p>{state.message}</p>}
     </form>
   );
 }
 ```
-此示例展示了一个将商品提交到购物车的表单。`isPending` 状态用于在提交期间禁用按钮，而 `state` 对象则保存来自 `addToCart` action 的响应，然后将其显示给用户。
+
+## useOptimistic
+
+`useOptimistic` 允许你应用一个临时的、“乐观”的 state 更新，该更新会在异步操作进行期间立即呈现给用户。如果操作失败，state 会自动恢复。
+
+```javascript
+function useOptimistic<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void]
+```
+
+**参数**
+
+| Name | Type | Description |
+|---|---|---|
+| `passthrough` | `S` | 当没有乐观更新处于活动状态时使用的默认 state 值。 |
+| `reducer` | `(S, A) => S` | 一个接收当前 state 和乐观值并返回新的乐观 state 的函数。 |
+
+**返回值**
+
+一个包含两个元素的数组：
+1.  乐观 state，除非有操作正在进行，否则它将与 `passthrough` 相同。
+2.  一个 `addOptimistic` 函数，用于应用临时 state 更新。
+
+**示例：乐观地添加消息**
+```javascript
+import { useOptimistic, useState, useRef } from 'react';
+
+async function deliverMessage(message) {
+  // Simulate network delay
+  await new Promise(res => setTimeout(res, 1000));
+  // To simulate an error, you could throw an error here.
+  return message;
+}
+
+function MessageThread() {
+  const [messages, setMessages] = useState([]);
+  const [optimisticMessages, addOptimisticMessage] = useOptimistic(
+    messages,
+    (state, newMessage) => [
+      ...state,
+      { text: newMessage, sending: true }
+    ]
+  );
+  const formRef = useRef();
+
+  async function formAction(formData) {
+    const message = formData.get('message');
+    addOptimisticMessage(message);
+    formRef.current.reset();
+    const sentMessage = await deliverMessage(message);
+    setMessages(prev => [...prev, { text: sentMessage }]);
+  }
+
+  return (
+    <div>
+      {optimisticMessages.map((m, i) => (
+        <div key={i}>{m.text}{m.sending && <small> (Sending...)</small>}</div>
+      ))}
+      <form action={formAction} ref={formRef}>
+        <input type="text" name="message" placeholder="Hello!" />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  );
+}
+```
+当用户发送消息时，它会立即出现在列表中，并带有一个“Sending...”标签。一旦异步 `deliverMessage` 函数完成，乐观 state 将被 `setMessages` 中的实际 state 替换。
 
 ---
 
-既然你已经学会了如何管理组件 state，下一步是了解如何处理数据获取或订阅等副作用。请继续阅读 [Effect Hook](./hooks-effect.md) 文档以了解更多信息。
+现在你已经了解了如何管理 state，下一步是学习如何处理因 state 变化或组件生命周期事件而产生的副作用。继续阅读 [Effect Hook](./hooks-effect.md) 部分以了解更多信息。

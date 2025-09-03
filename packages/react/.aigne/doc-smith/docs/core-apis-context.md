@@ -1,99 +1,81 @@
 # Context
 
-Context provides a way to pass data through the component tree without having to pass props down manually at every level. It is designed to share data that can be considered "global" for a tree of React components, such as the current authenticated user, theme, or preferred language.
+Context provides a way to pass data through the component tree without having to pass props down manually at every level. It's designed to share data that can be considered "global" for a tree of React components, such as the current authenticated user, theme, or preferred language.
 
-When you have data that many components at different nesting levels need, you can often find yourself passing props through components that don't need the data themselves. This is commonly known as "prop drilling" and can make components less reusable and harder to refactor. Context solves this problem by allowing a parent component to make certain data available to any component in the tree below it, no matter how deep, without explicitly passing a prop.
+While it can be tempting to use context for all state management, it's important to remember that it makes components less reusable. For simpler cases, consider [component composition](./core-apis-components-and-props.md) first. However, for managing state that needs to be accessed by many components at different nesting levels, Context is an effective solution.
 
-### How Context Works
+## Core Concepts
 
-The context flow involves three main parts:
-1.  **`React.createContext()`**: Creates a Context object.
+The Context API is composed of three main parts:
+
+1.  **`createContext`**: A function to create a context object.
 2.  **`Context.Provider`**: A component that provides the context value to its descendants.
-3.  **`Context.Consumer` or `useContext()`**: Components that subscribe to context changes and receive the value.
+3.  **`useContext` Hook / `Context.Consumer`**: Ways for components to subscribe to and read the context value.
+
+This diagram illustrates how a provider passes data directly to a deeply nested consumer, bypassing intermediate components.
 
 ```d2
 direction: down
 
 "App": {
-  label: "App"
   shape: rectangle
-  style: {
-    fill: "#f0f0f0"
-  }
 
-  "Provider": {
-    label: "<ThemeContext.Provider value='dark'>"
-    shape: rectangle
-    style: {
-      fill: "#c5e1a5"
-    }
+  "ThemeContext.Provider value='dark'": {
+    shape: package
+    grid-columns: 1
 
-    "IntermediateComponent": {
-      label: "IntermediateComponent\n(Doesn't need theme)"
+    "Layout": {
       shape: rectangle
-      style: {
-        fill: "#fff9c4"
-      }
-
-      "ConsumingComponent": {
-        label: "ConsumingComponent\n(Uses theme via useContext)"
-        shape: rectangle
-        style: {
-          fill: "#b3e5fc"
-        }
-      }
+      label: "Layout\n(Does not need theme)"
     }
+
+    "ThemedButton": {
+      shape: rectangle
+      label: "ThemedButton\n(Consumes theme)"
+    }
+
+    "Layout" -> "ThemedButton": "Renders"
   }
 }
 
-"Provider" -> "ConsumingComponent": "Context value ('dark') passed directly" {
-  style: {
-    stroke-dash: 4
-    animated: true
-  }
-}
-
-"App"."Provider"."IntermediateComponent" -> "App"."Provider"."IntermediateComponent"."ConsumingComponent": "Standard Prop Passing (Bypassed by Context)" {
-  style: {
-    stroke: "#cccccc"
-  }
+"ThemeContext.Provider value='dark'" -> "ThemedButton": "Provides 'dark' value directly" {
+  style.stroke-dash: 4
 }
 ```
 
-## `createContext(defaultValue)`
+---
 
-This function is the entry point for creating a new context. It returns a context object that contains `Provider` and `Consumer` components.
+## API Reference
+
+### `createContext(defaultValue)`
+
+This function creates a Context object. When React renders a component that subscribes to this Context object, it will read the current context value from the closest matching `Provider` above it in the tree.
+
+The `defaultValue` argument is **only** used when a component does not have a matching `Provider` above it in the tree. This can be helpful for testing components in isolation without wrapping them.
 
 **Parameters**
 
 | Name | Type | Description |
 |---|---|---|
-| `defaultValue` | `T` | The value that a consumer will receive if it's rendered outside of a matching `Provider`. This can be useful for testing components in isolation without wrapping them. |
+| `defaultValue` | `T` | The value the context will have if there is no provider in the tree. |
 
 **Returns**
 
-A `ReactContext` object with the following properties:
-
-| Property | Type | Description |
-|---|---|---|
-| `Provider` | `React.ComponentType` | A component that allows consuming components to subscribe to context changes. |
-| `Consumer` | `React.ComponentType` | A component that subscribes to context changes. Requires a function as a child (render prop). |
+A context object with `Provider` and `Consumer` properties.
 
 **Example**
 
-Here, we create a context for the current UI theme, with `'light'` as the default value.
-
 ```javascript
+// src/ThemeContext.js
 import { createContext } from 'react';
 
-// The default value is only used when a component does not have a matching
-// Provider above it in the tree.
+// The default value is 'light'
 export const ThemeContext = createContext('light');
 ```
 
-## `Context.Provider`
+### `Context.Provider`
 
-Every Context object comes with a `Provider` component that allows consuming components to subscribe to context changes.
+Every Context object comes with a `Provider` React component that allows consuming components to subscribe to context changes.
 
 The `Provider` component accepts a `value` prop to be passed to consuming components that are descendants of this `Provider`. All consumers that are descendants of a `Provider` will re-render whenever the `Provider`’s `value` prop changes.
 
@@ -101,39 +83,37 @@ The `Provider` component accepts a `value` prop to be passed to consuming compon
 
 | Name | Type | Description |
 |---|---|---|
-| `value` | `T` | The value to be made available to all descendant consumers of this provider. |
-| `children` | `React.Node` | The part of the component tree that can access the context value. |
+| `value` | `T` | The value to be passed to all consuming components deep in the tree. |
+| `children` | `ReactNode` | The components that can access the context value. |
 
 **Example**
 
-Wrap a component tree with the provider to make the theme value available to any component within it.
-
 ```javascript
-import React, { useState } from 'react';
+import React from 'react';
 import { ThemeContext } from './ThemeContext';
 import Toolbar from './Toolbar';
 
 function App() {
-  const [theme, setTheme] = useState('dark');
-
-  // The value 'dark' will be passed to any descendant component that consumes ThemeContext
+  // Any component inside this provider can now read the 'dark' value
   return (
-    <ThemeContext.Provider value={theme}>
+    <ThemeContext.Provider value="dark">
       <Toolbar />
     </ThemeContext.Provider>
   );
 }
 ```
 
-## Consuming Context
+### Consuming Context
 
-There are two ways to read a context value: the modern hook-based approach and the traditional render-prop component.
+There are two primary ways to consume a context value.
 
-### `useContext` (Recommended)
+#### `useContext(Context)`
 
-The `useContext` hook is the modern and preferred way to consume context in function components. It accepts a context object (the value returned from `React.createContext`) and returns the current context value for that context.
+The modern and recommended way to read a context value is by using the `useContext` Hook. It's concise and fits naturally within function components.
 
-This makes consuming context values clean and straightforward. For a complete guide, please refer to the [useContext Hook documentation](./hooks-other.md).
+This hook accepts a context object (the value returned from `React.createContext`) and returns the current context value for that context.
+
+For a detailed guide, see the [useContext Hook documentation](./hooks-other.md).
 
 **Example**
 
@@ -142,18 +122,22 @@ import React, { useContext } from 'react';
 import { ThemeContext } from './ThemeContext';
 
 function ThemedButton() {
-  // useContext returns the value from the nearest ThemeContext.Provider
+  // The useContext hook gets the value from the nearest Provider
   const theme = useContext(ThemeContext);
 
-  return <button style={{ background: theme === 'dark' ? '#333' : '#FFF' }}>A Themed Button</button>;
+  return (
+    <button style={{ background: theme === 'dark' ? '#333' : '#FFF', color: theme === 'dark' ? 'white' : 'black' }}>
+      The current theme is {theme}
+    </button>
+  );
 }
 ```
 
-### `Context.Consumer`
+#### `Context.Consumer`
 
-`Context.Consumer` is a component that subscribes to context changes. It is useful in class components or older codebases where Hooks are not available.
+For use in class components or in scenarios where Hooks are not available, you can use the `Consumer` component.
 
-It requires a function as a child. This function receives the current context value and returns a React node.
+This requires a function as a child (a "render prop"). The function receives the current context value and returns a React node.
 
 **Example**
 
@@ -166,8 +150,8 @@ class ThemedButton extends React.Component {
     return (
       <ThemeContext.Consumer>
         {theme => (
-          <button style={{ background: theme === 'dark' ? '#333' : '#FFF' }}>
-            A Themed Button (Class Component)
+          <button style={{ background: theme === 'dark' ? '#333' : '#FFF', color: theme === 'dark' ? 'white' : 'black' }}>
+            The current theme is {theme}
           </button>
         )}
       </ThemeContext.Consumer>
@@ -178,4 +162,10 @@ class ThemedButton extends React.Component {
 
 ---
 
-Context is a powerful tool for sharing state across your application. To learn more about the most common way to use it, continue to the documentation for the [`useContext` Hook](./hooks-other.md).
+## Next Steps
+
+Now that you understand how to pass data through your application with Context, you can explore utilities for working with component children.
+
+<x-card data-title="Children Utilities" data-icon="lucide:box" data-href="/core-apis/children-utilities" data-cta="Read More">
+  Learn how to work with the props.children data structure using the React.Children API helpers.
+</x-card>

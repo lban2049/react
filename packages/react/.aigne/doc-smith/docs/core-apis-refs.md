@@ -1,144 +1,148 @@
 # Refs
 
-Refs provide a way to access DOM nodes or React elements created in the render method. While you would typically let React handle all DOM manipulation, sometimes you might need to imperatively modify a child outside of the typical dataflow. Refs are the recommended way to do this.
+Refs provide a way to access DOM nodes or React elements created in the render method. They are useful when you need to manage focus, trigger animations, or integrate with third-party DOM libraries—actions that fall outside the typical data flow of React.
 
-Common use cases for refs include:
-- Managing focus, text selection, or media playback.
-- Triggering imperative animations.
-- Integrating with third-party DOM libraries.
+While powerful, refs should be used sparingly as they can make code harder to understand by breaking the top-down data flow. Before using a ref, consider if the desired behavior can be achieved with state and props.
 
-Avoid using refs for anything that can be done declaratively. For example, instead of exposing `open()` and `close()` methods on a `Dialog` component, pass an `isOpen` prop to it.
+This guide covers the core APIs for refs, `createRef` and `forwardRef`. For modern function components, the `useRef` Hook is the recommended approach. See the [Ref Hooks](./hooks-ref.md) guide for more details.
 
-This section covers the core APIs for creating and forwarding refs, which are commonly used in class components. For function components, the [`useRef`](./hooks-ref.md) Hook is the modern standard.
+## createRef
 
----
+The `createRef` function creates a ref object. Its primary feature is a `.current` property which React will populate with the corresponding DOM element or class component instance.
 
-## `createRef`
+`createRef` is most commonly used in class components.
 
-The `React.createRef()` function creates a ref object that can be attached to React elements via the `ref` attribute. The ref object has a mutable `current` property that holds the corresponding DOM node or component instance.
-
-As seen in its implementation, it creates a simple object with a `current` property initialized to `null`.
+### Syntax
 
 ```javascript
-// A simplified view from src/ReactCreateRef.js
-export function createRef(): RefObject {
-  const refObject = {
-    current: null,
-  };
-  return refObject;
-}
+const refObject = React.createRef();
 ```
 
-When the `ref` attribute is used on an HTML element, the `ref`'s `current` property receives the underlying DOM element as its value once the component mounts. React will update it to `null` when the component unmounts.
+The function returns a ref object containing a single mutable property: `current`. Initially, `refObject.current` is `null`. When the ref is attached to an element in the `render` method, React will assign the DOM element to the `current` property.
 
-### Usage in Class Components
+### Example: Accessing a DOM Node
 
-A common pattern is to create a ref in a class component's constructor and attach it to an element in the `render` method.
+Here is a typical use case: automatically focusing an input field when a component mounts.
 
 ```javascript
 import React, { Component, createRef } from 'react';
 
-class MyComponent extends Component {
+class MyInput extends Component {
   constructor(props) {
     super(props);
-    // Create a ref to store the textInput DOM element
+    // 1. Create a ref to store the textInput DOM element
     this.textInput = createRef();
   }
 
   componentDidMount() {
-    // Now that the component has mounted, we can access the DOM node
-    // via the 'current' property and focus the input.
-    if (this.textInput.current) {
-      this.textInput.current.focus();
-    }
+    // 3. Access the DOM node via the .current property and call focus()
+    this.textInput.current.focus();
   }
 
   render() {
-    // Attach the ref to the <input> element. When this element is mounted
-    // in the DOM, React will assign the DOM node to this.textInput.current.
+    // 2. Attach the ref to the <input> element
     return <input type="text" ref={this.textInput} />;
   }
 }
 ```
-In this example, `this.textInput.current` will point to the `<input>` DOM node after the component mounts, allowing us to call its `focus()` method.
 
----
+In this example:
+1.  We create a ref named `this.textInput` inside the constructor using `createRef()`.
+2.  We attach this ref to the `<input>` element in the `render` method by passing it to the `ref` attribute.
+3.  Once the component mounts, React updates the `current` property of `this.textInput`. In `componentDidMount`, we can then access the input's DOM node directly and call its `focus()` method.
 
-## `forwardRef`
+## forwardRef
 
-Ref forwarding is a technique for automatically passing a ref through a component to one of its children. This is particularly useful for reusable components, as it allows the parent component to get a reference to a DOM node deep inside the child's render tree.
+By default, you cannot pass the `ref` prop to a function component because they don't have instances. Ref forwarding is a feature that lets components receive a ref and pass it down to a child component.
 
-The `ref` attribute is not a standard prop and is handled specially by React. If you add a `ref` to a custom component, you won't get a reference to its DOM node. `React.forwardRef` solves this by creating a component that can accept a `ref` and forward it.
+This is particularly useful for creating reusable components like styled buttons or input fields where the parent component might need direct access to the underlying DOM node.
 
-`forwardRef` accepts a render function that receives `props` and `ref` as arguments. You can then forward the `ref` argument to an element inside the component.
+### Syntax
 
 ```javascript
-// A simplified view from src/ReactForwardRef.js
-export function forwardRef<Props, ElementType: React$ElementType>(
-  render: (
-    props: Props,
-    ref: React$RefSetter<React$ElementRef<ElementType>>,
-  ) => React$Node,
-) {
-  // ... internal logic ...
-  const elementType = {
-    $$typeof: REACT_FORWARD_REF_TYPE,
-    render,
-  };
-  return elementType;
-}
+const MyComponent = React.forwardRef((props, ref) => {
+  // render logic using props and ref
+});
 ```
 
-### Example
+`React.forwardRef` accepts a render function that receives `props` and `ref` as arguments. You can then "forward" the received `ref` to an element inside the component.
 
-Let's create a `FancyButton` component that forwards any refs it receives to the underlying DOM `<button>` element.
+### Example: Forwarding a Ref to a DOM Element
+
+Let's create a `FancyButton` component that forwards any ref it receives to the underlying DOM `<button>` element.
 
 ```javascript
-import React, { forwardRef, createRef } from 'react';
+import React, { createRef, forwardRef } from 'react';
 
-// Create a component that forwards the ref to the DOM button
+// 1. Create a component using forwardRef
 const FancyButton = forwardRef((props, ref) => (
   <button ref={ref} className="FancyButton">
     {props.children}
   </button>
 ));
 
-// Parent component that uses FancyButton
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    // Create a ref that will point to the button DOM element
-    this.buttonRef = createRef();
-  }
+function App() {
+  // 2. Create a ref to be attached to the DOM button
+  const buttonRef = createRef();
 
-  componentDidMount() {
-    // The ref now points to the <button> element rendered by FancyButton
-    if (this.buttonRef.current) {
-      this.buttonRef.current.style.backgroundColor = 'lightblue';
-      this.buttonRef.current.focus();
-    }
-  }
+  const handleClick = () => {
+    // 4. Access the button's DOM node to focus it
+    buttonRef.current.focus();
+  };
 
-  render() {
-    return (
-      <FancyButton ref={this.buttonRef}>Click me!</FancyButton>
-    );
-  }
+  return (
+    <>
+      {/* 3. Pass the ref down to FancyButton */}
+      <FancyButton ref={buttonRef}>Click me!</FancyButton>
+      <button onClick={handleClick}>Focus Fancy Button</button>
+    </>
+  );
 }
 ```
-Without `forwardRef`, the `ref` on `<FancyButton>` would be `null`. With it, `this.buttonRef.current` in the `App` component correctly points to the `<button>` DOM node, allowing the parent to interact with it directly.
+
+Here's the flow:
+1.  We wrap our `FancyButton` component in `forwardRef`.
+2.  `forwardRef` provides the `ref` passed by the parent as the second argument to our render function.
+3.  We pass, or "forward," this `ref` down to the `<button>` element.
+4.  This allows the parent `App` component to create a `buttonRef`, pass it to `<FancyButton>`, and get direct access to the underlying `<button>` DOM node.
+
+### Ref Forwarding Flow
+
+The following diagram illustrates how a ref is passed from a parent component, through a forwarding component, and attached to a DOM node.
+
+```d2
+direction: down
+
+"Parent Component": {
+  shape: rectangle
+  "const myRef = createRef()"
+
+  "render()": {
+    "<FancyButton ref={myRef} />"
+  }
+}
+
+"FancyButton = forwardRef((props, ref) => ...)": {
+  shape: package
+  "render()": {
+    "<button ref={ref} />"
+  }
+}
+
+"DOM": {
+  shape: cylinder
+  "<button>"
+}
+
+"Parent Component" -> "FancyButton = forwardRef((props, ref) => ...)": "1. Passes ref"
+"FancyButton = forwardRef((props, ref) => ...)" -> "DOM": "2. Forwards ref to <button>"
+"Parent Component" -> "DOM": "3. myRef.current now points to the <button> node" {
+  style.stroke-dash: 4
+}
+```
 
 ---
 
-### Next Steps
+This covers the fundamental APIs for creating and forwarding refs. While essential for certain use cases, especially in class components and component libraries, modern React applications often rely on hooks.
 
-Refs are a necessary tool for certain imperative actions, but should be used as an escape hatch. Understanding how they work is a key part of mastering React's component model.
-
-<x-cards>
-  <x-card data-title="Ref Hooks" data-icon="lucide:hook" data-href="/hooks/ref">
-    For modern React applications using function components, learn about the `useRef` and `useImperativeHandle` Hooks, which are the standard for managing refs.
-  </x-card>
-  <x-card data-title="Context" data-icon="lucide:box" data-href="/core-apis/context">
-    Explore Context for a different way to pass data through the component tree without having to pass props down manually at every level.
-  </x-card>
-</x-cards>
+To learn about the modern approach, continue to the [Ref Hooks](./hooks-ref.md) guide.

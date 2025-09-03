@@ -1,13 +1,16 @@
 # Server vs. Client Environments
 
-React is designed to build user interfaces in various environments. The primary distinction is between the **server** and the **client** (the browser). This separation enables powerful rendering strategies like Server-Side Rendering (SSR) and the use of React Server Components. While a large portion of the React API is universal, certain functions and hooks are exclusive to one environment. This guide explores these differences and how React manages them.
+React is designed to run in different JavaScript environments, primarily the client (in a web browser) and the server (with Node.js or similar runtimes). To support this, the `react` package provides distinct sets of APIs tailored to each environment. This separation allows for optimized builds and prevents the use of environment-specific APIs in the wrong context.
 
-## Conditional Package Exports
+This distinction is formally managed through conditional exports in the `react` package's `package.json` file.
 
-The distinction between environments is managed at the package level through conditional exports. When you import from the `react` package, your build tool or runtime resolves to a different file depending on whether it's building for a server or client environment. This logic is defined in React's `package.json` file:
+## Conditional Exports
+
+The `react` package uses a modern module feature called conditional exports to expose different files depending on the environment. When a build tool or runtime, such as Webpack or Next.js, detects a server environment, it can use the `"react-server"` condition to import a server-specific version of React and its APIs.
+
+Here is a simplified view of how this is defined in `react/package.json`:
 
 ```json
-// A simplified view of react/package.json
 {
   "exports": {
     ".": {
@@ -22,91 +25,97 @@ The distinction between environments is managed at the package level through con
 }
 ```
 
-The `react-server` condition points to server-specific builds, while `default` typically resolves to the client-side build for browsers.
-
-This mechanism allows React to provide an optimized set of APIs for each context.
+This mechanism is key to how React separates concerns. The `default` export points to the client-side build, which includes everything needed for interactivity in a browser. The `react-server` export points to a build that is streamlined for server-side rendering, excluding APIs that are irrelevant or would cause errors on the server.
 
 ```d2
 direction: down
 
-Bundler: "Build Tool or Runtime"
-
-package_json: {
-  shape: document
-  label: "react/package.json"
+"Bundler / Runtime": {
+  shape: rectangle
 }
 
-condition_check: {
-  shape: diamond
-  label: "Is this a 'react-server' environment?"
-}
+"react package": {
+  shape: package
+  grid-columns: 2
+  grid-gap: 80
 
-server_entry: {
-  label: "Loads './react.react-server.js' (Server APIs)"
-  style: {
-    fill: "#d3e5ff"
+  "Client Entry (`index.js`)": {
+    label: "Client Environment\n(default export)"
+    shape: document
+    "APIs": {
+      "useState": "Stateful logic"
+      "useEffect": "Side effects"
+      "Component": "Class components"
+      "startTransition": "Concurrent UI"
+    }
+  }
+
+  "Server Entry (`react.react-server.js`)": {
+    label: "Server Environment\n('react-server' export)"
+    shape: document
+    "APIs": {
+      "cache": "Server-side data caching"
+      "use": "Read promises/context"
+      "Fragment": "Group elements"
+      "createElement": "Core element factory"
+    }
   }
 }
 
-client_entry: {
-  label: "Loads './index.js' (Client APIs)"
-  style: {
-    fill: "#d0f0c0"
-  }
-}
-
-Bundler -> package_json: "Reads 'exports' field"
-package_json -> condition_check: "Evaluates conditions"
-condition_check -> server_entry: "Yes"
-condition_check -> client_entry: "No (uses 'default')"
+"Bundler / Runtime" -> "react package": "Resolves module based on environment"
 ```
 
-## API Availability
+## API Availability Comparison
 
-While many core concepts like Components, Elements, and some Hooks are universal, a significant number of APIs are environment-specific. The client environment has a richer set of APIs for interactivity, state management, and side effects that directly manipulate the DOM.
+The most significant difference between the environments is the set of available APIs. Client environments include APIs for interactivity, stateful logic, and browser-specific side effects. The server environment provides a more limited set of APIs focused on rendering and data management.
 
-| API | Environment(s) | Description |
-|---|---|---|
-| **Universal APIs** | | |
-| `createElement`, `cloneElement`, `isValidElement` | Server & Client | Core functions for creating and working with React elements. |
-| `Fragment`, `Profiler`, `StrictMode`, `Suspense` | Server & Client | Built-in components for structuring UI and managing rendering behavior. |
-| `useMemo`, `useCallback`, `useDebugValue` | Server & Client | Hooks for optimization and debugging, available in both runtimes. |
-| `useId` | Server & Client | Generates stable, unique IDs that work safely with server rendering. |
-| `use` | Server & Client | Reads the value of a resource like a Promise or context. |
-| `lazy`, `memo`, `forwardRef` | Server & Client | Utilities for optimizing components and forwarding refs. |
-| **Client-Only APIs** | | |
-| `useState`, `useReducer`, `useRef`, `useActionState`, `useOptimistic` | Client | Hooks to manage state, complex state logic, and references to DOM elements or values. |
-| `useEffect`, `useLayoutEffect`, `useInsertionEffect`| Client | Hooks for performing side effects that interact with the browser environment (e.g., data fetching, subscriptions, DOM mutations). |
-| `useContext` | Client | Hook for reading and subscribing to context. |
-| `startTransition`, `useTransition` | Client | APIs for marking UI updates as non-urgent to avoid blocking user input. |
-| `Component`, `PureComponent` | Client | Base classes for creating stateful class components. |
-| `createContext` | Client | Creates a Context object for sharing data without prop drilling. |
-| `act` | Client | A testing utility to ensure updates are processed before assertions are made. |
-| **Server-Only APIs** | | |
-| `cache`, `cacheSignal` | Server | A function to memoize data fetches or computations across component renderings within a single server request. `cacheSignal` is an associated utility. |
-| `__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE` | Server | An internal object exposing server-specific state, not for direct use. |
+Below is a comparison of key APIs and their availability.
 
-## Internal State Differences
+| API | Client Environment | Server Environment | Notes |
+|---|---|---|---|
+| **State Hooks** | | | |
+| `useState`, `useReducer` | ✅ Available | ❌ Not Available | Manages component state, which is a client-side concept tied to user interaction and re-renders. |
+| `useActionState`, `useOptimistic` | ✅ Available | ❌ Not Available | Hooks designed for managing form state and pending UI updates on the client. |
+| **Effect Hooks** | | | |
+| `useEffect`, `useLayoutEffect`, `useInsertionEffect` | ✅ Available | ❌ Not Available | Used to perform side effects that interact with the browser DOM and lifecycle, which do not exist on the server. |
+| **Component Types** | | | |
+| `Component`, `PureComponent` | ✅ Available | ❌ Not Available | Class components and their lifecycle methods are part of the client-side component model. |
+| **Concurrency APIs** | | | |
+| `startTransition`, `useTransition`, `useDeferredValue` | ✅ Available | ❌ Not Available | APIs for managing concurrent rendering transitions, which are primarily for keeping the UI responsive during updates on the client. |
+| **Shared Hooks & APIs** | | | |
+| `use`, `useId`, `useMemo`, `useCallback`, `useDebugValue` | ✅ Available | ✅ Available | Hooks that are not dependent on a specific client or server lifecycle. |
+| `cache`, `cacheSignal` | ✅ Available | ✅ Available | Provides a mechanism for memoization and caching. The underlying implementation is optimized for each specific environment. |
+| `createElement`, `cloneElement`, `isValidElement` | ✅ Available | ✅ Available | Fundamental APIs for creating and manipulating React elements are available everywhere. |
+| `Fragment`, `Profiler`, `StrictMode`, `Suspense` | ✅ Available | ✅ Available | Core components for structuring and debugging applications. |
 
-Beyond the public API, the internal state managed by React also differs. Each environment has a unique `ReactSharedInternals` object tailored to its specific needs.
+## Shared Internals
 
-- **Server Internals (`ReactSharedInternalsServer`)**: Focuses on request-level concerns. For example, when `enableTaint` is active, it includes registries for experimental security features (`TaintRegistryObjects`, `TaintRegistryValues`) which help prevent data leaks from the server.
+Internally, React maintains separate shared state objects for each environment: `ReactSharedInternalsClient` and `ReactSharedInternalsServer`. These objects hold the current state needed by hooks and other features, such as the active dispatcher for hooks or the current transition state.
 
-- **Client Internals (`ReactSharedInternalsClient`)**: Manages state related to browser interactivity and rendering. This includes queues for the `act` testing utility (`actQueue`), state for concurrent transitions (`asyncTransitions`), and flags to track asynchronous work within a render batch (`didUsePromise`).
+For example, `ReactSharedInternalsClient` includes properties like `actQueue` for testing and `isBatchingLegacy` for legacy mode, which are irrelevant on the server. Conversely, `ReactSharedInternalsServer` is configured to handle features like the Taint APIs for security when enabled.
 
-## Summary
+While you will not interact with these internal objects directly, their existence is fundamental to how React isolates environment-specific logic and maintains a clean separation of concerns.
 
-Understanding the distinction between React's server and client environments is key for building modern, performant applications. This dual-runtime architecture allows you to leverage the best of both worlds: fast initial page loads from the server and rich interactivity on the client. By being aware of which APIs are available in each context, you can write more efficient and robust code.
+## Practical Implications
+
+Understanding this separation is crucial when developing applications that utilize server-side rendering or React Server Components. When writing a component intended to run on both the server and the client, you must only use the shared API surface.
+
+- **Avoid Client-Only APIs on the Server**: Attempting to use a hook like `useState` or `useEffect` in a component that renders exclusively on the server will result in an error.
+- **Optimized Server Builds**: This separation allows for smaller, more efficient server builds that exclude the code for client-side interactivity, state management, and effects.
+
+By respecting these environment boundaries, you can build applications that are both robust and performant, taking full advantage of React's capabilities on both the server and the client.
+
+---
 
 ### Next Steps
 
-To learn more about features that leverage this architecture, explore these guides:
+Explore these related topics to further understand how React leverages different environments.
 
-<x-cards>
-  <x-card data-title="Caching" data-icon="lucide:database-zap" data-href="/advanced/caching">
-    Dive deeper into React's caching mechanisms, which are available on both the server and client but have distinct use cases.
+<x-cards data-columns="2">
+  <x-card data-title="Caching" data-icon="lucide:database" data-href="/advanced/caching">
+    Learn how React's caching capabilities work on both the client and the server for data fetching and memoization.
   </x-card>
-  <x-card data-title="Code Splitting with lazy and Suspense" data-icon="lucide:split" data-href="/advanced/code-splitting">
-    Learn how to use `Suspense` to handle asynchronous operations like data fetching on the server and code splitting on the client.
+  <x-card data-title="Code Splitting with lazy and Suspense" data-icon="lucide:splitsquare-horizontal" data-href="/advanced/code-splitting">
+    Discover how to improve app performance by loading components only when they are needed, a pattern that works with Suspense in both environments.
   </x-card>
 </x-cards>

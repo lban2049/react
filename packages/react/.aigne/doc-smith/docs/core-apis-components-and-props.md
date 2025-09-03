@@ -1,51 +1,41 @@
 # Components & Props
 
-Components are the fundamental building blocks of React applications. They are independent and reusable pieces of code that, when combined, form the user interface. This section covers how to create both function and class components, and how to pass data between them using props.
+Components are the core building blocks of any React application. They let you split the UI into independent, reusable pieces, and think about each piece in isolation. Conceptually, components are like JavaScript functions. They accept arbitrary inputs (called “props”) and return React elements describing what should appear on the screen.
 
-## Understanding Components
+### Function and Class Components
 
-In React, a component is essentially a JavaScript function or class that returns a React element, which describes what should appear on the screen. Components let you split the UI into independent, reusable pieces, allowing you to think about each piece in isolation.
+React offers two primary ways to define a component:
 
-Here's a diagram illustrating the basic relationship between a parent and child component:
+1.  **Function Components**: The simplest way to write a component. These are JavaScript functions that accept a single `props` object and return a React element.
+2.  **Class Components**: These are ES6 classes that extend from `React.Component` and provide more features, such as local state and lifecycle methods. With the introduction of Hooks, you can now use these features in function components as well.
 
-```d2
-direction: down
+Here is an example of a simple `Welcome` component written as both a function and a class:
 
-ParentComponent: {
-  shape: rectangle
-  "State or Data: { user: 'Jane' }"
-}
-
-ChildComponent: {
-  shape: rectangle
-  "Receives props and renders UI"
-}
-
-ParentComponent -> ChildComponent: "Passes data via props (e.g., name={user})"
-```
-
-### Function Components
-
-Function components are the modern and recommended way to define components in React. They are simple JavaScript functions that accept a single `props` object argument with data and return a React element.
-
+**Function Component**
 ```javascript
-// A simple function component
 function Welcome(props) {
   return <h1>Hello, {props.name}</h1>;
 }
-
-// Usage
-const element = <Welcome name="Sara" />;
 ```
 
-### Class Components
+**Class Component**
+```javascript
+class Welcome extends React.Component {
+  render() {
+    return <h1>Hello, {this.props.name}</h1>;
+  }
+}
+```
 
-Class components are an alternative way to define components using ES6 classes. They extend from `React.Component` and must include a `render()` method.
+Both components are equivalent from React’s point of view.
 
-As seen in the React source, the base `Component` class is initialized with `props`, `context`, and an `updater`.
+### The Component Base Class
+
+When you define a class component, you extend `React.Component`. This base class provides the essential functionality for a component to manage its state and lifecycle.
 
 ```javascript
 // From src/ReactBaseClasses.js
+
 function Component(props, context, updater) {
   this.props = props;
   this.context = context;
@@ -56,89 +46,81 @@ function Component(props, context, updater) {
 Component.prototype.isReactComponent = {};
 ```
 
-Here is a basic example of a class component:
+As seen in the constructor, every class component instance has a few key properties:
+*   `this.props`: Contains the properties passed to the component from its parent.
+*   `this.context`: An advanced feature for passing data through the component tree without having to pass props down manually at every level. See the [Context](./core-apis-context.md) documentation for more details.
+*   `this.refs`: A way to access DOM nodes or React components created in the render method. See the [Refs](./core-apis-refs.md) documentation.
+*   `this.updater`: An object that handles queuing state updates and re-rendering the component.
 
-```javascript
-import React, { Component } from 'react';
+The `isReactComponent` property is an empty object that React uses internally to differentiate class components from plain JavaScript functions.
 
-class Welcome extends Component {
-  render() {
-    return <h1>Hello, {this.props.name}</h1>;
-  }
-}
-```
+#### Updating State
 
-Class components have additional features like local state and lifecycle methods, although Hooks now provide these capabilities to function components as well.
+Class components have two primary methods for triggering UI updates.
 
-#### `setState()`
+1.  **`setState(partialState, callback)`**
 
-This method is used to update a component's local state. It tells React that the component and its children need to be re-rendered with the updated state.
+    This is the primary method you use to update a component's local state. It tells React that the component and its children need to be re-rendered with the updated state.
 
-- **Asynchronous Nature**: Calls to `setState` are asynchronous and may be batched together for performance. Accessing `this.state` right after calling `setState` might not yield the new value.
-- **Functional Updates**: You can pass a function to `setState` to ensure the update is based on the most recent state and props.
+    *   **Asynchronous Nature**: React may batch multiple `setState()` calls into a single update for performance. Because `this.props` and `this.state` may be updated asynchronously, you should not rely on their values for calculating the next state. Instead, use the function form of `setState`.
+    *   **Merging**: When you call `setState()`, React merges the object you provide into the current state.
 
-```javascript
-// From src/ReactBaseClasses.js
-Component.prototype.setState = function (partialState, callback) {
-  // ...
-  this.updater.enqueueSetState(this, partialState, callback, 'setState');
-};
-```
+    ```javascript
+    // Correct: Using a function to access previous state
+    this.setState((prevState, props) => ({
+      counter: prevState.counter + 1
+    }));
 
-#### `forceUpdate()`
+    // Incorrect: May lead to bugs due to asynchronous updates
+    this.setState({
+      counter: this.state.counter + 1
+    });
+    ```
 
-The `forceUpdate()` method causes a component to re-render, skipping `shouldComponentUpdate()`. This is rarely necessary and should be avoided. It's typically used when state deep within a component changes without a `setState` call.
+2.  **`forceUpdate(callback)`**
 
-```javascript
-// From src/ReactBaseClasses.js
-Component.prototype.forceUpdate = function (callback) {
-  this.updater.enqueueForceUpdate(this, callback, 'forceUpdate');
-};
-```
+    By default, when your component’s state or props change, your component will re-render. If your `render()` method depends on some other data, you can tell React that the component needs re-rendering by calling `forceUpdate()`. Calling `forceUpdate()` will cause `render()` to be called on the component, skipping `shouldComponentUpdate()`. This should be used sparingly.
 
-### `PureComponent`
+### PureComponent
 
-`React.PureComponent` is similar to `React.Component` but implements `shouldComponentUpdate()` with a shallow comparison of props and state. This can be a simple way to optimize the performance of certain components by preventing unnecessary re-renders.
+`React.PureComponent` is similar to `React.Component` but implements the `shouldComponentUpdate()` method with a shallow prop and state comparison. If the new props and state are shallowly equal to the previous ones, the component does not re-render, providing a performance boost in certain cases.
 
 ```javascript
 // From src/ReactBaseClasses.js
 function PureComponent(props, context, updater) {
-  // ... initialization is similar to Component
+  this.props = props;
+  this.context = context;
+  this.refs = emptyObject;
+  this.updater = updater || ReactNoopUpdateQueue;
 }
 
-// ...
+const pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
+pureComponentPrototype.constructor = PureComponent;
+assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = true;
 ```
 
-## Props (Properties)
+### Props are Read-Only
 
-Props are arguments passed into React components. They are the primary way to pass data from a parent component to a child component. A key principle in React is that **props are read-only**. A component must never modify its own props.
+Whether you declare a component as a function or a class, it must never modify its own props. All React components must act like pure functions with respect to their props.
 
-### Passing and Accessing Props
+*   **Correct**: A pure function that does not change its inputs.
+    ```javascript
+    function sum(a, b) {
+      return a + b;
+    }
+    ```
 
-You can pass any JavaScript value as a prop, including strings, numbers, arrays, objects, and functions.
+*   **Incorrect**: An impure function that changes its own input.
+    ```javascript
+    function withdraw(account, amount) {
+      account.total -= amount; // Don't do this!
+    }
+    ```
 
-```javascript
-function UserProfile(props) {
-  return (
-    <div>
-      <h2>{props.user.name}</h2>
-      <p>Age: {props.user.age}</p>
-      <button onClick={props.onFollow}>Follow</button>
-    </div>
-  );
-}
+### Next Steps
 
-function App() {
-  const userData = { name: 'John Doe', age: 30 };
-  const handleFollow = () => console.log('Follow button clicked!');
+Now that you understand the fundamentals of components and props, you can explore how to write them using a more concise syntax.
 
-  return <UserProfile user={userData} onFollow={handleFollow} />;
-}
-```
-
-In this example, the `App` component passes an object (`userData`) and a function (`handleFollow`) as props to the `UserProfile` component.
-
----
-
-Understanding components and props is crucial for building any React application. With this foundation, you can start composing complex UIs from simple, isolated pieces. To learn how to write the HTML-like syntax used in these examples, proceed to the next section on [JSX](./core-apis-jsx.md).
+- Learn about [JSX](./core-apis-jsx.md) to embed XML-like syntax directly in your JavaScript code.
+- Dive into the [Hooks](./hooks.md) documentation to learn how to use state and other React features in function components.

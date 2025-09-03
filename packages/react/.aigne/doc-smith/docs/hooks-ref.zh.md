@@ -1,77 +1,43 @@
 # Ref Hooks
 
-Ref Hooks 提供了一种直接访问 DOM 节点或在多次渲染之间持久化可变值而无需触发重新渲染的方法。它们对于与第三方 DOM 库集成、管理焦点以及处理不直接参与组件视觉输出的值至关重要。
+Ref Hooks 提供了一种访问 DOM 节点或在多次渲染之间持久化可变值而无需触发重新渲染的方法。它们对于管理不直接与组件视觉输出相关的值至关重要，例如管理焦点、媒体播放或与第三方 DOM 库集成。本节将介绍 `useRef` 和 `useImperativeHandle`。
 
-若想对 ref 有一个基础的了解，你可能需要先查阅 [Refs](./core-apis-refs.md) 文档。
+如需管理触发重新渲染的组件状态，请参阅 [State Hooks](./hooks-state.md)。
 
-本节涵盖以下 hooks：
-- `useRef`：创建一个可变 ref 对象，可以持有一个值或一个 DOM 节点。
-- `useImperativeHandle`：在使用 `ref` 时，自定义暴露给父组件的实例值。
+## `useRef`
 
----
+`useRef` Hook 返回一个可变的 ref 对象，其 `.current` 属性被初始化为传入的参数 (`initialValue`)。返回的对象将在组件的整个生命周期内保持不变。一个常见的用例是直接访问 DOM 元素。
 
-## useRef
-
-`useRef` Hook 返回一个可变的 ref 对象，其 `.current` 属性被初始化为传入的参数（`initialValue`）。返回的对象在组件的整个生命周期内保持不变。
-
-`useRef` 的一个常见用例是直接访问 DOM 元素。它也可以用来持有任何可变值，类似于在类中使用实例字段的方式。
-
-```d2
-direction: down
-
-Component: {
-  "useRef(initialValue)": {
-    style.bold: true
-  }
-
-  "Ref Object": {
-    shape: cylinder
-    ".current": "initialValue"
-  }
-
-  "Component Lifetime": {
-    shape: sequence_diagram
-    A: "Mount"
-    B: "Re-render"
-    C: "Re-render"
-    D: "Unmount"
-
-    A -> B -> C -> D
-  }
-
-  "useRef(initialValue)" -> "Ref Object": "Returns"
-  "Ref Object" -> "Component Lifetime": "Persists across renders"
-}
-```
+更改 ref 的 `.current` 属性**不会**导致重新渲染。
 
 ### 语法
 
 ```javascript
-export function useRef<T>(initialValue: T): {current: T}
+function useRef<T>(initialValue: T): {current: T}
 ```
 
 ### 参数
 
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `initialValue` | `T` | ref 对象的 `current` 属性的初始值。 |
+| Name | Type | Description |
+|---|---|---|
+| `initialValue` | `T` | `ref` 对象 `current` 属性的初始值。它可以是任何类型的值。 |
 
 ### 返回值
 
-`useRef` 返回一个带有 `current` 属性的可变对象。最初，`ref.current` 被设置为 `initialValue`。之后你可以更改 `ref.current` 的值。如果你将 ref 对象作为 JSX 节点上的 `ref` 属性传递给 React（例如 `<div ref={myRef} />`），React 会将其 `current` 属性设置为相应的 DOM 节点。
+`useRef` 返回一个具有 `current` 属性的单一可变对象。
 
-### 示例 1：访问 DOM 元素
+### 示例：访问 DOM 元素
 
-你可以使用 ref 直接操作 DOM 元素，例如管理焦点、文本选择或媒体播放。
+以下示例展示了如何使用 `useRef` 存储对 input DOM 元素的引用，并在按钮被点击时使其聚焦。
 
 ```javascript
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 
 function TextInputWithFocusButton() {
   const inputEl = useRef(null);
-
+  
   const onButtonClick = () => {
-    // `current` 指向已挂载的文本输入元素
+    // `.current` 指向已挂载的文本输入元素
     if (inputEl.current) {
       inputEl.current.focus();
     }
@@ -86,53 +52,18 @@ function TextInputWithFocusButton() {
 }
 ```
 
-在此示例中，`useRef` 创建了一个 ref 对象。我们通过传递 `<input ref={inputEl}>` 将其附加到 `<input>` 元素上。当按钮被点击时，`inputEl.current.focus()` 会被调用，从而以编程方式使输入框获得焦点。
+在此示例中，`inputEl` 保存了对 `<input>` 元素的引用。当按钮被点击时，我们调用 `inputEl.current` 的 `focus()` 方法。
 
-### 示例 2：存储可变值
+## `useImperativeHandle`
 
-`useRef` 对于保存任何可变值也很有用。这对于那些你希望在多次渲染之间保持不变，但又不想在它们改变时触发重新渲染的值来说非常方便。
+`useImperativeHandle` 可以在使用 `ref` 时，自定义暴露给父组件的实例值。当您希望控制父组件能够访问子组件实例上的哪些内容时，这个 Hook 非常有用。它应始终与 `forwardRef` 结合使用。
 
-```javascript
-import React, { useState, useEffect, useRef } from 'react';
-
-function Timer() {
-  const [count, setCount] = useState(0);
-  const intervalRef = useRef(null);
-
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setCount(prevCount => prevCount + 1);
-    }, 1000);
-
-    // 清理函数
-    return () => {
-      clearInterval(intervalRef.current);
-    };
-  }, []); // 空依赖数组意味着此 effect 仅在挂载时运行一次
-
-  return (
-    <div>
-      <h1>Count: {count}</h1>
-      <button onClick={() => clearInterval(intervalRef.current)}>
-        Stop Timer
-      </button>
-    </div>
-  );
-}
-```
-
-在这里，`useRef` 存储了 interval ID。我们可以在组件的任何地方访问和清除此 interval，而不会导致重新渲染，因为更改 `intervalRef.current` 不会触发组件更新。
-
----
-
-## useImperativeHandle
-
-`useImperativeHandle` 在使用 `ref` 时自定义暴露给父组件的实例值。它应始终与 `forwardRef` 一起使用。这允许子组件向其父组件暴露特定的函数，而不是暴露整个组件实例，从而提供了更好的封装性。
+这个 Hook 允许您向父组件暴露一个特定的、有限的 API，而不是整个组件实例，这有助于创建更可预测和解耦的组件。
 
 ### 语法
 
 ```javascript
-export function useImperativeHandle<T>(
+function useImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   deps: Array<mixed> | void | null,
@@ -141,65 +72,67 @@ export function useImperativeHandle<T>(
 
 ### 参数
 
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `ref` | `Ref<T>` | 从父组件转发的 ref。 |
-| `create` | `() => T` | 一个返回自定义句柄的函数。此句柄将被赋值给父组件中的 `ref.current` 属性。 |
-| `deps` | `Array<any>` | 可选的依赖数组。每当其中一个依赖项发生变化时，`create` 函数就会重新执行。 |
+| Name | Type | Description |
+|---|---|---|
+| `ref` | `RefObject` | 通过 `forwardRef` 从父组件转发的 `ref`。 |
+| `create` | `() => T` | 一个函数，其返回值将作为 ref 的 `current` 值暴露出来。这个值可以是一个包含您想要暴露的方法或属性的对象。 |
+| `deps` | `Array<any>?` | 一个可选的依赖项数组。每当此数组中的任何依赖项发生更改时，都会重新执行 `create` 函数。如果省略，则在每次渲染时都会运行。 |
 
-### 示例
 
-在此示例中，父组件需要在一个自定义输入组件上调用 `focusAndClear` 方法。
+### 示例：暴露自定义的 Focus 方法
+
+在此示例中，父组件需要聚焦子组件内部的输入框。子组件 `FancyInput` 使用 `useImperativeHandle` 仅暴露一个 `focus` 方法。
 
 ```javascript
-import React, { useRef, useImperativeHandle, forwardRef, useState } from 'react';
+import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 
-// 子组件
-const CustomInput = forwardRef((props, ref) => {
-  const [value, setValue] = useState('');
+// 使用 forwardRef 和 useImperativeHandle 的子组件
+const FancyInput = forwardRef((props, ref) => {
   const inputRef = useRef();
-
+  
   useImperativeHandle(ref, () => ({
-    focusAndClear: () => {
-      inputRef.current.focus();
-      setValue('');
+    // 向父组件暴露一个自定义的 'focus' 方法
+    focus: () => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     },
-    // 你可以在这里暴露其他方法
+    // 你也可以在这里暴露其他方法
+    clear: () => {
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
+    }
   }));
 
-  return (
-    <input
-      ref={inputRef}
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      placeholder="Type something..."
-    />
-  );
+  return <input ref={inputRef} type="text" placeholder="Enter text..." />;
 });
 
 // 父组件
-function ParentComponent() {
-  const customInputRef = useRef(null);
+function App() {
+  const fancyInputRef = useRef(null);
 
-  const handleFocusAndClear = () => {
-    if (customInputRef.current) {
-      customInputRef.current.focusAndClear();
+  const handleFocusClick = () => {
+    if (fancyInputRef.current) {
+      fancyInputRef.current.focus();
     }
   };
 
   return (
     <div>
-      <CustomInput ref={customInputRef} />
-      <button onClick={handleFocusAndClear}>Focus and Clear Input</button>
+      <FancyInput ref={fancyInputRef} />
+      <button onClick={handleFocusClick}>
+        Focus Child Input
+      </button>
     </div>
   );
 }
 ```
 
-`ParentComponent` 创建一个 ref (`customInputRef`) 并将其传递给 `CustomInput`。被 `forwardRef` 包裹的 `CustomInput` 组件使用 `useImperativeHandle` 来精确定义 `customInputRef.current` 上可访问的属性和方法。然后，父组件可以调用 `customInputRef.current.focusAndClear()` 以受控的方式与子组件进行交互。
+父组件现在可以调用 `fancyInputRef.current.focus()`，但不能直接访问底层的 `<input>` DOM 节点或 `FancyInput` 的其他内部属性。
 
 ---
 
-通过 Ref Hooks，你可以精确控制不影响渲染的 DOM 元素和可变状态。
+通过使用 `useRef` 和 `useImperativeHandle`，您可以有效地管理超出 React 标准声明式数据流的交互。
 
-接下来，让我们探讨如何使用 [Performance Hooks](./hooks-performance.md) 来优化你的应用程序。
+接下来，学习如何使用 [Performance Hooks](./hooks-performance.md) 优化应用程序的渲染性能。

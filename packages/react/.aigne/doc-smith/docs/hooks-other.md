@@ -1,49 +1,32 @@
 # Other Hooks
 
-Beyond managing state, effects, and performance, React provides several specialized Hooks to solve other common problems. This guide covers a collection of Hooks for tasks like reading context, generating stable identifiers, debugging custom Hooks, and integrating with external data sources.
-
-<x-cards data-columns="2">
-  <x-card data-title="useContext" data-icon="lucide:arrow-down-to-dot">
-    Access data from parent components without prop drilling.
-  </x-card>
-  <x-card data-title="useId" data-icon="lucide:fingerprint">
-    Generate unique, stable IDs for accessibility attributes.
-  </x-card>
-  <x-card data-title="useDebugValue" data-icon="lucide:bug">
-    Display custom labels in React DevTools for your custom Hooks.
-  </x-card>
-  <x-card data-title="useSyncExternalStore" data-icon="lucide:link-2">
-    Subscribe to external stores in a way that supports concurrent features.
-  </x-card>
-</x-cards>
+This section covers a set of specialized Hooks that handle various tasks, from reading context and generating unique IDs to integrating with external data sources and debugging custom Hooks. While [State Hooks](./hooks-state.md) manage component data and [Effect Hooks](./hooks-effect.md) handle side effects, these Hooks provide solutions for other common needs in React applications.
 
 ---
 
-## useContext
+## `useContext`
 
-The `useContext` Hook accepts a context object (the value returned from `React.createContext`) and returns the current value for that context. It's the primary way to consume context in function components, allowing you to avoid passing props down through many levels of the component tree.
+Accepts a context object (the value returned from `React.createContext`) and returns the current context value. The current context value is determined by the `value` prop of the nearest `<MyContext.Provider>` above the calling component in the tree.
 
-For more information on the concept of context, see the [Context](./core-apis-context.md) guide.
+When the nearest `<MyContext.Provider>` above the component updates, this Hook will trigger a re-render with the latest context `value`.
 
-**Syntax**
+### API
 
 ```javascript
 const value = useContext(SomeContext);
 ```
 
-**Parameters**
+### Parameters
 
-| Name | Type | Description |
+| Parameter | Type | Description |
 |---|---|---|
-| `Context` | `ReactContext` | The context object returned by `React.createContext`. |
+| `Context` | React Context Object | The context object returned from `React.createContext`. |
 
-**Returns**
+### Returns
 
-The current context value, which is determined by the `value` prop of the nearest matching `<MyContext.Provider>` above the calling component in the tree.
+Returns the context value for the calling component.
 
-**Example**
-
-This example shows how a `ThemedButton` component can access the current theme without receiving it as a prop.
+### Example
 
 ```javascript
 import React, { createContext, useContext } from 'react';
@@ -54,7 +37,7 @@ const ThemeContext = createContext('light');
 // 2. A component that uses the context
 function ThemedButton() {
   const theme = useContext(ThemeContext);
-  return <button className={`theme-${theme}`}>A {theme} button</button>;
+  return <button>Current theme is: {theme}</button>;
 }
 
 // 3. A component that provides the context
@@ -69,112 +52,128 @@ export default function App() {
 
 ---
 
-## useId
+## `useId`
 
-`useId` is a Hook for generating unique IDs that are stable across both server and client rendering. This is useful for avoiding hydration mismatches, especially for accessibility attributes like `htmlFor` and `id`.
+`useId` is a Hook for generating unique IDs that are stable across both server and client, which is essential for preventing hydration mismatches in server-rendered applications. It is primarily used for accessibility attributes that need to connect two elements, such as a `<label>` and an `<input>`.
 
-**Syntax**
+### API
 
 ```javascript
-const id = useId();
+const uniqueId = useId();
 ```
 
-**Parameters**
+### Parameters
 
-None.
+This hook takes no parameters.
 
-**Returns**
+### Returns
 
-A unique string ID. The ID is stable for a given component across renders.
+A unique and stable string ID. The ID is prefixed with `:r` to ensure it doesn't conflict with CSS selectors.
 
-**Example**
-
-Here, `useId` generates a matching ID to connect a label and an input field, which is essential for screen readers.
+### Example
 
 ```javascript
-import React, { useId } from 'react';
+import { useId } from 'react';
 
-function EmailField() {
+function FormField() {
   const id = useId();
   return (
     <div>
-      <label htmlFor={id}>Email Address</label>
+      <label htmlFor={id}>Your Email:</label>
       <input id={id} type="email" name="email" />
     </div>
   );
 }
+
+export default function SignupForm() {
+  return (
+    <form>
+      <p>Sign up for our newsletter:</p>
+      <FormField />
+      <FormField />
+    </form>
+  );
+}
 ```
+In the example above, each `FormField` instance will get its own unique ID, correctly associating each label with its input.
 
 ---
 
-## useDebugValue
+## `useDebugValue`
 
-`useDebugValue` is a Hook that lets you display a custom label for your own custom Hooks in React DevTools. This makes it easier to inspect and debug the internal state of custom Hooks.
+`useDebugValue` can be used to display a label for custom Hooks in React DevTools. It helps in inspecting and debugging the internal state of your custom Hooks.
 
-**Syntax**
+**Note:** This Hook only has an effect in development mode and is ignored in production builds.
+
+### API
 
 ```javascript
-useDebugValue(value, format?);
+useDebugValue(value, formatFn?);
 ```
 
-**Parameters**
+### Parameters
 
-| Name | Type | Description |
+| Parameter | Type | Description |
 |---|---|---|
-| `value` | `any` | The value to display in React DevTools. |
-| `formatterFn`| `function` | Optional. A function to format the displayed value. It receives the value as an argument and should return a formatted value. This is useful for avoiding expensive formatting operations unless the Hook is actually inspected. |
+| `value` | `any` | The value to display in React DevTools next to your custom Hook. |
+| `formatFn` | `function` | (Optional) A formatting function that is only called when the DevTools are open. It receives the `value` and should return a formatted display value. This defers potentially expensive formatting operations. |
 
-**Example**
+### Returns
 
-In this custom Hook, `useDebugValue` provides a human-readable status in the DevTools component inspector.
+This hook does not return anything (`void`).
+
+### Example
 
 ```javascript
 import { useState, useDebugValue } from 'react';
 
 function useOnlineStatus() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  // ... logic to check online status would go here ...
+  // ... logic to listen to online/offline events ...
 
-  // Display a readable label in React DevTools next to this hook
+  // This label will appear in React DevTools
   useDebugValue(isOnline ? 'Online' : 'Offline');
 
   return isOnline;
 }
 
-export default function App() {
+export default function ChatApp() {
   const isOnline = useOnlineStatus();
-  return <h1>{isOnline ? '✅ Online' : '❌ Disconnected'}</h1>;
+  return <h1>{isOnline ? '✅ Connected' : '❌ Disconnected'}</h1>;
 }
 ```
-
-When you inspect the `App` component in React DevTools, you will see a label for the `OnlineStatus` Hook showing either "Online" or "Offline".
+When you inspect the `ChatApp` component in React DevTools, you will see a `OnlineStatus` hook with the label "Online" or "Offline" next to it.
 
 ---
 
-## useSyncExternalStore
+## `useSyncExternalStore`
 
-`useSyncExternalStore` is a Hook for reading and subscribing to an external data source in a way that is compatible with React's concurrent rendering features. It ensures that your component re-renders whenever the external data changes and prevents visual tearing during concurrent updates.
+`useSyncExternalStore` is a Hook for subscribing to an external data source. It is designed to be compatible with concurrent rendering features and ensures that your component re-renders correctly when the external data changes, avoiding visual tearing.
 
-It is typically used by libraries that integrate with React, rather than in application code directly.
+This is useful for integrating with third-party state management libraries or browser APIs that are not built with React state.
 
-**Syntax**
+### API
 
 ```javascript
-const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?);
+const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?);
 ```
 
-**Parameters**
+### Parameters
 
-| Name | Type | Description |
+| Parameter | Type | Description |
 |---|---|---|
-| `subscribe` | `function` | A function that subscribes a callback to the store. It must return a function that unsubscribes. |
-| `getSnapshot`| `function` | A function that returns a snapshot of the current data in the store. |
-| `getServerSnapshot` | `function` | Optional. A function that returns a snapshot of the data for server-side rendering. |
+| `subscribe` | `function` | A function that subscribes a callback to the store. It must return an `unsubscribe` function. |
+| `getSnapshot` | `function` | A function that returns the current value (snapshot) of the data in the store. |
+| `getServerSnapshot`| `function` | (Optional) A function that returns the initial snapshot of the data for server-side rendering (SSR). |
 
-**Example**
+### Returns
 
-This example demonstrates subscribing to the browser's `window.innerWidth` property.
+The current value from the external store.
+
+### Example
+
+This example subscribes to the browser's `window.innerWidth` to display the current window width.
 
 ```javascript
 import { useSyncExternalStore } from 'react';
@@ -192,14 +191,10 @@ function getSnapshot() {
 
 export default function App() {
   const width = useSyncExternalStore(subscribe, getSnapshot);
-
-  return <h1>Window width: {width}</h1>;
+  return <p>Window width: {width}px</p>;
 }
 ```
-This component will now correctly re-render whenever the browser window is resized.
 
 ---
 
-### Next Steps
-
-You have now explored a variety of specialized Hooks that handle context, unique IDs, debugging, and external state. To dive deeper into more complex React features and patterns, continue to our [Advanced Guides](./advanced.md).
+These utility Hooks address a range of specific needs within the React ecosystem. For more complex challenges, consider exploring the [Advanced Guides](./advanced.md) or consulting the complete [API Reference](./api-reference.md).

@@ -1,153 +1,125 @@
 # 实验性 API
 
-本指南涵盖了 React 中的实验性和不稳定的 API。这些 API 旨在用于测试和反馈。它们可能会在未来的版本中发生重大变化或被移除，而不会遵循通常的弃用周期。请谨慎使用它们，尤其是在生产环境中。
+**警告：本页记录的 API 是实验性的，尚未在稳定版本中提供。在未来的 React 版本中，它们可能会发生重大变化或被完全移除。**
 
-对于更稳定的高级功能，你可能对 [服务器与客户端环境](./advanced-server-vs-client.md) 或 [缓存](./advanced-caching.md) 感兴趣。
+本节概述了正在积极开发的实验性功能。它们旨在供早期采用者和库作者进行实验并提供反馈。我们强烈建议不要在生产应用程序中使用这些 API。
 
-## 使用 Taint API 实现服务器端安全
+## 安全性：Tainting API
 
-在使用 React 服务器组件构建应用程序时，防止敏感的仅服务器数据意外传递给客户端至关重要。Taint API 提供了一种机制，可以将特定数据标记为“已污染”，如果 React 尝试在发送给客户端的有效负载中序列化此数据，则会引发错误。
+在服务器环境中，防止敏感数据（如 API 密钥或用户会话令牌）被意外传递到客户端代码至关重要。Tainting API 是一项仅限服务器使用的功能，旨在创建安全边界，如果一个“受污染的”值被序列化并发送到客户端，就会抛出错误。
 
-此安全功能仅在服务器环境中可用。
+在使用 React Server Components 或 Server Actions 时，此机制有助于防止数据泄漏。
 
-```d2
-direction: down
+### `experimental_taintUniqueValue(message, lifetime, value)`
 
-Server: {
-  "服务器组件": {
-    "1. 污染敏感数据": {
-      shape: step
-      "experimental_taintUniqueValue('api_key', ...)"
-    }
-    "2. 为客户端组件准备 props" : { shape: step }
-  }
-}
-
-"序列化边界": {
-  shape: hexagon
-  "3. 检查污染值"
-}
-
-Client: {
-  "客户端组件"
-}
-
-Server -> "序列化边界": "传递 props"
-
-subgraph {
-  direction: right
-  "序列化边界" -- "数据是干净的" --> Client: "4a. 发送有效负载"
-  "序列化边界" -- "检测到污染值" --> Server: "4b. 抛出错误（已防止泄漏）" {
-    style.stroke: red
-  }
-}
-```
-
-### `experimental_taintUniqueValue`
-
-此函数污染一个唯一的原始值，例如密钥或令牌。它可以与字符串、bigint 和 ArrayBuffer 视图一起使用。
+此函数会污染一个唯一的原始值，如机密令牌或密钥。React 将阻止此特定值被传递给任何 Client Component 或 Server Action 闭包。
 
 **参数**
 
-| Name      | Type                                | Description                                                                                                                            |
-|-----------|-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| `message` | `string` (optional)                 | 如果被污染的值被序列化，将抛出的自定义错误信息。默认为通用警告。                                                                       |
-| `lifetime`| `object`                            | 一个持有该值的对象。污染在该对象的生命周期内被认为是有效的。                                                                           |
-| `value`   | `string` \| `bigint` \| `ArrayBufferView` | 要污染的唯一的、敏感的值。它不能是通用对象或函数。                                                                                     |
+| Name | Type | Description |
+|---|---|---|
+| `message` | `string` | 违反污染规则时抛出的可选自定义错误消息。 |
+| `lifetime` | `object` | 一个对象引用。当此对象被垃圾回收时，污染将被移除。这有助于管理污染注册表使用的内存。 |
+| `value` | `string` \| `bigint` \| `$ArrayBufferView` | 要污染的唯一的、敏感的原始值。 |
 
-**示例**
+**示例：污染用户的 API 密钥**
 
 ```javascript
-// 在服务器组件或服务器操作中
+// 位于一个仅限服务器的文件中
 import { experimental_taintUniqueValue } from 'react';
+import { getUserData } from './database';
 
-async function processUserData(user) {
-  const userSecrets = { apiKey: process.env.USER_API_KEY };
+export async function getTaintedUserData(userId) {
+  const user = await getUserData(userId);
 
-  // 污染 API 密钥，以防止其离开服务器。
-  // 'userSecrets' 对象定义了污染的生命周期。
+  // 此对象的生命周期与请求绑定
+  const requestLifetime = {}; 
+
+  // 污染用户的机密 API 密钥
   experimental_taintUniqueValue(
-    'API key should not be sent to the client.',
-    userSecrets,
-    userSecrets.apiKey
+    'API key must not be exposed to the client.',
+    requestLifetime,
+    user.apiKey
   );
 
-  // ……如果 userSecrets 被传递给客户端组件，React 将会抛出错误。
+  return user;
+}
+
+// 在一个 Server Component 中：
+async function UserProfile({ userId }) {
+  const user = await getTaintedUserData(userId);
+
+  // 这是安全的，因为 `user.apiKey` 没有被传递给客户端。
+  const serverSideData = await fetchDataWithKey(user.apiKey);
+
+  return (
+    // 如果你将 `user.apiKey` 传递给 ClientInfo，React 将会抛出错误。
+    <ClientInfo name={user.name} />
+  );
 }
 ```
 
-### `experimental_taintObjectReference`
+### `experimental_taintObjectReference(message, object)`
 
-此函数污染整个对象或函数引用。这对于像数据库连接或会话对象这样不应被序列化的东西很有用。
+此函数会污染整个对象或函数引用。任何序列化此对象并将其发送到客户端的尝试都将导致错误。
 
 **参数**
 
-| Name      | Type                  | Description                                                                                             |
-|-----------|-----------------------|---------------------------------------------------------------------------------------------------------|
-| `message` | `string` (optional)   | 如果被污染的对象被序列化，将抛出的自定义错误信息。默认为通用警告。                                      |
-| `object`  | `object` \| `function`  | 要污染的对象或函数引用。                                                                                |
+| Name | Type | Description |
+|---|---|---|
+| `message` | `string` | 违反污染规则时抛出的可选自定义错误消息。 |
+| `object` | `object` \| `function` | 要污染的对象或函数引用。 |
 
-**示例**
+**示例：污染数据库连接**
 
 ```javascript
-// 在服务器端模块中
+// 位于一个仅限服务器的文件中
 import { experimental_taintObjectReference } from 'react';
+import { createDbConnection } from './db';
 
-// 假设这是你的数据库连接池
-const dbConnection = createDatabaseConnection();
+const db = createDbConnection();
 
-// 污染整个连接对象。
-experimental_taintObjectReference('Database connection cannot be serialized.', dbConnection);
+// 污染数据库连接对象，以防止其离开服务器。
+experimental_taintObjectReference(
+  'The database connection object cannot be sent to the client.',
+  db
+);
 
-export function getData() {
-  // 这个函数可以在服务器上安全地使用 dbConnection。
-  // 但如果它或连接被传递到客户端，React 将会抛出错误。
-  return dbConnection.query('SELECT * FROM users');
-}
+export default db;
 ```
 
-## 使用 unstable_postpone 实现声明式渲染延迟
+## 渲染：`postpone(reason)`
 
-unstable_postpone 函数允许服务器组件以声明方式暂停其渲染。调用该函数时，React 会停止当前的渲染过程，并等待新的渲染过程启动，届时它将尝试从根组件重新渲染。在某些渲染先决条件尚未满足，而你又希望等待而不是显示 `Suspense` 回退的情况下，这可能很有用。
+`postpone` 函数允许 React Server Component 中断其渲染过程而不会导致服务器错误。当被调用时，它会向 React 渲染器发出信号，表明组件尚未准备好渲染，并且渲染应在稍后重试。这对于数据尚不可用，而你更愿意等待而不是渲染 `Suspense` 回退的场景很有用。
 
-**用法**
+它的工作原理是抛出一个特殊的对象，渲染器会捕获该对象并将其解释为暂停的信号。
 
-`unstable_postpone` 使用一个字符串参数进行调用，该参数提供了延迟的原因。此原因用于调试目的。
+**参数**
+
+| Name | Type | Description |
+|---|---|---|
+| `reason` | `string` | 一个描述性字符串，解释渲染被推迟的原因。这用于调试。 |
+
+**示例：为个性化问候语推迟渲染**
 
 ```javascript
-import { unstable_postpone as postpone } from 'react';
+import { postpone } from 'react';
+import { getPersonalizedContent } from './contentApi';
 
-function FeatureGate({ featureFlag }) {
-  if (!featureFlag.isLoaded) {
-    // 如果功能标志数据尚未准备好，则推迟渲染此树。
-    // React 将会等待并稍后重试渲染。
-    postpone('Feature flags are not loaded yet.');
+async function PersonalizedGreeting({ userId }) {
+  // 获取个性化内容，初始生成可能较慢。
+  const content = await getPersonalizedContent(userId);
+
+  if (content.status === 'PENDING') {
+    // 如果内容尚未准备好，则推迟渲染。
+    // React 将保持连接并重试渲染此组件。
+    postpone(`Personalized content for user ${userId} is not ready.`);
   }
 
-  if (!featureFlag.isEnabled) {
-    return null; // 如果功能被禁用，则不进行渲染
-  }
-
-  return <MyNewFeature />;
+  return <h1>{content.greeting}</h1>;
 }
 ```
-
-## 其他实验性 API
-
-还有其他一些 API 在 `experimental` 或 `unstable` 前缀下可用。它们提供了对仍在积极开发中的新功能的访问。
-
-| API                                | Description                                                                                 |
-|------------------------------------|---------------------------------------------------------------------------------------------|
-| `experimental_useOptimistic`       | `useOptimistic` 的旧别名。现已稳定，使用此 API 将产生开发者警告。                          |
-| `unstable_Activity`                | 将组件的作用域限定在过渡（transition）中，防止在作用域外显示回退（fallback）。              |
-| `unstable_SuspenseList`            | 协调多个 `Suspense` 边界的加载顺序。                                                          |
-| `unstable_ViewTransition`          | 一个用于管理 SPA 导航的 CSS 视图过渡（View Transitions）的组件。                              |
-| `unstable_startGestureTransition`  | 专门为基于手势的交互启动一个过渡。                                                          |
-| `unstable_useCacheRefresh`         | 提供一种刷新 React 缓存中数据的机制。                                                       |
-| `unstable_getCacheForType`         | 一个仅限服务器的 API，用于访问特定类型的缓存实例。                                            |
 
 ---
 
-通过探索这些 API，你可以一窥 React 未来的发展方向并提供宝贵的反馈。但是，在使用它们时，请务必为重大变更做好准备。
-
-接下来，你可以在 [服务器与客户端环境](./advanced-server-vs-client.md) 中了解更多关于 React 如何处理不同环境的信息。
+这些实验性 API 为构建安全和动态的应用程序提供了强大的新功能。随着它们的成熟，它们可能会被集成到稳定的 React API 中。目前，请使用它们进行探索和提供反馈。对于生产就绪的功能，请查阅主 [API 参考](./api-reference.md)。

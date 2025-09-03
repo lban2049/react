@@ -1,152 +1,162 @@
 # 创建和操作元素
 
-虽然 [JSX](./core-apis-jsx.md) 是描述 UI 最常见的方式，但它只是底层 React 函数的一种便捷语法。理解这些函数可以让你更直接地控制 React 元素，并且对于某些高级模式很有用。React 元素是描述你希望在屏幕上看到的内容的轻量级对象。
+虽然 [JSX](./core-apis-jsx.md) 是在 React 中描述用户界面最常用和最便捷的方式，但理解它只是底层函数调用的语法糖非常重要。其核心在于，每个 JSX 标签都会被转换为一个 `React.createElement()` 调用，该调用会生成一个称为 React 元素的 JavaScript 对象。本节将介绍用于直接创建和操作这些元素的底层 API。
 
-本指南涵盖了直接操作它们的主要 API：`createElement`、`cloneElement` 和 `isValidElement`。
+理解这些函数对于构建高阶组件、设计工具库或需要动态地向子元素添加 props 时非常有用。
 
-## createElement()
+```d2
+direction: down
 
-这是创建 React 元素的基本方法。在 JSX 出现之前，所有的 React UI 都是用 `createElement` 编写的。当使用经典的 JSX 转换时，你的 JSX 代码会直接编译成 `React.createElement` 调用。
+"JSX": {
+  shape: document
+  label: "<h1 className='greeting'>Hello</h1>"
+}
 
-**语法**
+"Babel Compiler": {
+  shape: hexagon
+}
 
-```javascript
-React.createElement(type, [props], [...children])
+"Function Call": {
+  shape: rectangle
+  label: "React.createElement('h1', {className: 'greeting'}, 'Hello')"
+}
+
+"React Element Object": {
+  shape: package
+  label: "对渲染内容的轻量级描述"
+  "$$typeof": "Symbol(react.element)"
+  "type": "'h1'"
+  "props": "{ className: 'greeting', children: 'Hello' }"
+}
+
+"JSX" -> "Babel Compiler": "转译"
+"Babel Compiler" -> "Function Call": "输出"
+"Function Call" -> "React Element Object": "创建"
 ```
 
-**参数**
+---
+
+## `createElement()`
+
+`React.createElement()` 是一个基础函数，用于创建并返回一个给定类型的新 React 元素。JSX 转换会编译为使用此函数。
+
+`React.createElement(type, [props], [...children])`
+
+**Parameters**
 
 | Parameter | Type | Description |
 |---|---|---|
-| `type` | `string` \| `Component` | 元素类型。可以是一个标签名称字符串（例如，`'div'`）或一个 React 组件（一个类或一个函数）。 |
-| `props` | `object` | 包含元素 props 的对象。`null` 被视为空对象。`key` 是一个特殊的保留 prop。 |
-| `children` | `ReactNode` | 零个或多个子元素。可以是其他 React 元素、字符串、数字等。 |
+| `type` | string \| Component | 元素类型。可以是一个标签名称字符串（例如 `'div'`、`'span'`），一个 React 组件类型（类或函数），或一个 React fragment 类型。 |
+| `props` | object | 一个包含元素属性 (props) 的对象。此对象不应包含 `key` 等保留 props。如果 `config` 为 `null` 或 `undefined`，则视为空对象。 |
+| `children` | ReactNode... | 可变数量的子参数。这些参数可以是其他 React 元素、字符串、数字或节点数组。 |
 
-**示例**
+**Example**
+
+以下 JSX 代码：
+
+```jsx
+const element = (
+  <h1 className="greeting">
+    Hello, world!
+  </h1>
+);
+```
+
+等效于以下 `createElement()` 调用：
 
 ```javascript
-import React from 'react';
-
-// 使用 JSX，它看起来像这样：
-const jsxElement = <h1 className="greeting">Hello, world!</h1>;
-
-// 使用 React.createElement，它等效于此：
-const createElementElement = React.createElement(
+const element = React.createElement(
   'h1',
-  { className: 'greeting' },
+  {className: 'greeting'},
   'Hello, world!'
 );
-
-// 你也可以嵌套元素：
-const nestedElement = React.createElement(
-  'div',
-  null, // 无 props
-  React.createElement('p', null, 'This is a paragraph inside a div.')
-);
 ```
 
-这表明 `createElement` 是 JSX 这种便利性语法所依赖的、虽然冗长但明确的基础。
+两个版本都会生成相同的 React 元素对象。
 
-## cloneElement()
+---
 
-此实用工具允许你以另一个元素为起点创建一个新的 React 元素。它在修改元素的 props 时特别有用，尤其是修改作为 `props.children` 传入的元素。
+## `cloneElement()`
 
-**语法**
+`React.cloneElement()` 以现有 `element` 为起点，克隆并返回一个新的 React 元素。生成的元素将拥有原始元素的 props，并与新的 props 进行浅层合并。
 
-```javascript
-React.cloneElement(element, [props], [...children])
-```
+`React.cloneElement(element, [props], [...children])`
 
-**参数**
+**Parameters**
 
 | Parameter | Type | Description |
 |---|---|---|
-| `element` | `ReactElement` | 要克隆的元素。这必须是一个有效的 React 元素。 |
-| `props` | `object` | 新的 props 将浅层合并到原始元素的 props 中。此对象中的 `key` 和 `ref` 具有优先权。 |
-| `children` | `ReactNode` | 新的子元素，将完全替换原始元素的子元素。 |
+| `element` | ReactElement | 要克隆的 React 元素。必须是有效的 React 元素。 |
+| `props` | object | 一个包含新 props 的对象，用于合并到克隆的元素中。除非被覆盖，否则原始元素的 `key` 和 `ref` 将被保留。 |
+| `children` | ReactNode... | 将替换现有 `children` 的新子元素。 |
 
-**示例**
+**Usage**
+
+`cloneElement` 主要用于添加或修改传递给组件的子元素的 props。这在需要向其子元素注入 props 的布局组件中很常见。
+
+**Example**
+
+此组件为其所有作为有效 React 元素的直接子元素添加一个 `className` prop。
 
 ```javascript
 import React from 'react';
 
-// 一个为其直接子元素添加 CSS 类的组件
-function Tabbable({ children }) {
-  // 我们只能克隆单个元素。
-  const element = React.Children.only(children);
+function CustomContainer({ children }) {
+  const enhancedChildren = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      // 克隆子元素并添加一个新的 prop
+      return React.cloneElement(child, { className: 'enhanced-child' });
+    }
+    return child;
+  });
 
-  if (React.isValidElement(element)) {
-    return React.cloneElement(element, {
-      className: `${element.props.className || ''} tabbable-item`,
-      tabIndex: 0 // 使其可聚焦
-    });
-  }
-  return children;
+  return <div className="container">{enhancedChildren}</div>;
 }
 
 // 用法：
-function App() {
-  return (
-    <Tabbable>
-      <button onClick={() => alert('Clicked!')}>Click Me</button>
-    </Tabbable>
-  );
-}
+// <CustomContainer>
+//   <p>First paragraph</p>
+//   <span>Some text</span>
+// </CustomContainer>
+// <p> 和 <span> 都将接收 'enhanced-child' 类。
 ```
 
-在此示例中，`Tabbable` 组件接收一个子元素，克隆它，并合并新的 `className` 和 `tabIndex` props 来增强其行为，而子组件无需知晓这一点。
+---
 
-## isValidElement()
+## `isValidElement()`
 
-此函数验证给定对象是否为 React 元素。它提供了一种安全的方法，用于检查是否可以使用 `cloneElement` 等元素特定逻辑来处理某个对象。
+`React.isValidElement()` 是一个工具函数，用于验证一个对象是否为 React 元素。
 
-**语法**
+`React.isValidElement(object)`
 
-```javascript
-React.isValidElement(object)
-```
-
-**参数**
+**Parameters**
 
 | Parameter | Type | Description |
 |---|---|---|
-| `object` | `any` | 要检查的对象。 |
+| `object` | any | 要检查的对象。 |
 
-如果 `object` 是一个 React 元素，则返回 `true`，否则返回 `false`。其内部原理是检查 `$$typeof: REACT_ELEMENT_TYPE` 属性是否存在。
+**Returns**
 
-**示例**
+如果 `object` 是一个 React 元素，则返回 `true`，否则返回 `false`。
+
+**Example**
+
+此函数通常与 `React.Children.map` 或其他工具函数结合使用，以确保您只尝试操作 React 元素。
 
 ```javascript
-import React from 'react';
+import React, { isValidElement } from 'react';
 
-function Wrapper({ children }) {
-  const validElementCount = React.Children.toArray(children).filter(React.isValidElement).length;
+const validElement = <div />;
+const componentType = () => <div />;
+const notAnElement = 'Hello';
+const nullValue = null;
 
-  return (
-    <div>
-      <p>Number of valid React Elements passed as children: {validElementCount}</p>
-      <div className="content">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-// 用法：
-<Wrapper>
-  <h1>A Title</h1>
-  {'Just a string'}
-  {null}
-  <p>A paragraph.</p>
-</Wrapper>
-// 渲染结果：
-// Number of valid React Elements passed as children: 2
+console.log(isValidElement(validElement));     // true
+console.log(isValidElement(componentType));   // false（它是一个函数，而不是一个元素）
+console.log(isValidElement(notAnElement));    // false
+console.log(isValidElement(nullValue));         // false
 ```
 
-此示例使用 `isValidElement` 来计算 children 中有多少是实际的 React 元素，而不是像字符串或 `null` 这样的其他原始类型。
+---
 
-## 总结
-
-虽然你在日常开发中主要使用 JSX，但理解 `createElement`、`cloneElement` 和 `isValidElement` 对于构建灵活的组件和库非常有价值。这些函数提供了操作作为 props 传递的元素所需的底层控制，从而实现了强大的模式和抽象。
-
-既然你已经了解了如何创建元素，接下来可以通过探索 [Refs](./core-apis-refs.md) 来学习如何与它们渲染出的底层 DOM 节点进行交互。
+既然您已经了解了如何创建和操作元素，接下来可以探索如何与传递给组件的子元素进行交互。请在 [Children Utilities](./core-apis-children-utilities.md) 指南中了解更多信息。
