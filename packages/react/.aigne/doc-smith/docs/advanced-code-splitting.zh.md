@@ -1,18 +1,17 @@
 # 使用 `lazy` 和 `Suspense` 进行代码分割
 
-代码分割是一种通过将大型代码包拆分成较小代码块来提升 Web 应用性能的技术。这些代码块可以按需加载，从而减少初始加载时间并改善用户体验。React 提供了 `React.lazy` 和 `Suspense` 这两个核心功能，使代码分割变得简单直接且具有声明性。
+代码分割是一种用于提升 Web 应用性能的技术，它将一个大的代码包分割成多个较小的代码块，这些代码块可以按需加载。这可以显著减少应用的初始加载时间，因为用户只需下载初始路由所需的代码。
 
-本指南将逐步介绍如何使用 `lazy` 和 `Suspense` 来实现组件的按需加载。
+React 提供了两个核心功能，可以轻松实现代码分割：`React.lazy` 用于定义应动态加载的组件，`React.Suspense` 用于指定这些组件在获取过程中的加载状态。
 
-## `React.lazy` 函数
+## `React.lazy()`
 
-`React.lazy` 允许你将动态导入的组件作为常规组件进行渲染。它接受一个函数作为参数，该函数必须调用动态 `import()`。
+`React.lazy` 函数允许你将一个动态导入的组件像普通组件一样进行渲染。它接受一个函数作为参数，该函数必须调用动态的 `import()`。这个 `import()` 必须返回一个 `Promise`，该 `Promise` 会解析为一个带有 `default` 导出的模块，该导出包含一个 React 组件。
 
-### 如何使用
+### 基本用法
 
-`lazy` 函数会返回一个特殊的 `LazyComponent` 对象。该对象具有 React 能够理解的特定结构，其 `$$typeof` 属性值为 `REACT_LAZY_TYPE`。
+在代码分割之前，你可能会静态导入一个组件：
 
-代码分割前：
 ```javascript
 import MyComponent from './MyComponent';
 
@@ -23,7 +22,8 @@ const App = () => (
 );
 ```
 
-使用 `React.lazy` 进行代码分割后：
+使用 `React.lazy`，你可以推迟加载该组件的代码，直到它实际被渲染时：
+
 ```javascript
 import React, { Suspense } from 'react';
 
@@ -38,145 +38,130 @@ const App = () => (
 );
 ```
 
-`import()` 调用会返回一个 `Promise`（具体来说，是一个 `Thenable` 对象）。此 promise 会解析为一个模块对象，该对象必须包含一个名为 `default` 的导出，且该导出的内容为 React 组件。如果模块没有 `default` 导出，导入操作将会失败。
+`lazy` 函数返回一个特殊的 `LazyComponent` 对象。该对象有一个值为 `REACT_LAZY_TYPE` 的 `$$typeof` 属性，并包含一个带有加载状态和结果的 `_payload`，以及一个 React 用来解析组件的 `_init` 函数 (`lazyInitializer`)。
 
-### 内部状态机
+## `React.Suspense`
 
-`LazyComponent` 的载荷在内部会经历几个状态来管理异步加载过程。正是这个机制使得 `Suspense` 能够显示后备 UI。
+使用 `React.lazy` 定义的组件必须在 `Suspense` 组件内部进行渲染。`Suspense` 允许你指定一个加载指示器（一个后备 UI），在懒加载组件加载期间显示。
+
+The `fallback` 属性接受任何你希望在等待组件加载时渲染的 React 元素。
+
+```javascript
+<Suspense fallback={<p>Please wait, the component is loading.</p>}>
+  <LazyLoadedComponent />
+</Suspense>
+```
+
+你可以在组件树的高层放置一个 `Suspense` 组件来处理多个懒加载组件的加载状态，也可以为单个懒加载组件进行包裹以实现更精细的控制。
+
+## 内部工作原理
+
+当 React 首次尝试渲染 `LazyComponent` 时，会触发 `lazyInitializer` 函数。这个过程涉及几个内部状态：
+
+| State | Value | Description |
+|---|---|---|
+| `Uninitialized` | -1 | 动态导入被调用之前的初始状态。 |
+| `Pending` | 0 | 动态 `import()` 已被调用，且 promise 正在处理中。 |
+| `Resolved` | 1 | Promise 成功解析，组件模块可用。 |
+| `Rejected` | 2 | Promise 被拒绝，表示加载出错。 |
+
+下图展示了使用 `Suspense` 的懒加载组件的生命周期。
 
 ```d2
 direction: down
 
-"初始渲染": {
-  shape: oval
-}
-
-"未初始化": {
+App-Render: {
+  label: "App 渲染"
   shape: rectangle
-  label: "未初始化 (-1)"
 }
 
-"待定": {
+Suspense-Boundary: {
+  label: "<Suspense> 边界"
+  shape: package
+
+  Lazy-Component-Render: {
+    label: "<LazyComponent> 被渲染"
+    shape: rectangle
+  }
+
+  Show-Fallback: {
+    label: "显示后备 UI"
+    shape: rectangle
+    style.stroke: "#faad14"
+  }
+}
+
+Network: {
+  label: "网络"
+  shape: cylinder
+
+  Dynamic-Import: {
+    label: "动态 import() promise"
+    shape: rectangle
+  }
+}
+
+Render-Result: {
+  label: "最终渲染"
+  shape: package
+
+  Render-Component: {
+    label: "渲染实际组件"
+    shape: rectangle
+    style.stroke: "#52c41a"
+  }
+
+  Throw-Error: {
+    label: "抛出错误"
+    shape: rectangle
+    style.stroke: "#ff4d4f"
+  }
+}
+
+Error-Boundary: {
+  label: "错误边界"
   shape: rectangle
-  label: "待定 (0)"
-  "动态 import() promise 正在进行中。"
+  tooltip: "捕获渲染错误"
 }
 
-"已解析": {
-  shape: rectangle
-  label: "已解析 (1)"
-  style.fill: "#f6ffed"
-  "组件模块已成功加载。"
-}
+App-Render -> Suspense-Boundary.Lazy-Component-Render: "1. 首次尝试渲染"
+Suspense-Boundary.Lazy-Component-Render -> Network.Dynamic-Import: "2. 触发 lazyInitializer，状态变为 Pending"
+Suspense-Boundary.Lazy-Component-Render -> Suspense-Boundary.Show-Fallback: "3. React 暂停渲染"
 
-"已拒绝": {
-  shape: rectangle
-  label: "已拒绝 (2)"
-  style.fill: "#fff1f0"
-  "组件模块加载失败。"
-}
+Network.Dynamic-Import -> Render-Result.Render-Component: "4a. Promise 解析成功 (状态：Resolved)"
+Network.Dynamic-Import -> Render-Result.Throw-Error: "4b. Promise 被拒绝 (状态：Rejected)"
 
-"组件渲染": {
-  shape: oval
-}
-
-"错误边界": {
-  shape: oval
-}
-
-"初始渲染" -> "未初始化": "lazy() 创建组件"
-"未初始化" -> "待定": "首次渲染触发 lazyInitializer()"
-"待定" -> "已解析": "import() promise 解析成功"
-"待定" -> "已拒绝": "import() promise 被拒绝"
-"已解析" -> "组件渲染": "React 渲染组件的 default 导出"
-"已拒绝" -> "错误边界": "React 抛出错误"
+Render-Result.Throw-Error -> Error-Boundary: "5. 错误被捕获"
 
 ```
 
-## `Suspense` 组件
+1.  当 React 遇到懒加载组件时，其状态为 `Uninitialized`。React 调用 `_init` 函数。
+2.  `_init` 函数执行动态 `import()` 并将组件状态转换为 `Pending`。然后它会抛出 `import()` 调用返回的 promise (`thenable`)。
+3.  因为组件尚未就绪，React 会暂停渲染过程。它会沿着组件树向上查找，直到找到最近的 `<Suspense>` 边界，该边界会捕获 promise 并显示其 `fallback` UI。
+4.  一旦 promise 成功解析，懒加载组件的状态变为 `Resolved`。React 会收到通知并再次尝试渲染该组件。这一次，`_init` 函数看到 `Resolved` 状态并返回实际组件模块的 `default` 导出，然后将其渲染到屏幕上。
+5.  如果 promise 被拒绝，状态变为 `Rejected`。`_init` 函数会抛出该错误。这个错误会沿着树向上传播，并应由一个[错误边界](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)捕获。
 
-使用 `React.lazy` 创建的组件只能在 `Suspense` 组件内部渲染。`Suspense` 允许你指定一个加载指示器（即 `fallback` 属性），它会在懒加载组件的代码被获取和加载时显示。
+## 错误处理
+
+如果懒加载组件加载失败（例如，由于网络错误），它会触发一个错误。你可以通过将懒加载组件包裹在一个错误边界中来优雅地处理这些错误并显示用户友好的信息。错误边界是一个类组件，它可以捕获其子组件树中任何位置的 JavaScript 错误。
 
 ```javascript
 import React, { Suspense } from 'react';
+import ErrorBoundary from './ErrorBoundary'; // 一个自定义的错误边界组件
 
 const OtherComponent = React.lazy(() => import('./OtherComponent'));
 
-function MyComponent() {
+function MyApp() {
   return (
     <div>
-      <Suspense fallback={<div>Loading component...</div>}>
-        <OtherComponent />
-      </Suspense>
-    </div>
-  );
-}
-```
-
-`fallback` 属性可以接受任何你希望在等待组件加载时渲染的 React 元素。你可以将 `Suspense` 组件放置在懒加载组件上方的任何位置，从而为多个懒加载组件创建一个共享的加载状态。
-
-## 处理错误
-
-如果动态 `import()` 失败（例如，由于网络错误），将会触发一个错误。为了优雅地处理这些错误并显示用户友好的信息，你可以用一个标准的 React [错误边界](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary)来包裹你的懒加载组件（及其 `Suspense` 边界）。
-
-以下是一个 `ErrorBoundary` 组件的示例：
-
-```javascript
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    // 更新 state，以便下一次渲染将显示后备 UI。
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    // 你也可以将错误日志记录到错误报告服务中
-    console.error("Uncaught error:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      // 你可以渲染任何自定义的后备 UI
-      return <h1>Something went wrong.</h1>;
-    }
-
-    return this.props.children; 
-  }
-}
-```
-
-然后，你可以用它来包裹你的懒加载组件：
-
-```javascript
-import React, { Suspense } from 'react';
-import ErrorBoundary from './ErrorBoundary';
-
-const MyLazyComponent = React.lazy(() => import('./MyLazyComponent'));
-
-const App = () => {
-  return (
-    <div>
-      <h1>My Application</h1>
       <ErrorBoundary>
         <Suspense fallback={<div>Loading...</div>}>
-          <MyLazyComponent />
+          <OtherComponent />
         </Suspense>
       </ErrorBoundary>
     </div>
   );
-};
+}
 ```
 
-## 在不同环境中的可用性
-
-`lazy` 函数是 React 的核心部分，它同时为客户端和服务器端环境提供导出。这确保了使用 `lazy` 和 `Suspense` 实现的代码分割能够跨越不同的渲染策略（包括服务器端渲染，即 SSR）无缝工作。
-
----
-
-通过利用 `React.lazy` 和 `Suspense`，你可以显著提升应用的初始加载性能。这种模式允许你推迟加载非关键组件的代码，直到用户实际需要它们时再加载。
-
-要了解更高级的性能模式，你可以进一步探索[缓存](./advanced-caching.md)和[过渡](./advanced-transitions.md)。
+通过结合使用 `lazy`、`Suspense` 和错误边界，你可以创建一个健壮且高性能的用户体验，有效处理加载状态和网络故障。

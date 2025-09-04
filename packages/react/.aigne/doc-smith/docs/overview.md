@@ -1,19 +1,62 @@
 # Overview
 
-React is a JavaScript library for creating user interfaces. It allows you to build encapsulated, reusable components that manage their own state, and then compose them to make complex UIs. It's typically used with a renderer like `react-dom` for the web or `react-native` for native environments.
+React is a JavaScript library for creating user interfaces. As of version **19.1.0**, it provides the foundational tools necessary to build encapsulated components that manage their own state, composing them to make complex UIs.
 
-This document provides a high-level introduction to React's core principles and a guide to how this documentation is structured.
+The `react` package itself contains only the functionality necessary to define components, hooks, and context. It is designed to be used with a renderer, such as `react-dom` for web applications or `react-native` for native mobile environments. This separation allows React to be used in various environments beyond the browser.
 
-## Core Concepts
+```d2
+direction: down
 
-To understand React, it's helpful to be familiar with a few key concepts.
+"Your Application": {
+  shape: rectangle
+  label: "Your Application Code\n(Components, Hooks, Logic)"
+}
 
-### Components and JSX
+"React Ecosystem": {
+  shape: package
+  grid-columns: 2
+  grid-gap: 50
 
-React applications are built from isolated pieces of UI called components. A component is a JavaScript function that returns a piece of UI. Here is a simple example of a `Counter` component:
+  "react-package": {
+    label: "`react`\nCore Logic"
+    shape: package
+  }
+
+  "react-renderers": {
+    label: "Renderers"
+    shape: rectangle
+    grid-columns: 1
+
+    "react-dom": {
+      label: "`react-dom`\n(For Web)"
+      shape: package
+    }
+    "react-native": {
+      label: "`react-native`\n(For Native)"
+      shape: package
+    }
+  }
+}
+
+"Platform-UI": {
+  shape: rectangle
+  label: "Platform UI\n(Browser DOM or Native View)"
+}
+
+"Your Application" -> "React Ecosystem"."react-package": "Uses"
+"React Ecosystem"."react-package" -> "React Ecosystem"."react-renderers": "Coordinates with"
+"React Ecosystem"."react-renderers" -> "Platform-UI": "Renders to"
+```
+
+**Note on Builds:** By default, React runs in development mode, which includes helpful warnings for common mistakes. For deployment, you should always use the [production build](https://reactjs.org/docs/optimizing-performance.html#use-the-production-build), which is optimized for performance.
+
+## Basic Usage Example
+
+Here is a simple example of a React component that uses the `useState` Hook to manage a counter.
 
 ```javascript
 import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
 
 function Counter() {
   const [count, setCount] = useState(0);
@@ -26,79 +69,30 @@ function Counter() {
     </>
   );
 }
+
+const root = createRoot(document.getElementById('root'));
+root.render(<Counter />);
 ```
 
-The HTML-like syntax inside the function is called JSX. It's a syntax extension for JavaScript that allows you to write UI descriptions directly within your code.
+## How This Documentation is Structured
 
-### State and Hooks
-
-Components can manage internal data using 'state'. When a component's state changes, React efficiently updates and re-renders the component to reflect the new information. In the example above, `useState` is a **Hook**. Hooks are functions that let you "hook into" React state and lifecycle features from function components, providing a direct and powerful way to manage component behavior.
-
-### Client and Server Environments
-
-The `react` package contains only the functionality necessary to define components. This core library is then used by renderers to translate your components into a user interface on a specific platform. This separation allows React to run in different environments, including on the client (in a web browser) and on the server.
-
-```d2
-direction: down
-
-"Your Application" {
-  shape: rectangle
-}
-
-"React Ecosystem" {
-  shape: package
-  grid-columns: 1
-  grid-gap: 50
-
-  "React Core (`react` package)": {
-    shape: hexagon
-    "Defines Components, State, Hooks"
-  }
-
-  "Renderers": {
-    shape: rectangle
-    grid-columns: 2
-    
-    "react-dom": {
-      label: "Web (react-dom)"
-      "Renders to the DOM"
-    }
-    
-    "react-native": {
-      label: "Native (react-native)"
-      "Renders to native UI elements"
-    }
-  }
-}
-
-"User Interface": {
-  shape: cloud
-}
-
-"Your Application" -> "React Ecosystem"."React Core (`react` package)": "Uses"
-"React Ecosystem"."React Core (`react` package)" -> "React Ecosystem".Renderers: "Powers"
-"React Ecosystem".Renderers -> "User Interface": "Creates"
-```
-
-## How This Documentation Is Structured
-
-This documentation is designed to help you, whether you are building your first component or optimizing a large-scale application. It is organized into several key areas:
+This documentation is designed to help you learn React, whether you are just starting or are an experienced developer. It is organized into several major sections:
 
 <x-cards data-columns="2">
-  <x-card data-title="Getting Started" data-icon="lucide:play-circle" data-href="/getting-started">
-    Set up your development environment and build your first React component.
+  <x-card data-title="Getting Started" data-icon="lucide:rocket" data-href="/getting-started">
+    A step-by-step guide to setting up a new project and creating your first React component.
   </x-card>
-  <x-card data-title="Core APIs" data-icon="lucide:cuboids" data-href="/core-apis">
-    Learn the fundamental building blocks, including components, JSX, props, and context.
+  <x-card data-title="Core APIs" data-icon="lucide:cubes" data-href="/core-apis">
+    Understand the fundamental building blocks of React, from components and JSX to context and refs.
   </x-card>
-  <x-card data-title="Hooks" data-icon="lucide:hook" data-href="/hooks">
-    A complete guide to all built-in Hooks for managing state, side effects, and performance.
+  <x-card data-title="Hooks" data-icon="lucide:anchor" data-href="/hooks">
+    A detailed guide to all the built-in Hooks that let you use state and other React features without writing a class.
   </x-card>
   <x-card data-title="Advanced Guides" data-icon="lucide:graduation-cap" data-href="/advanced">
-    Explore topics like code-splitting, server environments, caching, and transitions.
+    Dive deeper into more complex React features, patterns, and environments like server components and caching.
   </x-card>
 </x-cards>
 
 ## Next Steps
 
-If you're ready to start building, the best place to begin is the [Getting Started](./getting-started.md) guide. It will walk you through creating a simple React application from scratch.
+To start building your first application, proceed to the [Getting Started](./getting-started.md) guide.

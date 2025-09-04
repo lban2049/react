@@ -1,165 +1,147 @@
 # 缓存
 
-React 提供了内置的缓存功能，主要用于服务器组件中的数据获取和记忆化。这些工具有助于在单次渲染过程中防止冗余的数据请求，从而提高性能并确保整个组件树的数据一致性。本指南将介绍 `cache` 函数及用于管理请求生命周期的相关 API。
+React 提供了一个内置的缓存机制，主要用于在单次服务器渲染过程中对数据获取和计算进行记忆化处理。这有助于避免重复工作，并在树中的多个组件访问相同数据时确保数据一致性。这在 React Server Components 的情境下尤其有用。
 
-要更广泛地了解不同的渲染环境，请参阅[服务器与客户端环境](./advanced-server-vs-client.md)指南。
+## `React.cache`
 
-## `cache` 函数
+该功能的主要 API 是 `React.cache`。它是一个高阶函数，用于包装另一个函数，并根据调用时传入的参数对其结果进行记忆化。
 
-The `cache` function is the primary API for memoizing the result of a function. When you wrap a function with `cache`, React stores the return value for a given set of arguments. If the same function is called with the same arguments later in the same server render pass, React will return the stored value instead of re-executing the function.
+### 基本用法
 
-这对于在组件树中从多个组件调用的数据获取函数特别有用。
-
-### 服务器端用法
-
-在服务器上，`cache` 会按请求对函数调用进行记忆化。它会处理成功的结果和抛出的错误，确保失败的数据获取不会在单次渲染中重复执行并多次抛出相同的错误。
+如需使用，请从 React 中导入 `cache` 并包装一个函数，例如数据获取函数。
 
 ```javascript
+// utils/data.js
 import { cache } from 'react';
 
 export const getUser = cache(async (id) => {
   const res = await fetch(`https://api.example.com/users/${id}`);
-  if (!res.ok) {
-    throw new Error('Failed to fetch user');
-  }
   return res.json();
 });
+```
 
-// 组件 1
+现在，你可以在组件中正常调用 `getUser`。在服务器的单次渲染过程中，如果多个组件调用 `getUser(123)`，底层的 `async` 函数将只执行一次。后续使用相同 `id` 的调用将接收缓存的结果。
+
+```javascript
+// components/UserProfile.js
+import { getUser } from '../utils/data';
+
 async function UserProfile({ id }) {
-  const user = await getUser(id); // 发出网络请求
+  const user = await getUser(id);
   return <h1>{user.name}</h1>;
-}
-
-// 组件 2（在同一树中）
-async function UserHeader({ id }) {
-  const user = await getUser(id); // 立即返回缓存结果
-  return <header>Welcome, {user.name}</header>;
 }
 ```
 
-在此示例中，尽管 `UserProfile` 和 `UserHeader` 都调用了 `getUser(id)`，但实际的 `fetch` 请求只会执行一次。第二次调用将接收到缓存的数据。
+### 记忆化工作原理
 
-### 客户端行为
+`cache` 函数会根据传递给被包装函数的参数创建一个键。
 
-默认情况下，`cache` 函数在客户端没有缓存行为。它作为一个空操作（no-op），意味着它会返回原始函数，该函数将在每次调用时执行。这种设计允许你编写在服务器上使用 `cache` 的共享组件，而不会在客户端中断。但是，你必须注意，该函数在客户端环境中不会被记忆化。
+- **基本类型**：对于字符串、数字和布尔值等基本类型值，它使用值相等性进行判断。
+- **对象和函数**：对于对象和函数，它使用引用相等性进行判断。这意味着使用不同的对象实例（即使它们内容相同）进行两次独立的调用，将会导致缓存未命中。
 
-### 缓存机制
+```javascript
+// 缓存未命中，因为每次调用都创建了一个新对象
+const user1 = await fetchUser({ id: 1 });
+const user2 = await fetchUser({ id: 1 });
 
-`cache` 函数构建一个嵌套的映射结构来存储结果。它对对象和函数参数使用 `WeakMap`，对原始类型参数（字符串、数字、布尔值等）使用标准的 `Map`。这确保了如果对象在其他地方不再被引用，可以被垃圾回收，从而防止内存泄漏。
+// 缓存命中，因为使用了相同的对象引用
+const params = { id: 1 };
+const user3 = await fetchUser(params);
+const user4 = await fetchUser(params);
+```
 
-以下是缓存结构的简化示意图：
+这种行为是通过对对象/函数参数使用 `WeakMap`、对基本类型参数使用 `Map` 来实现的，从而为每个唯一的参数序列创建一棵缓存节点树。
+
+### 缓存流程图
+
+下图展示了缓存函数调用的逻辑。
 
 ```d2
 direction: down
 
-call: "cachedFn(1, { id: 'a' })" {
-  label: "Function Call"
-  shape: oval
+Component: {
+  shape: rectangle
 }
 
-tree: "Cache Tree" {
-  shape: package
-  grid-columns: 1
-
-  fn_ref: "Function Reference (WeakMap)" {
-    shape: package
-
-    fn_node: "fn -> Node 1" {
-      shape: rectangle
-      
-      primitive_args: "Primitive Args (Map)" {
-        shape: package
-
-        primitive_node: "1 -> Node 2" {
-          shape: rectangle
-          
-          object_args: "Object Args (WeakMap)" {
-            shape: package
-
-            result_node: "{id: 'a'} -> Node 3 (Result)" {
-              shape: document
-              "status: TERMINATED"
-              "value: { ... }"
-            }
-          }
-        }
-      }
-    }
-  }
+Cache-Storage: {
+  label: "React 的单次请求缓存"
+  shape: cylinder
 }
 
-call -> tree.fn_ref: "Traverses tree to find or store result"
+Data-Source: {
+  label: "数据库 / API"
+  shape: cylinder
+}
+
+cachedFunction: {
+  label: "cachedFunction(args)"
+  shape: diamond
+}
+
+Component -> cachedFunction: "1. 调用"
+
+cachedFunction -> Cache-Storage: "2. 检查 'args' 键"
+
+Cache-Storage -> cachedFunction: "3a. 缓存命中\n(返回缓存值)" {
+  style.stroke: "#52c41a"
+}
+
+cachedFunction -> Data-Source: "3b. 缓存未命中\n(执行函数)" {
+  style.stroke: "#faad14"
+}
+
+Data-Source -> cachedFunction: "4. 返回结果"
+
+cachedFunction -> Cache-Storage: "5. 将结果存入 'args' 键"
+
+cachedFunction -> Component: "6. 返回值"
 
 ```
 
-## 相关 API
+## 特定环境下的行为
 
-还有一些其他 API 与 React 的缓存系统协同工作。
+`cache` 的行为在服务器和客户端环境中有所不同。
 
-<x-cards data-columns="2">
-  <x-card data-title="cacheSignal" data-icon="lucide:signal">
-    一个返回与当前请求绑定的 `AbortSignal` 的函数。你可以将此信号传递给 fetch 请求，以便在渲染中止时自动取消它们。在客户端，它返回 `null`。
-  </x-card>
-  <x-card data-title="unstable_useCacheRefresh" data-icon="lucide:refresh-cw">
-    一个 Hook，返回一个用于使整个缓存失效并触发更新的函数。这对于在客户端组件中实现“刷新”按钮等功能以重新获取服务器数据非常有用。
-  </x-card>
-</x-cards>
+- **服务器**：在 React Server Components 等环境中，`cache` 会执行单次请求范围内的记忆化。缓存会在请求开始时创建，并在渲染完成后被丢弃。
+- **客户端**：在客户端，`cache` 目前不起任何作用（no-op）。它会返回原始函数，不添加任何缓存行为。提供此 API 是为了兼容性，允许使用 `cache` 的组件在服务器和客户端上都无需修改即可运行。未来版本可能会引入完整的客户端缓存实现。
 
-### 示例：使用 `cacheSignal` 和 `useCacheRefresh`
+## `cacheSignal`
 
-以下是如何结合使用这些 API 来实现稳健的数据获取。
-
-**服务器数据获取函数：**
+为了处理请求取消，React 提供了 `cacheSignal` 函数。它会返回一个与当前请求的缓存作用域相关联的 `AbortSignal`。你可以将此信号传递给 `fetch` 等操作，以便在渲染被中止时自动取消这些操作。
 
 ```javascript
-// lib/data.js
 import { cache, cacheSignal } from 'react';
 
-export const getItems = cache(async () => {
+export const getPost = cache(async (id) => {
   const signal = cacheSignal();
-  const res = await fetch('https://api.example.com/items', { signal });
+  const res = await fetch(`https://api.example.com/posts/${id}`, { signal });
   return res.json();
 });
 ```
 
-**带刷新按钮的客户端组件：**
+与 `cache` 类似，`cacheSignal` 也主要用于服务器端。在客户端，它会返回 `null`。
+
+## 缓存失效
+
+虽然服务器缓存会在请求之间自动清除，但你可能需要在客户端手动使其失效，例如在数据变更后。`useCacheRefresh` Hook 正是为此目的而设。
+
+调用 `useCacheRefresh` 返回的 `refresh` 函数会使缓存失效，从而导致被缓存的函数重新执行。
 
 ```javascript
-'use client';
+import { useCacheRefresh } from 'react';
 
-import { useTransition, unstable_useCacheRefresh as useCacheRefresh } from 'react';
-
-export function RefreshButton() {
+function RefreshButton() {
   const refresh = useCacheRefresh();
-  const [isPending, startTransition] = useTransition();
 
-  const handleRefresh = () => {
-    startTransition(() => {
-      refresh();
-    });
-  };
+  function handleClick() {
+    // 使缓存失效并触发重新渲染
+    refresh();
+  }
 
-  return (
-    <button onClick={handleRefresh} disabled={isPending}>
-      {isPending ? 'Refreshing...' : 'Refresh Data'}
-    </button>
-  );
+  return <button onClick={handleClick}>Refresh Data</button>;
 }
 ```
 
-## 环境行为摘要
-
-缓存 API 的行为在服务器和客户端环境之间有很大差异。下表总结了这些差异：
-
-| API                          | 服务器环境                               | 客户端环境（默认）                                   |
-| ---------------------------- | ------------------------------------------------ | -------------------------------------------------------------- |
-| `cache(fn)`                  | 在请求期间记忆化 `fn`。     | 空操作。返回 `fn`，不带任何缓存行为。              |
-| `cacheSignal()`              | 返回当前请求的 `AbortSignal`。 | 返回 `null`。                                                |
-| `unstable_useCacheRefresh()` | 不适用（它是一个 Hook）。                    | 返回一个函数，用于使缓存失效并触发重新渲染。 |
-
-理解这些区别是在跨越服务器和客户端执行的应用程序中有效使用 React 缓存功能的关键。
-
 ---
 
-掌握了 React 的缓存机制后，你就可以构建性能更佳的服务器渲染应用程序。要探索另一个用于非阻塞 UI 更新的高级功能，请继续阅读[过渡 (Transitions)](./advanced-transitions.md) 指南。
+理解 React 的缓存是构建高性能服务器渲染应用的关键。要深入了解不同渲染环境之间的差异，请参阅[服务器与客户端环境](./advanced-server-vs-client.md)指南。

@@ -1,125 +1,121 @@
 # 实验性 API
 
-**警告：本页记录的 API 是实验性的，尚未在稳定版本中提供。在未来的 React 版本中，它们可能会发生重大变化或被完全移除。**
+本节介绍 React 中可用的实验性和不稳定的 API。这些功能旨在供社区测试和提供反馈。它们可能会在不另行通知的情况下发生变更，不应在生产环境中使用。
 
-本节概述了正在积极开发的实验性功能。它们旨在供早期采用者和库作者进行实验并提供反馈。我们强烈建议不要在生产应用程序中使用这些 API。
+> **警告：**实验性 API 可能存在错误、经历重大变更或在未来版本中被完全移除。使用它们需要您自担风险。
 
-## 安全性：Tainting API
+## 用于安全的 Taint API (仅限服务器端)
 
-在服务器环境中，防止敏感数据（如 API 密钥或用户会话令牌）被意外传递到客户端代码至关重要。Tainting API 是一项仅限服务器使用的功能，旨在创建安全边界，如果一个“受污染的”值被序列化并发送到客户端，就会抛出错误。
+Taint API 是一种安全功能，旨在防止敏感数据从服务器环境传递到客户端。当一个值被“污染 (tainted)”时，如果你试图将其包含在客户端组件的 props 中或服务器操作的闭包中，React 将会抛出错误，从而防止意外的数据泄露。
 
-在使用 React Server Components 或 Server Actions 时，此机制有助于防止数据泄漏。
+这些 API 仅在 React 的服务器环境中使用。
 
 ### `experimental_taintUniqueValue(message, lifetime, value)`
 
-此函数会污染一个唯一的原始值，如机密令牌或密钥。React 将阻止此特定值被传递给任何 Client Component 或 Server Action 闭包。
+此函数会污染一个唯一的原始值，例如密钥或用户特定的令牌。它确保此特定值不能被序列化到客户端。
 
 **参数**
 
 | Name | Type | Description |
 |---|---|---|
-| `message` | `string` | 违反污染规则时抛出的可选自定义错误消息。 |
-| `lifetime` | `object` | 一个对象引用。当此对象被垃圾回收时，污染将被移除。这有助于管理污染注册表使用的内存。 |
-| `value` | `string` \| `bigint` \| `$ArrayBufferView` | 要污染的唯一的、敏感的原始值。 |
+| `message` | `string` | 当尝试序列化被污染的值时，将显示的可选错误信息。 |
+| `lifetime`| `object` | 一个对象，其垃圾回收生命周期与被污染的值绑定。当此对象被垃圾回收时，污染状态将被移除。 |
+| `value` | `string` \| `bigint` \| `ArrayBufferView` | 要污染的唯一原始值。它不能是普通的对象或函数。 |
 
-**示例：污染用户的 API 密钥**
+**示例**
 
 ```javascript
-// 位于一个仅限服务器的文件中
+// 在服务器端数据获取函数中
 import { experimental_taintUniqueValue } from 'react';
-import { getUserData } from './database';
 
-export async function getTaintedUserData(userId) {
-  const user = await getUserData(userId);
+async function getUserData(userId) {
+  const user = await db.users.find({ id: userId });
+  const apiSecret = user.apiSecret; // 一个敏感值
 
-  // 此对象的生命周期与请求绑定
-  const requestLifetime = {}; 
-
-  // 污染用户的机密 API 密钥
+  // 污染密钥。user 对象用于生命周期管理。
   experimental_taintUniqueValue(
-    'API key must not be exposed to the client.',
-    requestLifetime,
-    user.apiKey
+    '不要将 API 密钥泄露给客户端。',
+    user,
+    apiSecret
   );
 
   return user;
 }
 
-// 在一个 Server Component 中：
-async function UserProfile({ userId }) {
-  const user = await getTaintedUserData(userId);
-
-  // 这是安全的，因为 `user.apiKey` 没有被传递给客户端。
-  const serverSideData = await fetchDataWithKey(user.apiKey);
-
-  return (
-    // 如果你将 `user.apiKey` 传递给 ClientInfo，React 将会抛出错误。
-    <ClientInfo name={user.name} />
-  );
-}
+// 如果之后你尝试将 apiSecret 传递给客户端组件，React 将会抛出错误。
 ```
 
 ### `experimental_taintObjectReference(message, object)`
 
-此函数会污染整个对象或函数引用。任何序列化此对象并将其发送到客户端的尝试都将导致错误。
+此函数会污染整个对象或函数引用。这对于污染那些绝不应离开服务器的复杂对象（如数据库连接或配置实例）非常有用。
 
 **参数**
 
 | Name | Type | Description |
 |---|---|---|
-| `message` | `string` | 违反污染规则时抛出的可选自定义错误消息。 |
-| `object` | `object` \| `function` | 要污染的对象或函数引用。 |
+| `message` | `string` | 当尝试序列化被污染的对象引用时，将显示的可选错误信息。 |
+| `object` | `object` \| `function` | 要污染的对象或函数引用。它不能是字符串或数字等原始值。 |
 
-**示例：污染数据库连接**
+**示例**
 
 ```javascript
-// 位于一个仅限服务器的文件中
+// 在服务器端模块中
 import { experimental_taintObjectReference } from 'react';
-import { createDbConnection } from './db';
 
-const db = createDbConnection();
+// 假设 dbConnection 是一个活动的数据库连接对象
+const dbConnection = createDatabaseConnection();
 
-// 污染数据库连接对象，以防止其离开服务器。
-experimental_taintObjectReference(
-  'The database connection object cannot be sent to the client.',
-  db
-);
+// 污染整个数据库连接对象，以防止其被传递到客户端。
+experimental_taintObjectReference('数据库连接不能发送到客户端。', dbConnection);
 
-export default db;
-```
-
-## 渲染：`postpone(reason)`
-
-`postpone` 函数允许 React Server Component 中断其渲染过程而不会导致服务器错误。当被调用时，它会向 React 渲染器发出信号，表明组件尚未准备好渲染，并且渲染应在稍后重试。这对于数据尚不可用，而你更愿意等待而不是渲染 `Suspense` 回退的场景很有用。
-
-它的工作原理是抛出一个特殊的对象，渲染器会捕获该对象并将其解释为暂停的信号。
-
-**参数**
-
-| Name | Type | Description |
-|---|---|---|
-| `reason` | `string` | 一个描述性字符串，解释渲染被推迟的原因。这用于调试。 |
-
-**示例：为个性化问候语推迟渲染**
-
-```javascript
-import { postpone } from 'react';
-import { getPersonalizedContent } from './contentApi';
-
-async function PersonalizedGreeting({ userId }) {
-  // 获取个性化内容，初始生成可能较慢。
-  const content = await getPersonalizedContent(userId);
-
-  if (content.status === 'PENDING') {
-    // 如果内容尚未准备好，则推迟渲染。
-    // React 将保持连接并重试渲染此组件。
-    postpone(`Personalized content for user ${userId} is not ready.`);
-  }
-
-  return <h1>{content.greeting}</h1>;
+export function getDB() {
+  return dbConnection;
 }
 ```
 
+## `postpone(reason)` (仅限服务器端)
+
+`postpone` 函数允许你以给定的原因中断当前的服务器渲染。与等待 promise 解析的 `Suspense` 不同，`postpone` 是一个有意停止渲染组件子树的选择。React 可能会在稍后重试渲染。这对于推迟依赖于缓慢或非关键数据的 UI 非必要部分非常有用。
+
+它仅在 React 的服务器环境中使用。
+
+**参数**
+
+| Name | Type | Description |
+|---|---|---|
+| `reason` | `string` | 一个字符串，用于解释渲染被推迟的原因。 |
+
+**示例**
+
+```javascript
+import { postpone } from 'react';
+import { fetchOptionalWidgetData } from './api';
+
+async function OptionalWidget() {
+  const data = await fetchOptionalWidgetData();
+  if (!data) {
+    // 如果数据不可用，暂时不要渲染此组件。
+    // 这不会阻塞初始页面加载。
+    postpone('可选的小部件数据此时不可用。');
+  }
+
+  return <div>{data.content}</div>;
+}
+```
+
+## 其他不稳定和实验性 API
+
+其他一些 API 在 `unstable_` 或 `experimental_` 前缀下可用。这些 API 暴露出来供框架和库进行测试。
+
+| API 名称 | 描述 |
+|---|---|
+| `experimental_useOptimistic` | `useOptimistic` 的旧别名。它现在处于 Canary 版本中，应改用 `useOptimistic`。该前缀将被移除。 |
+| `unstable_Activity` | 一个用于控制屏幕外内容可见性的组件，常用于框架中的 keep-alive 缓存等功能。 |
+| `unstable_SuspenseList` | 一个用于协调多个 `Suspense` 边界外观的组件，防止内容加载时出现突兀的 UI。 |
+| `unstable_ViewTransition` | 一个帮助在不同 UI 状态或视图之间创建平滑视觉过渡的 API。 |
+| `unstable_getCacheForType` | 一种访问特定类型共享缓存的机制，主要用于服务器上的数据缓存。 |
+| `unstable_useCacheRefresh` | 一个提供函数来使 React 缓存失效的 Hook，从而触发缓存数据的刷新。 |
+
 ---
 
-这些实验性 API 为构建安全和动态的应用程序提供了强大的新功能。随着它们的成熟，它们可能会被集成到稳定的 React API 中。目前，请使用它们进行探索和提供反馈。对于生产就绪的功能，请查阅主 [API 参考](./api-reference.md)。
+以上是 React 实验性 API 的概述。虽然它们让我们得以一窥未来的功能，但在生产应用中应始终优先使用稳定的 API。有关服务器和客户端差异的更多详细信息，请参阅 [服务器与客户端环境](./advanced-server-vs-client.md) 指南。

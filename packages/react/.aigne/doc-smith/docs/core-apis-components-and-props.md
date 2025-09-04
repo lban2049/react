@@ -1,126 +1,149 @@
 # Components & Props
 
-Components are the core building blocks of any React application. They let you split the UI into independent, reusable pieces, and think about each piece in isolation. Conceptually, components are like JavaScript functions. They accept arbitrary inputs (called “props”) and return React elements describing what should appear on the screen.
+Components are the fundamental building blocks of React applications. They allow you to split the user interface into independent, reusable pieces, and think about each piece in isolation. Props, short for properties, are how components receive data from their parents to configure their appearance and behavior.
 
-### Function and Class Components
+This section covers the two main ways to define components—Function and Class components—and explains how to pass data between them using props.
 
-React offers two primary ways to define a component:
+## Function Components
 
-1.  **Function Components**: The simplest way to write a component. These are JavaScript functions that accept a single `props` object and return a React element.
-2.  **Class Components**: These are ES6 classes that extend from `React.Component` and provide more features, such as local state and lifecycle methods. With the introduction of Hooks, you can now use these features in function components as well.
+Function components are the modern and recommended way to create components in React. They are simple JavaScript functions that accept a single `props` object as an argument and return a React element to be rendered.
 
-Here is an example of a simple `Welcome` component written as both a function and a class:
-
-**Function Component**
 ```javascript
 function Welcome(props) {
   return <h1>Hello, {props.name}</h1>;
 }
+
+// Usage:
+const element = <Welcome name="Sara" />;
 ```
 
-**Class Component**
+Initially, these were known as "stateless components." However, with the introduction of Hooks, function components can now manage their own state and perform side effects. You can learn more about this in the [Hooks](./hooks.md) section.
+
+## Class Components
+
+Class components are an alternative way to define components using ES6 classes. To create a class component, you extend the `React.Component` or `React.PureComponent` base classes.
+
 ```javascript
-class Welcome extends React.Component {
+direction: down
+
+Parent-Component: {
+  shape: rectangle
+  label: "Parent Component"
+}
+
+Child-Component: {
+  shape: rectangle
+  label: "Child Component"
+}
+
+Props: {
+  shape: parallelogram
+  label: "Props Data"
+}
+
+UI: {
+  shape: document
+  label: "Rendered UI"
+}
+
+Parent-Component -> Props: "Passes"
+Props -> Child-Component: "Receives"
+Child-Component -> UI: "Renders"
+```
+
+### `React.Component`
+
+This is the primary base class for React components defined using ES6 classes. It requires you to implement a `render()` method, which returns a React element.
+
+**Props and State**
+
+Unlike function components that receive props as an argument, class components access props via `this.props`. They can also manage internal data using a special property called `state`.
+
+```javascript
+class Counter extends React.Component {
+  constructor(props) {
+    super(props);
+    // State is initialized in the constructor
+    this.state = { count: 0 };
+  }
+
+  // ... methods to update state ...
+
   render() {
-    return <h1>Hello, {this.props.name}</h1>;
+    return (
+      <div>
+        <p>You clicked {this.state.count} times</p>
+        <button onClick={() => this.increment()}>Click me</button>
+      </div>
+    );
   }
 }
 ```
 
-Both components are equivalent from React’s point of view.
+#### `setState(partialState, [callback])`
 
-### The Component Base Class
+To modify a component's state, you must use the `setState()` method. You should treat `this.state` as immutable.
 
-When you define a class component, you extend `React.Component`. This base class provides the essential functionality for a component to manage its state and lifecycle.
+- **Asynchronous Updates**: `setState()` enqueues changes to the component's state and tells React that this component and its children need to be re-rendered with the updated state. There is no guarantee that `this.state` will be updated immediately.
+- **Functional Updates**: If your next state depends on the previous state, you can pass a function to `setState`. This function will receive the previous state and props as arguments and should return an object to be merged into the state.
 
 ```javascript
-// From src/ReactBaseClasses.js
+// From ReactBaseClasses.js - simplified example
 
-function Component(props, context, updater) {
-  this.props = props;
-  this.context = context;
-  this.refs = emptyObject;
-  this.updater = updater || ReactNoopUpdateQueue;
-}
+Component.prototype.setState = function (partialState, callback) {
+  this.updater.enqueueSetState(this, partialState, callback, 'setState');
+};
 
-Component.prototype.isReactComponent = {};
+// Example of using setState with an object
+this.setState({ count: this.state.count + 1 });
+
+// Example of using setState with a function (safer for updates depending on previous state)
+this.setState((prevState, props) => ({
+  count: prevState.count + props.increment
+}));
 ```
 
-As seen in the constructor, every class component instance has a few key properties:
-*   `this.props`: Contains the properties passed to the component from its parent.
-*   `this.context`: An advanced feature for passing data through the component tree without having to pass props down manually at every level. See the [Context](./core-apis-context.md) documentation for more details.
-*   `this.refs`: A way to access DOM nodes or React components created in the render method. See the [Refs](./core-apis-refs.md) documentation.
-*   `this.updater`: An object that handles queuing state updates and re-rendering the component.
+#### `forceUpdate([callback])`
 
-The `isReactComponent` property is an empty object that React uses internally to differentiate class components from plain JavaScript functions.
+By default, when your component’s state or props change, your component will re-render. If your `render()` method depends on some other data, you can tell React that the component needs re-rendering by calling `forceUpdate()`. This method should be used sparingly.
 
-#### Updating State
+Calling `forceUpdate()` will cause `render()` to be called on the component, skipping `shouldComponentUpdate()`. Child components will still trigger their normal lifecycle methods.
 
-Class components have two primary methods for triggering UI updates.
+### `React.PureComponent`
 
-1.  **`setState(partialState, callback)`**
+`React.PureComponent` is a variation of `React.Component`. The primary difference is that `React.Component` doesn't implement `shouldComponentUpdate()`, while `React.PureComponent` implements it with a shallow comparison of props and state.
 
-    This is the primary method you use to update a component's local state. It tells React that the component and its children need to be re-rendered with the updated state.
-
-    *   **Asynchronous Nature**: React may batch multiple `setState()` calls into a single update for performance. Because `this.props` and `this.state` may be updated asynchronously, you should not rely on their values for calculating the next state. Instead, use the function form of `setState`.
-    *   **Merging**: When you call `setState()`, React merges the object you provide into the current state.
-
-    ```javascript
-    // Correct: Using a function to access previous state
-    this.setState((prevState, props) => ({
-      counter: prevState.counter + 1
-    }));
-
-    // Incorrect: May lead to bugs due to asynchronous updates
-    this.setState({
-      counter: this.state.counter + 1
-    });
-    ```
-
-2.  **`forceUpdate(callback)`**
-
-    By default, when your component’s state or props change, your component will re-render. If your `render()` method depends on some other data, you can tell React that the component needs re-rendering by calling `forceUpdate()`. Calling `forceUpdate()` will cause `render()` to be called on the component, skipping `shouldComponentUpdate()`. This should be used sparingly.
-
-### PureComponent
-
-`React.PureComponent` is similar to `React.Component` but implements the `shouldComponentUpdate()` method with a shallow prop and state comparison. If the new props and state are shallowly equal to the previous ones, the component does not re-render, providing a performance boost in certain cases.
+If your component's `render()` function consistently renders the same result given the same props and state, you can use `PureComponent` for a potential performance boost in some cases.
 
 ```javascript
-// From src/ReactBaseClasses.js
+// From ReactBaseClasses.js
+
 function PureComponent(props, context, updater) {
-  this.props = props;
-  this.context = context;
-  this.refs = emptyObject;
-  this.updater = updater || ReactNoopUpdateQueue;
+  // ... constructor logic ...
 }
 
 const pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
 pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
-pureComponentPrototype.isPureReactComponent = true;
+pureComponentPrototype.isPureReactComponent = true; // This flag identifies it as a PureComponent
 ```
 
-### Props are Read-Only
+## Props are Read-Only
 
-Whether you declare a component as a function or a class, it must never modify its own props. All React components must act like pure functions with respect to their props.
+Whether you declare a component as a function or a class, it must never modify its own props. All React components must act like pure functions with respect to their props. This ensures that the UI is predictable and easier to debug.
 
-*   **Correct**: A pure function that does not change its inputs.
-    ```javascript
-    function sum(a, b) {
-      return a + b;
-    }
-    ```
+```javascript
+// Correct: A pure function that does not change its inputs.
+function sum(a, b) {
+  return a + b;
+}
 
-*   **Incorrect**: An impure function that changes its own input.
-    ```javascript
-    function withdraw(account, amount) {
-      account.total -= amount; // Don't do this!
-    }
-    ```
+// Incorrect: This function changes its own input.
+function withdraw(account, amount) {
+  account.total -= amount;
+}
+```
 
-### Next Steps
+---
 
-Now that you understand the fundamentals of components and props, you can explore how to write them using a more concise syntax.
-
-- Learn about [JSX](./core-apis-jsx.md) to embed XML-like syntax directly in your JavaScript code.
-- Dive into the [Hooks](./hooks.md) documentation to learn how to use state and other React features in function components.
+Now that you understand how to build and compose components, the next step is to master the syntax used to describe their UI. Proceed to the [JSX](./core-apis-jsx.md) section to learn more.

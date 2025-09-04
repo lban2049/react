@@ -1,120 +1,118 @@
 # JSX
 
-JSX is a syntax extension for JavaScript that allows you to write UI descriptions in a format that resembles HTML. It provides a concise and familiar way to define React elements and components, making your code more readable and maintainable.
+JSX is a syntax extension for JavaScript that allows you to write UI structures in a familiar, HTML-like syntax. It is a fundamental part of writing React components, providing a concise and readable way to describe what the UI should look like. While it may resemble a template language, JSX comes with the full power of JavaScript.
 
-While JSX may look like a template language, it is fully powered by JavaScript. It gets compiled into regular JavaScript function calls by a tool like Babel. This means you can use the full power of JavaScript—including variables, loops, and conditional logic—directly within your UI markup.
+This section explores how JSX is transformed into native JavaScript that the browser can understand and details the different runtimes React provides for client and server environments.
 
-For a deeper look at the underlying functions that JSX compiles to, see the guide on [Creating & Manipulating Elements](./core-apis-creating-elements.md).
+## JSX Transformation
 
-## The JSX Transform
+Browsers do not understand JSX out of the box. Your code needs to be run through a compiler (like Babel or TypeScript) to transform the JSX syntax into standard JavaScript function calls. 
 
-Modern React versions use a new JSX Transform that automatically imports the necessary functions from the React package, so you no longer need to import `React` into every file that uses JSX. The transform converts JSX into direct calls to `jsx` or `jsxs` functions.
+Historically, this transformation would convert JSX into `React.createElement(...)` calls. The modern JSX transform, however, automatically converts JSX into special `jsx(...)` function calls, which can lead to performance improvements and simpler code without needing to import `React` into every file just for JSX.
 
-Here's how a simple JSX element is transformed:
-
-**Before Compilation:**
-```jsx
-const element = <h1 className="greeting">Hello, world!</h1>;
-```
-
-**After Compilation:**
-```javascript
-import { jsx as _jsx } from 'react/jsx-runtime';
-
-const element = _jsx('h1', { className: 'greeting', children: 'Hello, world!' });
-```
-
-This compilation step turns your declarative JSX into concrete `ReactElement` objects that React can use to build the DOM.
+Here is a conceptual overview of the transformation process:
 
 ```d2
 direction: down
 
-"JSX in your code": {
-  shape: document
-  "const element = <MyComponent name='React' />"
+"jsx-code": {
+  label: "Your JSX Code\n<MyComponent name=\"React\" />"
+  shape: code
 }
 
-"Build Tool (e.g., Babel)": {
-  shape: hexagon
+compiler: {
+  label: "Compiler\n(Babel, TypeScript, etc.)"
+  shape: rectangle
 }
 
-"JavaScript Function Call": {
-  shape: document
-  "jsx(MyComponent, { name: 'React' })"
-}
-
-"React Runtime": {
+"runtime-functions": {
+  label: "React Runtime Functions"
   shape: package
-  "ReactElement() factory"
+  grid-columns: 2
+
+  "prod-runtime": {
+    label: "Production Runtime"
+    shape: rectangle
+    "jsx()": {}
+    "jsxs()": {}
+  }
+
+  "dev-runtime": {
+    label: "Development Runtime"
+    shape: rectangle
+    "jsxDEV()": {}
+  }
 }
 
-"React Element Object": {
-  shape: stored_data
-  "{ $$typeof: REACT_ELEMENT_TYPE, type: MyComponent, ... }"
-}
+"jsx-code" -> compiler: "1. Compilation"
+compiler -> "runtime-functions": "2. Output Function Calls"
 
-"Rendered UI": {
-   shape: rectangle
-   "The actual component displayed on the screen"
-}
-
-"JSX in your code" -> "Build Tool (e.g., Babel)": "Transpilation"
-"Build Tool (e.g., Babel)" -> "JavaScript Function Call": "Outputs"
-"JavaScript Function Call" -> "React Runtime": "Invokes"
-"React Runtime" -> "React Element Object": "Creates"
-"React Element Object" -> "Rendered UI": "Used by React to render"
 ```
 
-## JSX Runtimes
+## Environment-Specific Runtimes
 
-React provides different JSX runtimes tailored for specific environments and modes (development vs. production). Your build tooling will automatically select the correct one based on your configuration.
+React provides different runtime packages tailored for client and server environments, as well as for production and development modes. This separation allows for environment-specific optimizations and features.
 
-| Runtime | Purpose |
-|---|---|
-| `react/jsx-runtime` | The main production runtime for client-side applications. It is optimized for performance. |
-| `react/jsx-dev-runtime` | The development runtime for client-side applications. It includes additional checks, validations, and helpful warnings. |
-| `react/jsx-runtime/server` | The production runtime specifically for server environments, such as when using React Server Components. |
-| `react/jsx-dev-runtime/server`| The development runtime for server environments, providing server-specific warnings and debugging information. |
+You typically configure your build tool to use the correct runtime automatically. The main entry points are:
 
-These entry points export the core functions that power JSX.
+| Entry Point | Environment | Description |
+|---|---|---|
+| `react/jsx-runtime` | Client (Production) | The standard, optimized runtime for use in the browser. |
+| `react/jsx-dev-runtime` | Client (Development) | A special runtime for development that includes extra validation and warnings. |
+| `react/jsx-runtime.react-server` | Server (Production) | An optimized runtime specifically for server environments like React Server Components. |
+| `react/jsx-dev-runtime.react-server`| Server (Development) | The development version of the server runtime, with added debugging features. |
 
-## Core JSX Functions
+## Core Runtime Functions
 
-While you typically won't call these functions directly, understanding them helps clarify how JSX works.
+The modern JSX transform uses a few key functions exported by the runtimes:
 
-<x-cards data-columns="3">
-  <x-card data-title="jsx()" data-icon="lucide:code">
-    Used to create a React Element with a single child or dynamic children. The compiler uses this for elements like `<div>{name}</div>`.
-  </x-card>
-  <x-card data-title="jsxs()" data-icon="lucide:codesandbox">
-    An optimized version for creating elements with multiple, static children. The compiler uses this for elements like `<div><p>First</p><p>Second</p></div>`, marking the children array as static for potential optimizations.
-  </x-card>
-  <x-card data-title="jsxDEV()" data-icon="lucide:bug">
-    The development-only version. It validates props, checks for missing `key` props in arrays, and provides other essential warnings to catch potential bugs during development.
-  </x-card>
-</x-cards>
+*   `jsx(type, config, maybeKey)`: This is the primary function used to create React elements. It is called for elements with a single child or children that are passed dynamically.
 
-## Special Props: `key` and `ref`
+*   `jsxs(type, config, maybeKey)`: A variation of `jsx` that is used as an optimization when an element has multiple, static children (i.e., children are defined as an array in the source code). This allows React to perform potential optimizations.
 
-Certain props have special meaning in JSX and are handled differently by React.
+*   `jsxDEV(type, config, maybeKey, isStaticChildren)`: This is the development-only version of the function. It is instrumental for the developer experience, as it includes extensive validation and warning logic. For example, it warns about missing `key` props in lists, the misuse of the `key` prop, and provides more detailed error messages and component stack traces during development.
+
+## Important Considerations
+
+When working with JSX, there are a few special props and concepts to keep in mind.
 
 ### The `key` Prop
 
-The `key` prop is a special string attribute you need to include when creating lists of elements. Keys help React identify which items have changed, are added, or are removed, which is crucial for efficient updates and maintaining state in lists.
+The `key` prop is a special string attribute you need to include when creating lists of elements. Keys help React identify which items have changed, are added, or are removed. They should be stable, predictable, and unique among a list of siblings.
 
-- **Keys must be unique** among siblings.
-- **Keys are not passed as a prop** to your components. If you need the same value in your component, you must pass it as a different prop (e.g., `<Profile key={user.id} id={user.id} />`).
+```javascript
+const todoItems = todos.map((todo) =>
+  <li key={todo.id}>
+    {todo.text}
+  </li>
+);
+```
 
-In development mode, attempting to access `props.key` within a component will result in a warning:
+In development mode, React will warn you if you forget to provide a `key` for items in an array. Note that `key` is not a standard prop and cannot be accessed from the child component (e.g., via `props.key`).
 
-> `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop.
+### Fragments
+
+A common pattern in React is for a component to return multiple elements. JSX requires a single root element. Fragments let you group a list of children without adding extra nodes to the DOM.
+
+You can use them with the explicit `Fragment` export or the more concise `<>...</>` syntax.
+
+```javascript
+import { Fragment } from 'react';
+
+function Columns() {
+  return (
+    <>
+      <td>Hello</td>
+      <td>World</td>
+    </>
+  );
+}
+```
 
 ### The `ref` Prop
 
-The `ref` prop is used to get direct access to a DOM element or a class component instance. Unlike most props, `ref` is handled by React and is not passed to the component's props object.
-
-In React 19, `ref` is passed as a regular prop. However, accessing `element.ref` is deprecated and will trigger a warning in development mode to encourage the modern prop-based approach.
+As of React 19, `ref` is a regular prop that you can pass to a component to get a reference to a DOM element or a class component instance. Previously, accessing `element.ref` was possible but is now deprecated. You should always interact with refs via the `ref` prop.
 
 ---
 
-Now that you understand how JSX works behind the scenes, you're ready to see how it's used to build reusable UIs. Continue to the [Components & Props](./core-apis-components-and-props.md) guide to learn more.
+Understanding the JSX transform and its runtimes provides insight into how React works under the hood. For cases where you need to programmatically create elements without using JSX, you can learn more in the [Creating & Manipulating Elements](./core-apis-creating-elements.md) guide.

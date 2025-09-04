@@ -1,120 +1,118 @@
 # JSX
 
-JSX 是一种 JavaScript 的语法扩展，它允许你以类似 HTML 的格式编写 UI 描述。它提供了一种简洁而熟悉的方式来定义 React 元素和组件，使你的代码更具可读性和可维护性。
+JSX 是 JavaScript 的一个语法扩展，允许你用一种熟悉的、类似 HTML 的语法来编写 UI 结构。它是编写 React 组件的基础部分，提供了一种简洁易读的方式来描述 UI 的外观。虽然它可能看起来像一种模板语言，但 JSX 拥有 JavaScript 的全部功能。
 
-虽然 JSX 可能看起来像一种模板语言，但它完全由 JavaScript 驱动。它通过像 Babel 这样的工具被编译成常规的 JavaScript 函数调用。这意味着你可以直接在 UI 标记中使用 JavaScript 的全部功能，包括变量、循环和条件逻辑。
-
-要深入了解 JSX 编译成的底层函数，请参阅关于[创建和操作元素](./core-apis-creating-elements.md)的指南。
+本节将探讨 JSX 如何转换为浏览器可以理解的原生 JavaScript，并详细介绍 React 为客户端和服务器环境提供的不同运行时。
 
 ## JSX 转换
 
-现代 React 版本使用了一种新的 JSX 转换，它会自动从 React 包中导入必要的函数，因此你不再需要在每个使用 JSX 的文件中导入 `React`。该转换将 JSX 转换为对 `jsx` 或 `jsxs` 函数的直接调用。
+浏览器本身无法直接理解 JSX。你的代码需要通过编译器（如 Babel 或 TypeScript）运行，将 JSX 语法转换为标准的 JavaScript 函数调用。
 
-下面是一个简单的 JSX 元素是如何转换的：
+过去，这种转换会将 JSX 转换为 `React.createElement(...)` 调用。然而，现代 JSX 转换会自动将 JSX 转换为特殊的 `jsx(...)` 函数调用，这可以提升性能、简化代码，并且无需为了使用 JSX 而在每个文件中导入 `React`。
 
-**编译前：**
-```jsx
-const element = <h1 className="greeting">Hello, world!</h1>;
-```
-
-**编译后：**
-```javascript
-import { jsx as _jsx } from 'react/jsx-runtime';
-
-const element = _jsx('h1', { className: 'greeting', children: 'Hello, world!' });
-```
-
-这个编译步骤将你的声明式 JSX 转换成具体的 `ReactElement` 对象，React 可以使用这些对象来构建 DOM。
+以下是该转换过程的概念性概述：
 
 ```d2
 direction: down
 
-"代码中的 JSX": {
-  shape: document
-  "const element = <MyComponent name='React' />"
+"jsx-code": {
+  label: "你的 JSX 代码\n<MyComponent name=\"React\" />"
+  shape: code
 }
 
-"构建工具（例如 Babel）": {
-  shape: hexagon
+compiler: {
+  label: "编译器\n（Babel、TypeScript 等）"
+  shape: rectangle
 }
 
-"JavaScript 函数调用": {
-  shape: document
-  "jsx(MyComponent, { name: 'React' })"
-}
-
-"React 运行时": {
+"runtime-functions": {
+  label: "React 运行时函数"
   shape: package
-  "ReactElement() 工厂"
+  grid-columns: 2
+
+  "prod-runtime": {
+    label: "生产环境运行时"
+    shape: rectangle
+    "jsx()": {}
+    "jsxs()": {}
+  }
+
+  "dev-runtime": {
+    label: "开发环境运行时"
+    shape: rectangle
+    "jsxDEV()": {}
+  }
 }
 
-"React 元素对象": {
-  shape: stored_data
-  "{ $$typeof: REACT_ELEMENT_TYPE, type: MyComponent, ... }"
-}
+"jsx-code" -> compiler: "1. 编译"
+compiler -> "runtime-functions": "2. 输出函数调用"
 
-"渲染后的 UI": {
-   shape: rectangle
-   "屏幕上实际显示的组件"
-}
-
-"代码中的 JSX" -> "构建工具（例如 Babel）": "转译"
-"构建工具（例如 Babel）" -> "JavaScript 函数调用": "输出"
-"JavaScript 函数调用" -> "React 运行时": "调用"
-"React 运行时" -> "React 元素对象": "创建"
-"React 元素对象" -> "渲染后的 UI": "被 React 用于渲染"
 ```
 
-## JSX 运行时
+## 特定于环境的运行时
 
-React 提供了针对特定环境和模式（开发 vs. 生产）的不同 JSX 运行时。你的构建工具会根据你的配置自动选择正确的运行时。
+React 提供了针对客户端和服务器环境以及生产和开发模式的不同运行时包。这种分离设计使得针对特定环境的优化和功能成为可能。
 
-| 运行时 | 用途 |
-|---|---|
-| `react/jsx-runtime` | 用于客户端应用程序的主要生产运行时。它为性能进行了优化。 |
-| `react/jsx-dev-runtime` | 用于客户端应用程序的开发运行时。它包含额外的检查、验证和有用的警告。 |
-| `react/jsx-runtime/server` | 专用于服务器环境的生产运行时，例如在使用 React Server Components 时。 |
-| `react/jsx-dev-runtime/server`| 用于服务器环境的开发运行时，提供特定于服务器的警告和调试信息。 |
+通常，你会配置构建工具来自动使用正确的运行时。主要入口点如下：
 
-这些入口点导出了驱动 JSX 的核心函数。
+| 入口点 | 环境 | 描述 |
+|---|---|---|
+| `react/jsx-runtime` | 客户端（生产环境） | 用于浏览器的标准优化运行时。 |
+| `react/jsx-dev-runtime` | 客户端（开发环境） | 用于开发的特殊运行时，包含额外的验证和警告。 |
+| `react/jsx-runtime.react-server` | 服务器（生产环境） | 专为服务器环境（如 React Server Components）优化的运行时。 |
+| `react/jsx-dev-runtime.react-server`| 服务器（开发环境） | 服务器运行时的开发版本，增加了调试功能。 |
 
-## 核心 JSX 函数
+## 核心运行时函数
 
-虽然你通常不会直接调用这些函数，但理解它们有助于阐明 JSX 的工作原理。
+现代 JSX 转换使用由运行时导出的几个关键函数：
 
-<x-cards data-columns="3">
-  <x-card data-title="jsx()" data-icon="lucide:code">
-    用于创建一个带单个子元素或动态子元素的 React 元素。编译器将其用于像 `<div>{name}</div>` 这样的元素。
-  </x-card>
-  <x-card data-title="jsxs()" data-icon="lucide:codesandbox">
-    一个用于创建具有多个静态子元素的优化版本。编译器将其用于像 `<div><p>First</p><p>Second</p></div>` 这样的元素，并将子元素数组标记为静态以进行潜在的优化。
-  </x-card>
-  <x-card data-title="jsxDEV()" data-icon="lucide:bug">
-    仅用于开发环境的版本。它会验证 props，检查数组中缺失的 `key` prop，并提供其他必要的警告以在开发过程中捕获潜在的错误。
-  </x-card>
-</x-cards>
+*   `jsx(type, config, maybeKey)`: 这是用于创建 React 元素的主要函数。它在元素只有一个子元素或子元素是动态传递时被调用。
 
-## 特殊 Props：key 和 ref
+*   `jsxs(type, config, maybeKey)`: `jsx` 的一个变体，当元素有多个静态子元素（即子元素在源代码中被定义为数组）时用作优化。这使得 React 可以执行潜在的优化。
 
-某些 props 在 JSX 中具有特殊含义，并由 React 进行特殊处理。
+*   `jsxDEV(type, config, maybeKey, isStaticChildren)`: 这是该函数的仅限开发版本。它对提升开发者体验至关重要，因为它包含了大量的验证和警告逻辑。例如，它会警告列表中缺少 `key` prop、`key` prop 的滥用，并在开发过程中提供更详细的错误消息和组件堆栈跟踪。
 
-### key Prop
+## 重要注意事项
 
-`key` prop 是一个特殊的字符串属性，你在创建元素列表时需要包含它。Key 帮助 React 识别哪些项已更改、已添加或已删除，这对于高效更新和维护列表中的状态至关重要。
+在使用 JSX 时，需要注意几个特殊的 prop 和概念。
 
-- **Key 在同级元素中必须是唯一的**。
-- **Key 不会作为 prop** 传递给你的组件。如果你需要在组件中使用相同的值，必须将其作为不同的 prop 传递（例如，`<Profile key={user.id} id={user.id} />`）。
+### `key` Prop
 
-在开发模式下，尝试在组件内访问 `props.key` 会产生一个警告：
+`key` prop 是一个特殊的字符串属性，在创建元素列表时需要包含它。Key 可以帮助 React 识别哪些项发生了变化、被添加或被删除。在一个兄弟元素列表中，Key 应该是稳定、可预测且唯一的。
 
-> `key` 不是一个 prop。尝试访问它将导致返回 `undefined`。如果你需要在子组件中访问相同的值，你应该将其作为不同的 prop 传递。
+```javascript
+const todoItems = todos.map((todo) =>
+  <li key={todo.id}>
+    {todo.text}
+  </li>
+);
+```
 
-### ref Prop
+在开发模式下，如果你忘记为数组中的项提供 `key`，React 会发出警告。请注意，`key` 不是一个标准的 prop，不能从子组件中访问（例如，通过 `props.key`）。
 
-`ref` prop 用于直接访问 DOM 元素或类组件实例。与大多数 props 不同，`ref` 由 React 处理，不会传递给组件的 props 对象。
+### Fragments
 
-在 React 19 中，`ref` 作为常规 prop 传递。然而，访问 `element.ref` 已被弃用，并会在开发模式下触发警告，以鼓励使用现代的基于 prop 的方法。
+在 React 中，一个常见的模式是让一个组件返回多个元素。JSX 要求有单一的根元素。Fragments 允许你将一组子元素分组，而无需向 DOM 添加额外的节点。
+
+你可以使用显式导出的 `Fragment`，也可以使用更简洁的 `<>...</>` 语法。
+
+```javascript
+import { Fragment } from 'react';
+
+function Columns() {
+  return (
+    <>
+      <td>Hello</td>
+      <td>World</td>
+    </>
+  );
+}
+```
+
+### `ref` Prop
+
+从 React 19 开始，`ref` 是一个常规 prop，你可以将其传递给组件以获取对 DOM 元素或类组件实例的引用。之前，访问 `element.ref` 是可行的，但现在已被弃用。你应该始终通过 `ref` prop 与 ref 进行交互。
 
 ---
 
-现在你已经了解了 JSX 在幕后是如何工作的，你可以开始了解如何使用它来构建可复用的 UI。请继续阅读[组件与 Props](./core-apis-components-and-props.md)指南以了解更多信息。
+理解 JSX 转换及其运行时有助于深入了解 React 的内部工作原理。对于需要以编程方式创建元素而不使用 JSX 的情况，你可以在 [创建和操作元素](./core-apis-creating-elements.md) 指南中了解更多信息。

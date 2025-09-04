@@ -1,136 +1,121 @@
-# 性能 Hook
+# 性能 Hooks
 
-优化渲染性能是构建快速、响应迅速的 React 应用程序的关键一环。本节介绍了旨在帮助你通过记忆化值和函数，以及优雅地管理非紧急 UI 更新，来控制和改善组件渲染方式的 Hook。
+React 的渲染系统通常很快，但对于复杂的应用程序，你可能会遇到性能瓶颈。性能 Hooks 提供了优化组件的工具，通过记忆化昂贵的计算、防止不必要的重新渲染以及在不阻塞用户交互的情况下调度非紧急的 UI 更新来实现。
 
-这些 Hook 是强大的工具，但只应在已确定存在性能问题时使用。过早的优化可能导致代码更加复杂，却带不来实际的好处。
+这些 Hooks 功能强大，但应审慎使用。过早的优化可能导致代码更加复杂。通常最好的做法是先在没有它们的情况下构建组件，然后使用 React Profiler 等工具来识别真正需要优化的区域。
 
-以下是 React 中可用的主要性能 Hook：
+本节涵盖了专为性能调优设计的主要 Hooks：
 
 <x-cards data-columns="2">
-  <x-card data-title="useCallback" data-icon="lucide:function-square">
+  <x-card data-title="useCallback" data-icon="lucide:save">
     记忆化回调函数，防止它们在每次渲染时被重新创建。
   </x-card>
-  <x-card data-title="useMemo" data-icon="lucide:binary">
-    记忆化高开销计算的结果，仅在依赖项改变时才重新计算。
+  <x-card data-title="useMemo" data-icon="lucide:calculator">
+    记忆化昂贵计算的结果，仅在依赖项改变时才重新计算。
   </x-card>
   <x-card data-title="useTransition" data-icon="lucide:fast-forward">
-    将状态更新标记为非紧急的过渡，从而在繁重的渲染期间保持 UI 的响应性。
+    将状态更新标记为非紧急，允许其他更新优先渲染而不会阻塞 UI。
   </x-card>
   <x-card data-title="useDeferredValue" data-icon="lucide:hourglass">
-    推迟更新一个值，允许 UI 在准备新值的同时显示旧值。
+    推迟 UI 非关键部分的更新，保持应用程序的响应性。
   </x-card>
 </x-cards>
 
----
+## useCallback
 
-## `useCallback`
-
-`useCallback` Hook 返回一个记忆化版本的回调函数，该函数仅在某个依赖项改变时才会更新。这在将回调函数传递给依赖引用相等性以防止不必要渲染的优化子组件时非常有用。
+`useCallback` 返回一个回调函数的记忆化版本。当将回调函数传递给依赖引用相等性以防止不必要渲染的优化子组件时，这非常有用。
 
 ### 语法
 
 ```javascript
-const memoizedCallback = useCallback(
-  () => {
-    doSomething(a, b);
-  },
-  [a, b],
-);
+const memoizedCallback = useCallback(callback, deps);
 ```
 
 ### 参数
 
-| Parameter  | Type       | Description                                                                                             | Required |
-| :--------- | :--------- | :------------------------------------------------------------------------------------------------------ | :------- |
-| `callback` | `function` | 要记忆化的函数。                                                                                        | 是       |
-| `deps`     | `Array`    | 一个依赖项数组。如果其中任何一个依赖项的值发生变化，回调函数将被重新创建。                         | 是       |
+| Parameter  | Type      | Description                                                                                                                                                              |
+| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `callback` | `function`| 要被记忆化的函数。                                                                                                                                             |
+| `deps`     | `Array`   | 一个依赖项数组。只有当此数组中的值发生变化时，记忆化的回调函数才会被重新创建。如果省略，则每次渲染都会返回一个新的函数。 |
 
 ### 示例
 
-假设有一个 `SearchableList` 组件接收一个 `onSearch` 函数。如果父组件重新渲染，会创建一个新的 `onSearch` 函数，这会导致 `SearchableList` 即使被记忆化了也会重新渲染。`useCallback` 解决了这个问题。
+考虑一个 `ProductPage` 组件，它将一个 `handleSubmit` 函数传递给 `ShippingForm` 组件。如果 `ShippingForm` 被 `React.memo` 包裹，对 `handleSubmit` 使用 `useCallback` 可以防止在 `ProductPage` 因其他原因重新渲染时，表单也跟着重新渲染。
 
-```javascript
+```jsx
 import React, { useState, useCallback } from 'react';
-import { memo } from 'react';
 
-// 假设此子组件已使用 React.memo 进行优化
-const SearchableList = memo(({ onSearch }) => {
-  console.log('SearchableList rendered');
-  // ... 列表渲染逻辑
-  return <button onClick={() => onSearch('query')}>Search</button>;
+const ShippingForm = React.memo(function ShippingForm({ onSubmit }) {
+  console.log('ShippingForm rendered');
+  // ... form implementation
+  return <button onClick={onSubmit}>Submit</button>;
 });
 
-function ParentComponent() {
-  const [count, setCount] = useState(0);
+function ProductPage({ productId }) {
+  const [theme, setTheme] = useState('dark');
 
-  // 如果没有 useCallback，该函数会在 ParentComponent 的每次渲染时重新创建，
-  // 导致 SearchableList 不必要地重新渲染。
-  const handleSearch = useCallback((query) => {
-    console.log('Searching for:', query);
-  }, []); // 空依赖数组意味着该函数只在初次渲染时创建一次
+  const handleSubmit = useCallback(() => {
+    // This function's identity is stable across re-renders
+    // unless productId changes.
+    console.log(`Submitting form for product: ${productId}`);
+  }, [productId]);
 
   return (
     <div>
-      <button onClick={() => setCount(count + 1)}>Increment Count: {count}</button>
-      <SearchableList onSearch={handleSearch} />
+      <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+        Toggle Theme
+      </button>
+      <ShippingForm onSubmit={handleSubmit} />
     </div>
   );
 }
 ```
-在此示例中，点击“Increment Count”按钮会重新渲染 `ParentComponent`，但由于 `handleSearch` 被包裹在 `useCallback` 中且依赖数组为空，因此传递给 `SearchableList` 的是同一个函数实例。`React.memo` 发现 `onSearch` prop 没有改变，因此跳过了对列表的重新渲染。
+在此示例中，切换主题不会导致 `ShippingForm` 重新渲染，因为 `handleSubmit` 函数的引用保持稳定。
 
----
+## useMemo
 
-## `useMemo`
-
-`useMemo` Hook 返回一个记忆化的值。它仅在某个依赖项改变时才重新执行函数以计算新值。这对于避免在每次渲染时都进行高开销的计算非常有用。
+`useMemo` 返回一个记忆化的值。它仅在其依赖项之一发生变化时才重新计算该值，这对于避免在每次渲染时进行昂贵的计算非常有用。
 
 ### 语法
 
 ```javascript
-const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
+const memoizedValue = useMemo(create, deps);
 ```
 
 ### 参数
 
-| Parameter | Type       | Description                                                                                              |
-| :-------- | :--------- | :------------------------------------------------------------------------------------------------------- |
-| `create`  | `function` | 返回待记忆化值的函数。该函数应为纯函数。                                                                 |
-| `deps`    | `Array`    | 一个依赖项数组。如果其中任何一个依赖项发生变化，`create` 函数将被重新执行。                         |
+| Parameter | Type       | Description                                                                                                                                                  |
+| --------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `create`  | `function` | 一个计算并返回要记忆化的值的函数。                                                                                               |
+| `deps`    | `Array`    | 一个依赖项数组。只有当此数组中的值发生变化时，`create` 函数才会被重新执行。如果省略，则每次渲染都会重新计算该值。 |
 
 ### 示例
 
-如果你有一个需要筛选大型列表的组件，此操作可能会很慢。使用 `useMemo` 可以确保仅在列表或筛选条件改变时才执行筛选。
+如果你的组件需要过滤一个庞大的项目列表，你可以使用 `useMemo` 来确保过滤操作仅在列表或过滤文本发生变化时运行。
 
-```javascript
+```jsx
 import React, { useState, useMemo } from 'react';
 
-function ProductList({ products, filterTerm }) {
-  // 只有在 'products' 或 'filterTerm' 改变时，
-  // 这个高开销的筛选操作才会重新运行。
-  const visibleProducts = useMemo(() => {
-    console.log('Filtering products...');
-    return products.filter(p => p.name.includes(filterTerm));
-  }, [products, filterTerm]);
+function TodoList({ todos, filter }) {
+  const visibleTodos = useMemo(() => {
+    console.log('Filtering todos...');
+    return todos.filter(todo => todo.text.includes(filter));
+  }, [todos, filter]); // Only re-runs if 'todos' or 'filter' changes
 
   return (
     <ul>
-      {visibleProducts.map(product => (
-        <li key={product.id}>{product.name}</li>
+      {visibleTodos.map(todo => (
+        <li key={todo.id}>{todo.text}</li>
       ))}
     </ul>
   );
 }
 ```
-如果没有 `useMemo`，`products.filter` 会在 `ProductList` 因任何原因重新渲染时都运行一次，这可能会降低 UI 的速度。有了 `useMemo`，如果输入相同，则会跳过这项高开销的工作。
+这里，`visibleTodos` 仅在 `todos` 数组或 `filter` 字符串发生变化时才会重新计算，而不会在组件的其他重新渲染时计算。
 
----
+## useTransition
 
-## `useTransition`
-
-`useTransition` Hook 允许你在不阻塞 UI 的情况下更新状态。它返回一个表示过渡待定状态的有状态值和一个用于启动过渡的函数。
-
-这对于状态更新可能导致明显延迟的情况非常理想，例如在响应用户输入时筛选大型数据集。
+`useTransition` 是一个允许你在不阻塞 UI 的情况下更新状态的 Hook。它返回一个待处理状态和一个用于包装可能造成中断的状态更新的函数。
 
 ### 语法
 
@@ -140,107 +125,105 @@ const [isPending, startTransition] = useTransition();
 
 ### 返回值
 
-`useTransition` 返回一个包含两个元素的数组：
+一个包含两个值的元组：
 
-| Item              | Type       | Description                                                                                                   |
-| :---------------- | :--------- | :------------------------------------------------------------------------------------------------------------ |
-| `isPending`       | `boolean`  | 一个标志，当过渡处于待定状态时为 `true`。你可以用它来显示加载指示器。                                    |
-| `startTransition` | `function` | 一个接收回调函数的函数。此回调函数内的任何状态更新都被标记为非紧急的过渡。                               |
+| Value             | Type       | Description                                                                                             |
+| ----------------- | ---------- | ------------------------------------------------------------------------------------------------------- |
+| `isPending`       | `boolean`  | 一个布尔值，如果一个过渡当前处于活动状态，则为 `true`。你可以用它来显示加载状态。 |
+| `startTransition` | `function` | 一个接收回调函数的函数。此回调函数内的状态更新被标记为非紧急的过渡。 | 
 
 ### 示例
 
-在此示例中，在输入字段中键入内容会更新两个状态：输入值（紧急）和筛选后的列表（非紧急）。通过将列表更新包裹在 `startTransition` 中，我们确保了即使筛选列表很慢，输入字段也能保持响应。
+当用户在搜索字段中输入时，你可能希望在过滤搜索结果的同时保持输入的响应性。`useTransition` 可以将搜索结果的状态更新标记为较低优先级的过渡。
 
-```javascript
+```jsx
 import React, { useState, useTransition } from 'react';
 
-const largeList = Array.from({ length: 10000 }, (_, i) => `Item ${i + 1}`);
+function SearchResults({ query }) {
+  // ... component to render search results
+  return <div>Searching for: {query}</div>;
+}
 
 function App() {
   const [isPending, startTransition] = useTransition();
   const [inputValue, setInputValue] = useState('');
-  const [filteredList, setFilteredList] = useState(largeList);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleChange = (e) => {
-    // 紧急更新：立即显示用户正在输入的内容
+  const handleInputChange = (e) => {
+    // Urgent: update the input field immediately
     setInputValue(e.target.value);
 
-    // 非紧急更新：包裹在 startTransition 中
+    // Non-urgent: wrap the disruptive update in a transition
     startTransition(() => {
-      setFilteredList(largeList.filter(item => item.includes(e.target.value)));
+      setSearchQuery(e.target.value);
     });
   };
 
   return (
     <div>
-      <input type="text" value={inputValue} onChange={handleChange} />
-      {isPending && <p>Loading list...</p>}
-      <ul>
-        {filteredList.map((item, index) => <li key={index}>{item}</li>)}
-      </ul>
+      <input value={inputValue} onChange={handleInputChange} />
+      {isPending ? (
+        <div>Loading...</div>
+      ) : (
+        <SearchResults query={searchQuery} />
+      )}
     </div>
   );
 }
 ```
+在此示例中，即使 `SearchResults` 的渲染速度很慢，文本输入也能保持流畅和响应迅速。在过渡待处理期间，UI 会显示“Loading...”消息。
 
----
+更多高级用例，请参阅 [过渡](./advanced-transitions.md) 指南。
 
-## `useDeferredValue`
+## useDeferredValue
 
-`useDeferredValue` Hook 接受一个值并返回该值的新副本，该副本将推迟到更紧急的更新之后。如果当前渲染是由紧急更新（如用户输入）引起的，React 将返回先前的值，然后在紧急渲染完成后再渲染新值。
-
-这个 Hook 与 `useTransition` 类似，但当无法直接控制状态设置调用时，通常更容易使用。
+`useDeferredValue` 接受一个值并返回该值的一个新副本，该副本将推迟到更紧急的更新之后。它与 `useTransition` 类似，但对于你无法直接访问状态设置函数的情况通常更简单。
 
 ### 语法
 
 ```javascript
-const deferredValue = useDeferredValue(value, initialValue);
+const deferredValue = useDeferredValue(value);
 ```
 
 ### 参数
 
-| Parameter      | Type  | Description                                                                                             |
-| :------------- | :---- | :------------------------------------------------------------------------------------------------------ |
-| `value`        | `any` | 你想要推迟的值。                                                                                        |
-| `initialValue` | `any` | （可选）在第一个延迟值可用之前使用的初始值。                                                                  |
+| Parameter | Type  | Description                                                                                                                                     |
+| --------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value`   | `any` | 要推迟的值。React 最初会使用旧值进行渲染，然后在紧急更新后尝试使用新值进行重新渲染。 |
 
 ### 示例
 
-此示例创建了一个 `ProductList`，它接收一个搜索查询作为 prop。通过对查询使用 `useDeferredValue`，列表可以使用延迟的查询进行重新渲染，从而防止主输入字段出现延迟。
+这个 Hook 可以用来实现与 `useTransition` 相同的“边输入边搜索”行为，但方式不同。当值来自 props 或另一个 Hook 时，它特别有用。
 
-```javascript
+```jsx
 import React, { useState, useDeferredValue } from 'react';
 
-const largeList = Array.from({ length: 10000 }, (_, i) => `Product ${i + 1}`);
-
-function ProductList({ query }) {
+function SearchResults({ query }) {
+  // Memoize the component to show the effect clearly
   const deferredQuery = useDeferredValue(query);
-  const list = useMemo(() => 
-    largeList.filter(item => item.includes(deferredQuery)),
-    [deferredQuery]
-  );
+  const isStale = query !== deferredQuery;
+
+  // ... expensive rendering logic based on deferredQuery
 
   return (
-    <ul>
-      {list.map((item, index) => <li key={index}>{item}</li>)}
-    </ul>
+    <div style={{ opacity: isStale ? 0.5 : 1 }}>
+      Showing results for "{deferredQuery}"
+    </div>
   );
 }
 
 function App() {
   const [query, setQuery] = useState('');
-
   return (
     <div>
-      <input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products..."/>
-      <ProductList query={query} />
+      <input value={query} onChange={e => setQuery(e.target.value)} />
+      <SearchResults query={query} />
     </div>
   );
 }
-
 ```
-在这里，当用户输入时，`query` 状态会立即更新，保持输入的响应性。`ProductList` 组件接收到这个新的 `query`，但 `useDeferredValue` 告诉 React，它可以在后台渲染新列表的同时，继续显示旧的列表（基于先前的 `deferredQuery`）。
+在这里，`SearchResults` 组件会立即接收到 `query`，但使用 `useDeferredValue` 来创建一个 `deferredQuery`。在组件等待新查询被渲染时，`deferredQuery` 会持有之前的值，从而使 UI 保持响应。`isStale` 标志可用于提供视觉反馈，例如将旧结果调暗。
 
 ---
 
-通过这些 Hook，你可以有效地管理复杂的渲染逻辑，并确保流畅的用户体验。有关过渡的更高级模式，请参阅[过渡](./advanced-transitions.md)指南。
+掌握了这些性能优化后，你可以探索其他专门的 Hooks。更多信息，请继续阅读 [其他 Hooks](./hooks-other.md) 指南。

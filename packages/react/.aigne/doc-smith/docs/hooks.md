@@ -1,119 +1,90 @@
 # Hooks
 
-Hooks are functions that allow you to “hook into” React state and lifecycle features from function components. They let you use state, effects, context, and other React features without writing a class, leading to more readable and composable code.
+Hooks are functions that let you “hook into” React state and lifecycle features from function components. They allow you to use state and other React features without writing a class, making your components cleaner and more reusable.
 
-Before using Hooks, you should be familiar with two fundamental rules:
-1.  **Only Call Hooks at the Top Level:** Don't call Hooks inside loops, conditions, or nested functions.
-2.  **Only Call Hooks from React Functions:** Call them from React function components or custom Hooks, not regular JavaScript functions.
+Hooks can only be called at the top level of your function components or from your own custom Hooks. You cannot call them inside loops, conditions, or nested functions. This ensures that Hooks are called in the same order each time a component renders, which allows React to correctly preserve the state of Hooks between multiple `useState` and `useEffect` calls.
 
-For more details, see the official documentation on the [Rules of Hooks](https://react.dev/link/invalid-hook-call).
+### How Hooks Work
 
-This section provides a detailed guide to all built-in Hooks, grouped by their purpose.
+At a high level, Hooks provide a direct API to the React features you already know, such as state, lifecycle, context, and refs. When you call a Hook like `useState`, you are telling React that your component needs to keep track of some state.
 
 ```d2
 direction: down
 
-"React Hooks": {
-  shape: hexagon
-  
-  "Categories": {
-    grid-columns: 3
-    grid-gap: 50
+"Function Component": {
+  shape: rectangle
+  style.fill: "#e6f7ff"
 
-    "State": {
-      shape: package
-      "useState"
-      "useReducer"
-      "useActionState"
-      "useOptimistic"
-    }
-
-    "Effects": {
-      shape: package
-      "useEffect"
-      "useLayoutEffect"
-      "useInsertionEffect"
-    }
-
-    "Performance": {
-      shape: package
-      "useMemo"
-      "useCallback"
-      "useTransition"
-    }
-    
-    "Refs": {
-      shape: package
-      "useRef"
-      "useImperativeHandle"
-    }
-
-    "Context": {
-      shape: package
-      "useContext"
-    }
-
-    "Other": {
-      shape: package
-      "useId"
-      "useSyncExternalStore"
-      "useDebugValue"
-    }
+  "Hooks": {
+    label: "Hook Calls\n(useState, useEffect, ...)"
+    shape: rectangle
+    style.fill: "#f6ffed"
   }
-
-  "React Hooks" -> "Categories": "Grouped by purpose"
 }
+
+"React Core": {
+  shape: package
+  label: "React Core Features"
+  style.fill: "#fff7e6"
+
+  State: { shape: stored_data }
+  Lifecycle: { shape: step }
+  Context: { shape: stored_data }
+}
+
+"Function Component".Hooks -> "React Core": "Hooks into"
+"React Core" -> "Function Component": "Provides State & Lifecycle"
 ```
 
-## Hook Categories
+### Exploring the Hooks
 
-Explore the different types of Hooks to handle various aspects of your component's logic.
+React provides a set of built-in Hooks to cover a wide range of use cases. They are grouped below by their primary purpose. Dive into each section to learn more about them.
 
 <x-cards data-columns="2">
-  <x-card data-title="State Hooks" data-href="/hooks/state" data-icon="lucide:database">
-    Manage component's state with `useState`, `useReducer`, `useActionState`, and `useOptimistic`.
+  <x-card data-title="State Hooks" data-icon="lucide:database" data-href="/hooks/state">
+    Manage your component's local state. These Hooks allow your components to remember information like user input, server responses, or UI state.
   </x-card>
-  <x-card data-title="Effect Hooks" data-href="/hooks/effect" data-icon="lucide:zap">
-    Perform side effects in your components with `useEffect`, `useLayoutEffect`, and `useInsertionEffect`.
+  <x-card data-title="Effect Hooks" data-icon="lucide:zap" data-href="/hooks/effect">
+    Perform side effects in your components. Effects are used for data fetching, setting up a subscription, or manually changing the DOM.
   </x-card>
-  <x-card data-title="Ref Hooks" data-href="/hooks/ref" data-icon="lucide:git-commit">
-    Reference values that aren’t needed for rendering with `useRef` and `useImperativeHandle`.
+  <x-card data-title="Ref Hooks" data-icon="lucide:anchor" data-href="/hooks/ref">
+    Reference values that aren’t needed for rendering. Useful for accessing DOM nodes directly or for keeping a mutable value around.
   </x-card>
-  <x-card data-title="Performance Hooks" data-href="/hooks/performance" data-icon="lucide:gauge">
-    Optimize your components' performance with `useCallback`, `useMemo`, `useTransition`, and `useDeferredValue`.
+  <x-card data-title="Performance Hooks" data-icon="lucide:gauge-circle" data-href="/hooks/performance">
+    Optimize your components' performance by skipping expensive recalculations and managing UI updates without blocking the user.
   </x-card>
-  <x-card data-title="Other Hooks" data-href="/hooks/other" data-icon="lucide:puzzle">
-    Explore other Hooks like `useContext`, `useId`, `useDebugValue`, and `useSyncExternalStore`.
+  <x-card data-title="Other Hooks" data-icon="lucide:puzzle" data-href="/hooks/other">
+    A collection of Hooks for other specific use cases, such as reading context, generating unique IDs, or subscribing to external stores.
   </x-card>
 </x-cards>
 
-## Complete API Reference
+### Full API Reference
 
-Here is a complete list of all built-in Hooks available in React.
+For a quick lookup, here is a list of all built-in Hooks available in React.
 
 | Hook | Description |
-|---|---|
-| [`useState`](./hooks-state.md) | Manages state within a function component. |
-| [`useEffect`](./hooks-effect.md) | Performs side effects after render. |
-| [`useContext`](./hooks-other.md) | Subscribes to React context without introducing nesting. |
-| [`useReducer`](./hooks-state.md) | An alternative to `useState` for managing complex state logic. |
-| [`useCallback`](./hooks-performance.md) | Returns a memoized callback function. |
-| [`useMemo`](./hooks-performance.md) | Returns a memoized value. |
-| [`useRef`](./hooks-ref.md) | Returns a mutable ref object. |
-| [`useImperativeHandle`](./hooks-ref.md) | Customizes the instance value that is exposed to parent components when using `ref`. |
-| [`useLayoutEffect`](./hooks-effect.md) | Fires synchronously after all DOM mutations. |
-| [`useInsertionEffect`](./hooks-effect.md) | Fires synchronously before all DOM mutations, for CSS-in-JS libraries. |
-| [`useTransition`](./hooks-performance.md) | Lets you update the state without blocking the UI. |
-| [`useDeferredValue`](./hooks-performance.md) | Defers updating a part of the UI. |
-| [`useId`](./hooks-other.md) | Generates unique IDs that are stable across server and client. |
-| [`useSyncExternalStore`](./hooks-other.md) | Lets you subscribe to an external store. |
-| [`useDebugValue`](./hooks-other.md) | Displays a label for custom hooks in React DevTools. |
-| [`useActionState`](./hooks-state.md) | Manages the state of a form action. |
-| [`useOptimistic`](./hooks-state.md) | Manages optimistic UI updates. |
-| `use` | Lets you read the value of a resource like a Promise or context. |
+| --- | --- |
+| `useState` | Declares a state variable that you can update, causing a re-render. |
+| `useReducer` | An alternative to `useState` for managing complex state logic. |
+| `useEffect` | Lets you perform side effects in function components. |
+| `useLayoutEffect` | Fires synchronously after all DOM mutations. Use this to read layout from the DOM and synchronously re-render. |
+| `useInsertionEffect` | Allows inserting elements into the DOM before any layout effects fire. Primarily for CSS-in-JS libraries. |
+| `useContext` | Accepts a context object and returns the current context value for that context. |
+| `useRef` | Returns a mutable ref object whose `.current` property is initialized to the passed argument. |
+| `useCallback` | Returns a memoized callback function. |
+| `useMemo` | Returns a memoized value. |
+| `useImperativeHandle` | Customizes the instance value that is exposed to parent components when using `ref`. |
+| `useTransition` | Lets you update the state without blocking the UI. Returns a stateful value for the pending state of the transition, and a function to start it. |
+| `useDeferredValue` | Lets you defer updating a part of the UI. |
+| `useId` | A hook for generating unique IDs that are stable across the server and client. |
+| `useSyncExternalStore` | A hook recommended for reading and subscribing from external data sources in a way that’s compatible with concurrent rendering features. |
+| `useDebugValue` | Can be used to display a label for custom hooks in React DevTools. |
+| `useActionState` | A hook to manage the state of a form action. |
+| `useOptimistic` | A hook that lets you optimistically update the UI. |
+| `use` | A hook that allows you to read the value of a resource like a Promise or context. |
 
----
+### Next Steps
 
-Hooks are the foundation for building modern, functional React applications. By mastering their use, you can create efficient, readable, and maintainable components.
+To begin, a great starting point is learning how to add and manage state within your components. This is the foundation for creating interactive user interfaces.
 
-To see how these Hooks are applied in more complex patterns and environments, continue to the [Advanced Guides](./advanced.md).
+Next: [State Hooks](./hooks-state.md)

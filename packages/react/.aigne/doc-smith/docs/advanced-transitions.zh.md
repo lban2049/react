@@ -1,126 +1,134 @@
-# Transitions
+# 过渡
 
-在 React 中，transition 是一种管理 UI 更新而无需阻塞用户交互的机制。它允许你将某些状态更新指定为“transition”，这会告知 React，如果发生更紧急的更新（如用户输入），这些更新可以被中断。这确保了即使在复杂的渲染任务期间，应用程序也能保持响应。
+React 中的过渡功能可以帮助你管理复杂的 UI 更新，而不会阻塞主线程，从而确保应用程序对用户输入保持响应。通过将某些状态更新标记为“过渡”，你可以告知 React 它们并非紧急任务，如果出现更关键的更新（例如按键或点击），这些更新可以被中断。
 
-这对于可能较慢的更新特别有用，例如筛选大型列表或获取导致重大视觉变化的数据。其核心思想是将紧急更新（例如，在搜索框中输入）与非紧急或过渡性更新（例如，显示搜索结果）分开。
+这主要通过两个核心 API 实现：用于组件的 `useTransition` Hook 和独立的 `startTransition` 函数。
 
-React 提供了两个用于处理 transition 的主要 API：
-- **`useTransition`**：在函数组件中管理 transition 的首选 hook。你可以在我们的 [性能 Hooks](./hooks-performance.md) 页面上找到详细文档。
-- **`startTransition`**：一个独立的函数，可在 `useTransition` hook 不可用时使用，例如在数据库或组件外部。
+## `useTransition` Hook
 
-## `startTransition`
+`useTransition` Hook 是在函数组件中使用过渡的标准方法。它为过渡的挂起状态提供了一个有状态的值，并提供一个启动过渡的函数。
 
-`startTransition` 函数允许你包装一个状态更新，将其标记为非紧急。
+有关性能相关 Hook 的详细指南，请参阅 [Performance Hooks](./hooks-performance.md) 文档。
+
+### 用法
+
+调用 `useTransition` 会返回一个包含两个元素的数组：
+
+1.  `isPending` (布尔值)：一个标志，当过渡处于活动状态时为 `true`。你可以用它来显示加载指示器或其他挂起状态的 UI。
+2.  `startTransition` (函数)：一个函数，你可以用它来包装状态更新，从而将其标记为过渡。
+
+```javascript
+const [isPending, startTransition] = useTransition();
+```
+
+### 示例：筛选列表
+
+假设你有一个用于筛选大型列表的输入框。如果没有过渡，快速输入可能会导致 UI 卡顿，因为它会尝试在每次按键时重新渲染列表。通过使用 `useTransition`，你可以保持输入框的响应性，同时让列表在后台更新。
+
+```jsx
+import { useState, useTransition } from 'react';
+
+function App() {
+  const [isPending, startTransition] = useTransition();
+  const [inputValue, setInputValue] = useState('');
+  const [filterTerm, setFilterTerm] = useState('');
+
+  const handleInputChange = (e) => {
+    // 立即更新输入框 - 这是一个紧急更新。
+    setInputValue(e.target.value);
+
+    // 将列表筛选逻辑包装在过渡中 - 这是一个非紧急更新。
+    startTransition(() => {
+      setFilterTerm(e.target.value);
+    });
+  };
+
+  return (
+    <div>
+      <input type="text" value={inputValue} onChange={handleInputChange} />
+      {isPending && <p>正在更新列表...</p>}
+      {/* 一个根据 `filterTerm` 渲染列表的组件 */}
+      {/* <FilteredList term={filterTerm} /> */}
+    </div>
+  );
+}
+```
+
+在此示例中，`inputValue` 状态会立即更新，因此用户可以无延迟地看到自己输入的内容。而可能触发高开销重新渲染的 `filterTerm` 状态，则在 `startTransition` 中更新。React 会以较低的优先级处理此更新，并且在过渡完成前，`isPending` 标志将为 true。
+
+## `startTransition` 函数
+
+React 还导出了一个独立的 `startTransition` 函数，当 `useTransition` Hook 不可用时（例如在数据处理库或 React 组件之外），可以使用该函数。
+
+### 用法
+
+你可以直接从 React 导入 `startTransition`，并向其传递一个包含非紧急状态更新的回调函数。
 
 ```javascript
 import { startTransition } from 'react';
 
-// startTransition 回调中的任何状态更新都被视为非紧急更新。
-startTransition(() => {
-  // 例如，为渲染缓慢的组件设置状态
-  setFilteredList(data);
-});
+// 某些事件处理程序或数据获取逻辑
+function handleUpdate() {
+  // 此回调内的状态更新被标记为非紧急。
+  startTransition(() => {
+    // 例如，setSomeState(newValue);
+  });
+}
 ```
 
-### 工作原理
+### 参数
 
-此图说明了使用 transition 的并发更新流程：
+| Name      | Type         | Description                                                                                                                                                             |
+| :-------- | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scope`   | `() => void` | 一个包含一个或多个状态更新（例如 `setState`）的函数。React 会立即调用此函数，并将其中的任何更新都视为过渡。          |
+| `options` | `object`     | *（可选）* 一个包含选项的对象。如果 `enableTransitionTracing` 功能标志已开启，你可以为过渡提供一个 `name`，这有助于使用 React DevTools 进行调试。 |
+
+## 概念模型
+
+过渡允许 React 区分紧急更新和非紧急更新。这可以确保需要即时反馈的用户交互，不会被较慢的后台渲染任务所延迟。
 
 ```d2
 direction: down
 
-"用户交互": {
+"User-Interaction": {
   shape: person
+  label: "用户交互"
 }
 
-"紧急更新": {
+"High-Priority-Update": {
   shape: rectangle
-  label: "紧急状态更新（例如，输入值）"
-  style.fill: "#e6f7ff"
+  label: "紧急更新\n（例如，在输入框中输入）"
+  style.stroke: "#ff4d4f"
 }
 
-"过渡更新": {
+"Low-Priority-Update": {
   shape: rectangle
-  label: "过渡状态更新（例如，搜索结果）"
-  style.fill: "#fffbe6"
+  label: "过渡更新\n（例如，更新列表）"
+  style.stroke: "#faad14"
 }
 
-"即时渲染": {
+"UI-Render": {
   shape: rectangle
-  label: "即时、不可中断的渲染"
+  label: "UI 渲染"
   style.fill: "#f6ffed"
 }
 
-"可中断渲染": {
-  shape: rectangle
-  label: "可中断的渲染"
-  style.fill: "#fff0f6"
-}
+"User-Interaction" -> "High-Priority-Update": "触发"
+"High-Priority-Update" -> "UI-Render": "高优先级\n不可中断"
 
-"用户交互" -> "紧急更新"
-"用户交互" -> "过渡更新"
-
-"紧急更新" -> "即时渲染": "触发"
-"过渡更新" -> "可中断渲染": "触发"
-
-"即时渲染" -> "可中断渲染": "可中断"
-
+"User-Interaction" -> "Low-Priority-Update": "触发"
+"Low-Priority-Update" -> "UI-Render": "低优先级\n可被紧急更新中断"
 ```
 
-当一个状态更新被包装在 `startTransition` 中时，React 可以在后台渲染该更新的同时继续处理用户输入。如果用户提供了新的输入，React 可以中断 transition 的渲染，处理新的紧急更新，然后用最新的数据重新开始 transition 的渲染。
+## 实验性过渡 API
 
-### 参数
+虽然 `useTransition` 和 `startTransition` 是主要的稳定 API，但 React 团队正在探索与过渡相关的更高级功能。这些 API 尚不稳定，其行为可能会发生变化。
 
-`startTransition` 接受一个回调函数和一个可选的 options 对象。
+-   **`unstable_addTransitionType`**：此函数允许将特定类型（一个字符串）与当前活动的过渡关联起来。这旨在与视图过渡 (View Transitions) 等功能一起使用，以便根据发生的过渡类型应用不同的动画或行为。
+-   **`unstable_startGestureTransition`**：此函数专为与连续用户手势（如拖动或滑动）相关联的过渡而设计。它需要一个 `GestureProvider` 来管理基于手势的过渡的生命周期。
 
-| 名称 | 类型 | 描述 | 必需 |
-|---|---|---|---|
-| `scope` | `() => void` | 一个执行一个或多个状态更新的函数。这些更新将被标记为 transition。 | 是 |
-| `options` | `object` | 一个用于配置的可选对象。目前，它仅支持用于调试目的的 `name`。 | 否 |
+这些 API 可用于实验，但不应在生产环境中使用。有关更多信息，请参阅 [实验性 API](./advanced-experimental.md) 指南。
 
-- **`options.name`**：一个供 React DevTools 使用的字符串，用于帮助识别和追踪 transition。
+---
 
-### 示例
-
-考虑一个筛选大型列表的搜索输入。我们希望输入字段感觉即时，而列表筛选可以延迟。
-
-```javascript
-import { startTransition } from 'react';
-
-// 紧急更新：更新输入字段中的文本
-setSearchQuery(input);
-
-// 非紧急更新：将列表过滤操作包装在 transition 中
-startTransition(() => {
-  setFilteredList(getFilteredItems(input));
-});
-```
-
-在这种情况下，即使用 `getFilteredItems` 是一个缓慢的操作，用户也可以在搜索框中继续输入而不会有任何延迟，因为 `setSearchQuery` 更新被高优先级处理。
-
-## 实验性 Transition API
-
-React 还包含与 transition 相关的实验性 API，这些 API 可能会发生变化。它们旨在用于高级用例和库作者。
-
-<x-cards data-columns="2">
-  <x-card data-title="unstable_startGestureTransition" data-icon="lucide:move-3d">
-    用于创建与基于手势的交互（如滑动）相关联的 transition。它需要一个 `GestureProvider` 来管理手势的生命周期。
-  </x-card>
-  <x-card data-title="unstable_addTransitionType" data-icon="lucide:layers">
-    允许向正在进行的 transition 添加描述性类型，例如 'fade' 或 'slide'。这是实验性视图过渡支持的一部分，有助于协调动画。
-  </x-card>
-</x-cards>
-
-这些 API 通过功能标志（`enableGestureTransition`、`enableViewTransition`）启用，目前不适用于一般的应用程序。
-
-## 总结
-
-Transition 是在 React 中构建复杂且高度响应的用户界面的关键功能。通过将紧急更新与非紧急更新分开，你可以防止应用程序在繁重的渲染任务期间变得迟缓。
-
-对于大多数组件级用例，`useTransition` hook 是理想的工具。对于更高级的场景或在组件外部工作，`startTransition` 提供了必要的控制。
-
-要进一步优化组件的性能，请探索其他内置 hook。
-
-<x-card data-title="性能 Hooks" data-icon="lucide:gauge-circle" data-href="/hooks/performance" data-cta="阅读更多">
-  了解其他与性能相关的 hook，如 useTransition 和 useDeferredValue，以优化应用程序的渲染。
-</x-card>
+通过利用过渡，你可以构建更复杂、响应更灵敏的用户界面，从而优雅地处理数据密集型更新。要了解其他优化渲染的方法，请继续阅读 [性能 Hooks](./hooks-performance.md) 部分。

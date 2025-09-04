@@ -1,165 +1,147 @@
 # Caching
 
-React provides built-in caching capabilities primarily designed for data fetching and memoization within Server Components. These tools help prevent redundant data requests during a single render pass, improving performance and ensuring data consistency across your component tree. This guide covers the `cache` function and related APIs for managing the request lifecycle.
+React provides a built-in caching mechanism primarily designed to memoize data fetches and computations within a single server render pass. This helps avoid redundant work and ensures data consistency when the same data is accessed by multiple components in a tree. This is particularly useful in the context of React Server Components.
 
-For a broader understanding of the different rendering environments, see the [Server vs. Client Environments](./advanced-server-vs-client.md) guide.
+## `React.cache`
 
-## `cache` Function
+The primary API for this functionality is `React.cache`. It's a higher-order function that wraps another function, memoizing its results based on the arguments it's called with.
 
-The `cache` function is the primary API for memoizing the result of a function. When you wrap a function with `cache`, React stores the return value for a given set of arguments. If the same function is called with the same arguments later in the same server render pass, React will return the stored value instead of re-executing the function.
+### Basic Usage
 
-This is particularly useful for data fetching functions that are called from multiple components in a tree.
-
-### Server-Side Usage
-
-On the server, `cache` memoizes function calls on a per-request basis. It handles both successful results and thrown errors, ensuring that a failed data fetch doesn't re-execute and throw the same error multiple times within a single render.
+To use it, import `cache` from React and wrap a function, such as a data-fetching function.
 
 ```javascript
+// utils/data.js
 import { cache } from 'react';
 
 export const getUser = cache(async (id) => {
   const res = await fetch(`https://api.example.com/users/${id}`);
-  if (!res.ok) {
-    throw new Error('Failed to fetch user');
-  }
   return res.json();
 });
+```
 
-// Component 1
+Now, within your components, you can call `getUser` as you normally would. During a single render pass on the server, if multiple components call `getUser(123)`, the underlying `async` function will only be executed once. Subsequent calls with the same `id` will receive the cached result.
+
+```javascript
+// components/UserProfile.js
+import { getUser } from '../utils/data';
+
 async function UserProfile({ id }) {
-  const user = await getUser(id); // Network request is made
+  const user = await getUser(id);
   return <h1>{user.name}</h1>;
-}
-
-// Component 2 (in the same tree)
-async function UserHeader({ id }) {
-  const user = await getUser(id); // Cached result is returned instantly
-  return <header>Welcome, {user.name}</header>;
 }
 ```
 
-In this example, even though `UserProfile` and `UserHeader` both call `getUser(id)`, the actual `fetch` request will only be executed once. The second call will receive the cached data.
+### How Memoization Works
 
-### Client-Side Behavior
+The `cache` function creates a key based on the arguments passed to the wrapped function.
 
-By default, the `cache` function has no caching behavior on the client. It acts as a no-op, meaning it returns the original function, which will be executed on every call. This design allows you to write shared components that use `cache` on the server without breaking on the client. However, you must be aware that the function will not be memoized in a client environment.
+- **Primitives**: For primitive values like strings, numbers, and booleans, it uses value equality.
+- **Objects & Functions**: For objects and functions, it uses reference equality. This means two separate calls with different object instances (even if they have the same content) will result in a cache miss.
 
-### Caching Mechanism
+```javascript
+// Cache miss, because a new object is created for each call
+const user1 = await fetchUser({ id: 1 });
+const user2 = await fetchUser({ id: 1 });
 
-The `cache` function builds a nested map structure to store results. It uses a `WeakMap` for object and function arguments and a standard `Map` for primitive arguments (string, number, boolean, etc.). This ensures that objects can be garbage-collected if they are no longer referenced elsewhere, preventing memory leaks.
+// Cache hit, because the same object reference is used
+const params = { id: 1 };
+const user3 = await fetchUser(params);
+const user4 = await fetchUser(params);
+```
 
-Here is a simplified visualization of the caching structure:
+This behavior is implemented using a `WeakMap` for object/function arguments and a `Map` for primitive arguments, creating a tree of cache nodes for each unique sequence of arguments.
+
+### Caching Flow Diagram
+
+The following diagram illustrates the logic for a cached function call.
 
 ```d2
 direction: down
 
-call: "cachedFn(1, { id: 'a' })" {
-  label: "Function Call"
-  shape: oval
+Component: {
+  shape: rectangle
 }
 
-tree: "Cache Tree" {
-  shape: package
-  grid-columns: 1
-
-  fn_ref: "Function Reference (WeakMap)" {
-    shape: package
-
-    fn_node: "fn -> Node 1" {
-      shape: rectangle
-      
-      primitive_args: "Primitive Args (Map)" {
-        shape: package
-
-        primitive_node: "1 -> Node 2" {
-          shape: rectangle
-          
-          object_args: "Object Args (WeakMap)" {
-            shape: package
-
-            result_node: "{id: 'a'} -> Node 3 (Result)" {
-              shape: document
-              "status: TERMINATED"
-              "value: { ... }"
-            }
-          }
-        }
-      }
-    }
-  }
+Cache-Storage: {
+  label: "React's Per-Request Cache"
+  shape: cylinder
 }
 
-call -> tree.fn_ref: "Traverses tree to find or store result"
+Data-Source: {
+  label: "Database / API"
+  shape: cylinder
+}
+
+cachedFunction: {
+  label: "cachedFunction(args)"
+  shape: diamond
+}
+
+Component -> cachedFunction: "1. Call"
+
+cachedFunction -> Cache-Storage: "2. Check for 'args' key"
+
+Cache-Storage -> cachedFunction: "3a. Cache Hit\n(Return cached value)" {
+  style.stroke: "#52c41a"
+}
+
+cachedFunction -> Data-Source: "3b. Cache Miss\n(Execute function)" {
+  style.stroke: "#faad14"
+}
+
+Data-Source -> cachedFunction: "4. Return result"
+
+cachedFunction -> Cache-Storage: "5. Store result against 'args' key"
+
+cachedFunction -> Component: "6. Return value"
 
 ```
 
-## Related APIs
+## Environment-Specific Behavior
 
-Several other APIs work in conjunction with React's caching system.
+The behavior of `cache` differs between server and client environments.
 
-<x-cards data-columns="2">
-  <x-card data-title="cacheSignal" data-icon="lucide:signal">
-    A function that returns an `AbortSignal` tied to the current request. You can pass this signal to fetch requests to automatically cancel them if the render is aborted. On the client, it returns `null`.
-  </x-card>
-  <x-card data-title="unstable_useCacheRefresh" data-icon="lucide:refresh-cw">
-    A Hook that returns a function to invalidate the entire cache and trigger an update. This is useful for implementing features like a "refresh" button in a client component to refetch server data.
-  </x-card>
-</x-cards>
+- **Server**: In environments like React Server Components, `cache` performs per-request memoization. The cache is created at the beginning of a request and discarded after the render is complete.
+- **Client**: On the client, `cache` currently acts as a no-op. It returns the original function without adding any caching behavior. The API is provided for compatibility, allowing components that use `cache` to run on both the server and client without modification. A full client-side caching implementation may be introduced in a future version.
 
-### Example: Using `cacheSignal` and `useCacheRefresh`
+## `cacheSignal`
 
-Here’s how you can combine these APIs for robust data fetching.
-
-**Server Data Fetching Function:**
+To handle request cancellations, React provides the `cacheSignal` function. It returns an `AbortSignal` that is linked to the current request's cache scope. You can pass this signal to operations like `fetch` to automatically cancel them if the render is aborted.
 
 ```javascript
-// lib/data.js
 import { cache, cacheSignal } from 'react';
 
-export const getItems = cache(async () => {
+export const getPost = cache(async (id) => {
   const signal = cacheSignal();
-  const res = await fetch('https://api.example.com/items', { signal });
+  const res = await fetch(`https://api.example.com/posts/${id}`, { signal });
   return res.json();
 });
 ```
 
-**Client Component with Refresh Button:**
+Like `cache`, `cacheSignal` is primarily for server-side use. On the client, it returns `null`.
+
+## Cache Invalidation
+
+While the server cache is automatically cleared between requests, you may need a way to manually invalidate it on the client, for example after a data mutation. The `useCacheRefresh` Hook serves this purpose.
+
+Calling the `refresh` function returned by `useCacheRefresh` will invalidate the cache, causing cached functions to be re-executed.
 
 ```javascript
-'use client';
+import { useCacheRefresh } from 'react';
 
-import { useTransition, unstable_useCacheRefresh as useCacheRefresh } from 'react';
-
-export function RefreshButton() {
+function RefreshButton() {
   const refresh = useCacheRefresh();
-  const [isPending, startTransition] = useTransition();
 
-  const handleRefresh = () => {
-    startTransition(() => {
-      refresh();
-    });
-  };
+  function handleClick() {
+    // Invalidate the cache and trigger a re-render
+    refresh();
+  }
 
-  return (
-    <button onClick={handleRefresh} disabled={isPending}>
-      {isPending ? 'Refreshing...' : 'Refresh Data'}
-    </button>
-  );
+  return <button onClick={handleClick}>Refresh Data</button>;
 }
 ```
 
-## Environment Behavior Summary
-
-The behavior of caching APIs differs significantly between server and client environments. The following table summarizes these differences:
-
-| API                          | Server Environment                               | Client Environment (Default)                                   |
-| ---------------------------- | ------------------------------------------------ | -------------------------------------------------------------- |
-| `cache(fn)`                  | Memoizes `fn` for the duration of a request.     | No-op. Returns `fn` without any caching behavior.              |
-| `cacheSignal()`              | Returns an `AbortSignal` for the current request. | Returns `null`.                                                |
-| `unstable_useCacheRefresh()` | Not applicable (it's a Hook).                    | Returns a function to invalidate the cache and trigger a re-render. |
-
-Understanding these distinctions is key to effectively using React's caching features in applications that span both server and client execution.
-
 ---
 
-With a grasp of React's caching mechanisms, you can build more performant server-rendered applications. To explore another advanced feature for non-blocking UI updates, proceed to the [Transitions](./advanced-transitions.md) guide.
+Understanding React's caching is key to building performant server-rendered applications. For a deeper dive into the differences between rendering environments, see the [Server vs. Client Environments](./advanced-server-vs-client.md) guide.
