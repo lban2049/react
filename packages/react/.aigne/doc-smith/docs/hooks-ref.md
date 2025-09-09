@@ -1,101 +1,117 @@
 # Ref Hooks
 
-Ref Hooks provide a way to access DOM nodes directly or to create a reference to a value that persists across renders without causing a re-render itself. They are essential for managing focus, media playback, or integrating with third-party DOM libraries.
+Ref Hooks provide a way to access DOM nodes directly or to keep a mutable value that doesn't trigger a re-render upon mutation. They are essential for integrating with third-party libraries, managing focus, or storing values that persist for the full lifetime of the component without being part of the rendering logic.
 
-This section covers `useRef` for creating a general-purpose ref and `useImperativeHandle` for customizing the ref exposed by a component. For a foundational understanding of refs, you might want to review the [Refs](./core-apis-refs.md) documentation first.
+This section covers the two primary Ref Hooks:
+
+<x-cards>
+  <x-card data-title="useRef" data-icon="lucide:mouse-pointer-square">
+    Creates a mutable ref object whose `.current` property can hold a value, often a reference to a DOM node.
+  </x-card>
+  <x-card data-title="useImperativeHandle" data-icon="lucide:hand-pointing">
+    Customizes the instance value that is exposed to parent components when using `ref` with `forwardRef`.
+  </x-card>
+</x-cards>
+
+---
 
 ## `useRef`
 
-The `useRef` Hook returns a mutable ref object whose `.current` property is initialized to the passed argument (`initialValue`). The returned object will persist for the full lifetime of the component.
+The `useRef` Hook returns a mutable ref object. This object has a single property, `current`, which you can set to any value. `useRef` is useful for two main scenarios: accessing DOM elements and storing mutable values that don't cause re-renders.
 
-There are two primary use cases for `useRef`:
-1.  Accessing a DOM element.
-2.  Holding a mutable value that does not trigger a re-render when it changes.
+### Syntax
 
-**Signature**
-
-```typescript
+```javascript useRef Hook Signature icon=logos:javascript
 function useRef<T>(initialValue: T): {current: T};
 ```
 
-**Parameters**
+### Parameters
 
-| Name | Type | Description |
-| --- | --- | --- |
-| `initialValue` | `T` | The initial value for the ref's `current` property. It's only used on the initial render. |
+| Parameter | Type | Description |
+|---|---|---|
+| `initialValue` | `T` | The value you want the ref object’s `current` property to be initialized to. It can be a value of any type. |
 
-**Returns**
+### Returns
 
-A mutable ref object with a single property:
+`useRef` returns a single object with a `current` property. Initially, `current` is set to the `initialValue` you provided. You can later set it to something else. If you pass the ref object to a JSX node's `ref` attribute, React will put the corresponding DOM node into its `current` property.
 
-| Name | Type | Description |
-| --- | --- | --- |
-| `current` | `T` | Initially set to `initialValue`. You can mutate this property directly. Changing it does not cause a component re-render. |
+### Example 1: Accessing a DOM Element
 
-### Example: Accessing a DOM Element
+A common use case for `useRef` is to get direct access to a DOM element, allowing you to call imperative methods on it, such as `focus()`.
 
-This is the most common use case for `useRef`. You can pass the ref object to the `ref` attribute of a JSX element to get a direct reference to its underlying DOM node.
-
-```javascript
+```javascript Focus an Input with useRef icon=logos:javascript
 import React, { useRef } from 'react';
 
-function TextInputWithFocusButton() {
-  const inputEl = useRef(null);
-  const onButtonClick = () => {
-    // `current` points to the mounted text input element
-    if (inputEl.current) {
-      inputEl.current.focus();
+function FocusInput() {
+  const inputRef = useRef(null);
+
+  const handleFocusClick = () => {
+    // Access the DOM node directly via inputRef.current
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
   };
+
   return (
     <>
-      <input ref={inputEl} type="text" />
-      <button onClick={onButtonClick}>Focus the input</button>
+      <input ref={inputRef} type="text" placeholder="Click button to focus" />
+      <button onClick={handleFocusClick}>Focus the input</button>
     </>
   );
 }
+
+export default FocusInput;
 ```
+In this example, `inputRef` is attached to the `<input>` element. When the button is clicked, `inputRef.current` holds the actual DOM node, and we can call its `focus()` method.
 
-In this example, `inputEl.current` will be the `<input>` DOM node after React mounts it. Clicking the button calls the DOM node's `focus()` method.
+### Example 2: Storing a Mutable Value
 
-### Example: Storing a Mutable Value
+You can also use `useRef` to hold any mutable value, similar to an instance variable in a class. The key difference from state is that updating a ref does not trigger a component re-render.
 
-You can also use `useRef` to store any mutable value, similar to an instance property on a class. This is useful for values you want to persist across renders but don't want to trigger re-renders when they change, such as a timer ID.
-
-```javascript
-import React, { useRef, useEffect } from 'react';
+```javascript Storing an Interval ID icon=logos:javascript
+import React, { useState, useRef, useEffect } from 'react';
 
 function Timer() {
+  const [count, setCount] = useState(0);
   const intervalRef = useRef(null);
 
   useEffect(() => {
+    // Start the interval
     intervalRef.current = setInterval(() => {
-      console.log('Timer tick');
+      setCount(prevCount => prevCount + 1);
     }, 1000);
 
-    // Cleanup function
+    // Clean up the interval on component unmount
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      clearInterval(intervalRef.current);
     };
-  }, []); // Empty dependency array means this effect runs once on mount
+  }, []); // Empty dependency array means this effect runs only once on mount
 
-  return <div>Timer is running (check console)</div>;
+  const handleStopTimer = () => {
+    clearInterval(intervalRef.current);
+  };
+
+  return (
+    <div>
+      <p>Timer: {count} seconds</p>
+      <button onClick={handleStopTimer}>Stop Timer</button>
+    </div>
+  );
 }
-```
 
-Here, `intervalRef` holds the ID returned by `setInterval`. We can access it in the cleanup function to clear the interval when the component unmounts, without causing any re-renders when `intervalRef.current` is assigned.
+export default Timer;
+```
+Here, `intervalRef` stores the ID returned by `setInterval`. We can access this ID later in the `handleStopTimer` function or the `useEffect` cleanup function to clear the interval without causing the component to re-render every time the ID is set.
+
+---
 
 ## `useImperativeHandle`
 
-The `useImperativeHandle` Hook customizes the instance value that is exposed to parent components when using `ref`. It should be used in conjunction with `forwardRef`.
+`useImperativeHandle` lets you customize the ref handle exposed by a child component. Instead of exposing the entire DOM node, you can define a specific set of imperative functions for the parent component to call. This hook should be used with `forwardRef`.
 
-Instead of exposing the entire component instance, `useImperativeHandle` allows you to expose a specific, limited set of imperative methods. This helps to avoid breaking encapsulation by preventing parent components from depending on the child's internal DOM structure.
+### Syntax
 
-**Signature**
-
-```typescript
+```javascript useImperativeHandle Hook Signature icon=logos:javascript
 function useImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
@@ -103,112 +119,67 @@ function useImperativeHandle<T>(
 ): void;
 ```
 
-**Parameters**
+### Parameters
 
-| Name | Type | Description |
-| --- | --- | --- |
-| `ref` | `Ref<T>` | The `ref` forwarded from the parent component via `forwardRef`. |
-| `create` | `() => T` | A function that returns the value to be exposed. This value will be set as the `current` value of the parent's ref. |
-| `deps` | `Array<mixed>` | An optional dependency array. The `create` function will be re-executed whenever a value in this array changes. |
+| Parameter | Type | Description |
+|---|---|---|
+| `ref` | `RefObject` | The `ref` passed down from the parent component through `forwardRef`. |
+| `create` | `() => T` | A function that returns the custom handle. This handle can be an object with methods and properties. |
+| `deps` | `Array<any>` | (Optional) A dependency array. The `create` function is re-executed whenever a value in this array changes. |
 
-### Example: Exposing a Custom `focus` Method
+### Example: Exposing a Custom API
 
-Below is an example of a `FancyInput` component that uses `useImperativeHandle` to expose only a `focus` method to its parent.
+This example shows a custom input component that exposes only `focus` and `clear` methods to its parent, hiding the underlying `input` element implementation.
 
-```javascript
+```javascript CustomInput Component icon=logos:javascript
 import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 
-// Child component
-const FancyInput = forwardRef((props, ref) => {
-  const inputRef = useRef();
-  
+const CustomInput = forwardRef((props, ref) => {
+  const internalInputRef = useRef(null);
+
+  // Expose a custom handle to the parent component
   useImperativeHandle(ref, () => ({
-    // Expose a custom `focus` method
     focus: () => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-        console.log('Child input focused imperatively!');
-      }
+      internalInputRef.current.focus();
+    },
+    clear: () => {
+      internalInputRef.current.value = '';
     }
   }));
 
-  return <input ref={inputRef} placeholder="I am a fancy input" />;
+  return <input ref={internalInputRef} {...props} />;
 });
 
-// Parent component
+// Parent Component
 function App() {
-  const fancyInputRef = useRef();
+  const customInputRef = useRef(null);
 
-  const handleClick = () => {
-    if (fancyInputRef.current) {
-      fancyInputRef.current.focus();
-    }
+  const handleFocus = () => {
+    customInputRef.current.focus();
+  };
+
+  const handleClear = () => {
+    customInputRef.current.clear();
   };
 
   return (
     <div>
-      <FancyInput ref={fancyInputRef} />
-      <button onClick={handleClick}>
-        Focus Child Input
-      </button>
+      <CustomInput ref={customInputRef} placeholder="I have a custom API" />
+      <button onClick={handleFocus}>Focus Input</button>
+      <button onClick={handleClear}>Clear Input</button>
     </div>
   );
 }
+
+export default App;
 ```
+In the `App` component, `customInputRef.current` does not point to the DOM `<input>` element. Instead, it points to the object `{ focus: () => {..}, clear: () => {..} }` defined in `useImperativeHandle`.
 
-The `App` component can now call `fancyInputRef.current.focus()`, but it cannot directly access the underlying `<input>` DOM node, preserving the encapsulation of `FancyInput`.
+## Summary
 
-### How Parent and Child Refs Interact
+Ref Hooks are a powerful tool for breaking out of the standard declarative rendering flow when necessary. 
 
-The following diagram illustrates the flow of control when a parent component calls an imperative method on a child component that uses `useImperativeHandle`.
+- Use `useRef` to access DOM elements or to keep mutable data that doesn't affect rendering.
+- Use `useImperativeHandle` with `forwardRef` to create a clean and limited imperative API for your components, hiding implementation details from the parent.
 
-```d2
-direction: down
-
-Parent-Component: {
-  shape: rectangle
-  
-  Child-Ref: {
-    label: "const childRef = useRef()"
-    shape: oval
-  }
-  
-  Rendered-Child: {
-    label: "<FancyInput ref={childRef} />"
-    shape: rectangle
-  }
-
-  Button: {
-    label: "<button onClick={() => childRef.current.focus()} />"
-    shape: rectangle
-  }
-}
-
-FancyInput-Component: {
-  label: "FancyInput (wrapped in forwardRef)"
-  shape: package
-
-  useImperativeHandle: {
-    label: "useImperativeHandle(ref, () => ({ focus: ... }))"
-    shape: hexagon
-  }
-
-  Internal-Input: {
-    label: "<input ref={internalInputRef} />"
-    shape: rectangle
-  }
-}
-
-Parent-Component.Button -> Parent-Component.Child-Ref: "1. onClick triggers call"
-Parent-Component.Child-Ref -> FancyInput-Component.useImperativeHandle: "2. Accesses exposed 'focus' method"
-FancyInput-Component.useImperativeHandle -> FancyInput-Component.Internal-Input: "3. Manipulates internal DOM node"
-
-```
-
-By using `useRef` and `useImperativeHandle`, you can manage interactions that fall outside the typical top-down data flow of React, while still keeping component APIs clean and predictable.
-
----
-
-With refs covered, you now have the tools to handle direct DOM manipulation and persistent mutable state. Next, let's explore how to optimize your application's rendering performance.
-
-Next up: [Performance Hooks](./hooks-performance.md)
+Now that you understand how to manage refs, you can explore ways to optimize your application's performance. Learn more in the [Performance Hooks](./hooks-performance.md) section.

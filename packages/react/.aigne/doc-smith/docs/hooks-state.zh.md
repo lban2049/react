@@ -1,54 +1,58 @@
 # State Hook
 
-State 是所有交互式 React 应用的核心。State Hook 提供了一种在函数组件中跨重新渲染保留和管理数据的方式。它们允许你的组件响应用户输入、网络响应以及任何其他随时间发生的变化。
+State Hook 提供了一种在函数组件中管理局部状态的方法。它允许你向组件添加状态逻辑，而无需将其转换为类组件。本节将介绍用于管理状态的主要 Hook，涵盖从简单值到复杂状态转换和表单交互的各种场景。
 
-本指南介绍了用于管理组件 state 的主要 Hook。如需了解 state 和 props 工作原理的基础知识，可以查阅 [组件和 Props](./core-apis-components-and-props.md)。
+如需全面了解所有可用的 Hook，请参阅 [Hooks](./hooks.md) 主文档。
 
 <x-cards data-columns="2">
   <x-card data-title="useState" data-icon="lucide:variable">
-    最常用的 Hook，用于管理数字、字符串或布尔值等简单 state 值。
+    管理简单局部状态最基础的 Hook。
   </x-card>
-  <x-card data-title="useReducer" data-icon="lucide:network">
-    适用于管理具有多个子值的复杂 state 逻辑，或下一个 state 依赖于前一个 state 的情况。
+  <x-card data-title="useReducer" data-icon="lucide:binary">
+    useState 的替代方案，用于管理更复杂的状态逻辑。
   </x-card>
   <x-card data-title="useOptimistic" data-icon="lucide:fast-forward">
-    通过立即反映 state 变化来增强用户体验，然后在底层异步操作失败时回滚。
+    用于即时更新 UI，无需等待异步操作完成。
   </x-card>
-  <x-card data-title="useActionState" data-icon="lucide:edit">
-    管理表单操作的 state，跟踪挂起状态和来自服务器的响应。
+  <x-card data-title="useActionState" data-icon="lucide:form-input">
+    旨在管理表单状态及其触发的操作。
   </x-card>
 </x-cards>
 
 
 ## useState
 
-`useState` 是最基础的 State Hook。它声明一个“state 变量”，你可以直接更新它来触发重新渲染。
+`useState` Hook 是为函数组件添加状态的最常用方法。调用它以声明一个状态变量，它会返回一个包含两个值的数组：当前状态和一个用于更新状态的函数。
 
-### Signature
+### API 参考
 
 ```javascript
 const [state, setState] = useState(initialState);
 ```
 
-**Parameters**
+**参数**
 
-| Name | Type | Description |
-|---|---|---|
-| `initialState` | `S` or `() => S` | state 的初始值。它可以是任何类型的值。它也可以是一个函数，该函数只会在初始渲染期间执行以计算初始 state。 |
+| Parameter      | Type                | Description                                                                                                                              |
+|----------------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `initialState` | `S` or `() => S`    | 状态的初始值。如果传入一个函数，该函数将仅在初始渲染时执行，用于计算初始状态。 |
 
-**Returns**
+**返回值**
 
 一个包含两个元素的数组：
-1.  **当前 state：** 当前渲染的 state 变量的值。
-2.  **`setState` 函数：** 一个可以让你将 state 更新为新值并触发重新渲染的函数。
 
-### 示例：一个简单的计数器
+| Index | Name       | Type                                | Description                                                                                                                           |
+|-------|------------|-------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| 0     | `state`    | `S`                                 | 当前渲染的状态值。                                                                                |
+| 1     | `setState` | `Dispatch<BasicStateAction<S>>`     | 一个用于更新状态的函数。你可以直接传递一个新值，或者传递一个接收前一个状态并返回新状态的函数。 |
 
-```javascript
+### 示例
+
+这是一个使用 `useState` 来跟踪计数的简单计数器组件。
+
+```javascript Counter Component icon=logos:javascript
 import { useState } from 'react';
 
 function Counter() {
-  // 声明一个名为 "count" 的新 state 变量
   const [count, setCount] = useState(0);
 
   return (
@@ -61,45 +65,49 @@ function Counter() {
   );
 }
 ```
-在此示例中，`useState(0)` 将 `count` state 变量初始化为 `0`。当用户点击按钮时，会调用 `setCount(count + 1)`，这会更新 state 并导致组件使用新的 count 值重新渲染。
 
 ## useReducer
 
-`useReducer` 是 `useState` 的替代方案，用于管理更复杂的 state 逻辑。当你有多个子值或下一个 state 依赖于前一个 state 时，它特别有用。它遵循 Redux 模式，使用 reducer 函数来管理 state 转换。
+`useReducer` 是 `useState` 的一个替代方案，更适用于管理包含多个子值的复杂状态逻辑，或者当下一个状态依赖于前一个状态时。它遵循的模式与 Redux 类似。
 
-### Signature
+### API 参考
 
 ```javascript
 const [state, dispatch] = useReducer(reducer, initialArg, init?);
 ```
 
-**Parameters**
+**参数**
 
-| Name | Type | Description |
-|---|---|---|
-| `reducer` | `(S, A) => S` | 一个指定 state 如何更新的函数。它接收当前 state 和一个 action，并应返回下一个 state。 |
-| `initialArg` | `I` | 用于计算初始 state 的值。 |
-| `init` | `(I) => S` | （可选）一个返回初始 state 的初始化函数。如果未提供，则初始 state 设置为 `initialArg`。 |
+| Parameter    | Type             | Description                                                                                                     |
+|--------------|------------------|-----------------------------------------------------------------------------------------------------------------|
+| `reducer`    | `(S, A) => S`    | 一个接收当前状态 (`S`) 和一个操作 (`A`) 并返回新状态的函数。                 |
+| `initialArg` | `I`              | 传递给 `init` 函数的初始参数，如果未提供 `init`，则为初始状态。           |
+| `init`       | `(I) => S`       | （可选）一个返回初始状态的初始化函数。它允许提取复杂的状态初始化逻辑。 |
 
-**Returns**
+**返回值**
 
 一个包含两个元素的数组：
-1.  **当前 state：** 当前的 state 值。
-2.  **`dispatch` 函数：** 一个可以通过 action 来更新 state 的函数。
 
-### 示例：管理复杂 State
+| Index | Name       | Type          | Description                                                                                                   |
+|-------|------------|---------------|---------------------------------------------------------------------------------------------------------------|
+| 0     | `state`    | `S`           | 当前的状态值。                                                                               |
+| 1     | `dispatch` | `Dispatch<A>` | 一个函数，你可以传入一个 action 来调用它，从而通过执行 reducer 函数来触发状态更新。      |
 
-```javascript
+### 示例
+
+此计数器示例经过重构，使用 `useReducer` 来处理计数的增加和减少。
+
+```javascript Reducer Counter icon=logos:javascript
 import { useReducer } from 'react';
 
-const initialState = {count: 0};
+const initialState = { count: 0 };
 
 function reducer(state, action) {
   switch (action.type) {
     case 'increment':
-      return {count: state.count + 1};
+      return { count: state.count + 1 };
     case 'decrement':
-      return {count: state.count - 1};
+      return { count: state.count - 1 };
     default:
       throw new Error();
   }
@@ -107,53 +115,62 @@ function reducer(state, action) {
 
 function Counter() {
   const [state, dispatch] = useReducer(reducer, initialState);
+
   return (
-    <>
-      Count: {state.count}
-      <button onClick={() => dispatch({type: 'decrement'})}>-</button>
-      <button onClick={() => dispatch({type: 'increment'})}>+</button>
-    </>
+    <div>
+      <p>Count: {state.count}</p>
+      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+    </div>
   );
 }
 ```
-在这里，所有的 state 更新逻辑都集中在 `reducer` 函数中。组件通过一个 action 对象调用 `dispatch` 来触发 state 更新，这使得组件的事件处理程序更清晰，state 逻辑更可预测。
 
 ## useOptimistic
 
-`useOptimistic` 是一个 Hook，它允许你在异步操作进行期间向用户展示一个不同的 state。它接收当前 state 并提供一个可以立即更新的“乐观”版本。这个乐观 state 会一直使用，直到异步操作（例如网络请求）完成，此时 state 会更新为最终值。
+`useOptimistic` 是一个用于管理乐观 UI 更新的 Hook。它允许你的界面在用户操作后立即响应，而实际的数据变更在后台异步进行。如果后台操作失败，UI 会自动恢复到之前的状态。
 
-### Signature
+### API 参考
 
 ```javascript
 const [optimisticState, addOptimistic] = useOptimistic(passthrough, reducer?);
 ```
 
-**Parameters**
+**参数**
 
-| Name | Type | Description |
-|---|---|---|
-| `passthrough` | `S` | 在没有乐观更新激活时将返回的值。这通常是你的实际 state。 |
-| `reducer` | `(S, A) => S` | （可选）一个函数，它接收当前 state 和传递给 `addOptimistic` 的值，并返回新的乐观 state。 |
+| Parameter     | Type                | Description                                                                                                                                 |
+|---------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `passthrough` | `S`                 | 当没有乐观更新正在进行时返回的默认状态。这通常是由 `useState` 管理或通过 props 传递的状态。 |
+| `reducer`     | `?(S, A) => S`      | （可选）一个接收当前状态和一个 action，并返回新的乐观状态的函数。                                   |
 
-**Returns**
+**返回值**
 
 一个包含两个元素的数组：
-1.  **`optimisticState`：** 乐观 state 值。除非有更新处于活动状态，否则它将等于 `passthrough`。
-2.  **`addOptimistic`：** 一个函数，可以通过传入更新值来立即更改 `optimisticState`。
 
-### 示例：乐观地添加消息
+| Index | Name              | Type           | Description                                                                                                                   |
+|-------|-------------------|----------------|-------------------------------------------------------------------------------------------------------------------------------|
+| 0     | `optimisticState` | `S`            | 状态值。在异步操作期间，它将反映乐观值，否则它将是 `passthrough` 状态。     |
+| 1     | `addOptimistic`   | `(A) => void`  | 一个通过传入 action 来触发乐观更新的函数。                                                            |
 
-```javascript
+### 示例
+
+想象一个聊天应用，其中新消息会立即显示，甚至在服务器确认之前。
+
+```javascript Optimistic Chat icon=logos:javascript
 import { useOptimistic, useState, useRef } from 'react';
 
-async function deliverMessage(message) {
-  // 模拟网络请求
+async function sendMessage(message) {
+  // Simulate a network request
   await new Promise(res => setTimeout(res, 1000));
-  // 在此演示中，我们假设它总是失败以显示回滚行为
-  throw new Error('Message could not be sent'); 
+  // For demo, let's pretend it can fail
+  if (message.includes('error')) {
+    throw new Error('Failed to send message');
+  }
+  return { text: message, sending: false };
 }
 
-function Thread({ messages, setMessages }) {
+function Chat() {
+  const [messages, setMessages] = useState([]);
   const [optimisticMessages, addOptimisticMessage] = useOptimistic(
     messages,
     (state, newMessage) => [
@@ -167,160 +184,92 @@ function Thread({ messages, setMessages }) {
     const message = formData.get('message');
     addOptimisticMessage(message);
     formRef.current.reset();
-
     try {
-      // 在这里，你会将消息发送到服务器
-      await deliverMessage(message);
-      // 成功时，更新真实 state
-      setMessages(prev => [...prev, { text: message }]);
+      const sentMessage = await sendMessage(message);
+      setMessages(prev => [...prev, sentMessage]);
     } catch (e) {
-      // 发生错误时，乐观更新会自动回滚
+      // The UI will automatically revert on error
       console.error(e);
     }
   }
 
   return (
-    <>
+    <div>
       {optimisticMessages.map((m, i) => (
-        <div key={i}>{m.text}{m.sending && <small> (Sending...)</small>}</div>
+        <div key={i}>{m.text} {m.sending && <small>(Sending...)</small>}</div>
       ))}
       <form action={formAction} ref={formRef}>
         <input type="text" name="message" />
         <button type="submit">Send</button>
       </form>
-    </>
+    </div>
   );
 }
 ```
-当用户提交表单时，消息会立即出现在列表中，并带有一个“(Sending...)”标签。由于我们的 `deliverMessage` 函数失败了，React 会自动将 UI 恢复到最后一个已知的真实 state (`messages`)。
 
 ## useActionState
 
-`useActionState` 是一个用于管理表单操作 state 的 Hook。它提供上一次表单提交的 state、要传递给 `<form>` 的 action 以及表单的挂起状态。
+`useActionState` 是一个用于管理表单操作状态的 Hook。它提供操作的待定状态以及操作完成后返回的数据。
 
-### Signature
+### API 参考
 
 ```javascript
-const [state, formAction, isPending] = useActionState(action, initialState, permalink?);
+const [state, dispatch, isPending] = useActionState(action, initialState, permalink?);
 ```
 
-**Parameters**
+**参数**
 
-| Name | Type | Description |
-|---|---|---|
-| `action` | `(S, P) => S` | 表单提交时要执行的函数。它接收前一个 state 和表单的有效负载。 |
-| `initialState` | `S` | 初始 state 值。 |
-| `permalink` | `string` | （可选）表单成功提交后要重定向到的 URL。 |
+| Parameter      | Type                | Description                                                                                                   |
+|----------------|---------------------|---------------------------------------------------------------------------------------------------------------|
+| `action`       | `(S, P) => S`       | 要执行的函数。它接收前一个状态和操作的载荷（例如，表单数据）。     |
+| `initialState` | `S`                 | 初始状态值。                                                                                      |
+| `permalink`    | `?string`           | （可选）用于服务器端表单提交后重定向的 URL。                                             |
 
-**Returns**
+**返回值**
 
 一个包含三个元素的数组：
-1.  **`state`：** 当前 state。在首次渲染时，它与 `initialState` 匹配，之后则匹配上一个 action 的返回值。
-2.  **`formAction`：** 要传递给 `<form>` 的 `action` prop 的 action。
-3.  **`isPending`：** 一个布尔值，指示表单 action 当前是否处于挂起状态。
 
-### 示例：处理表单提交状态
+| Index | Name        | Type           | Description                                                                             |
+|-------|-------------|----------------|-----------------------------------------------------------------------------------------|
+| 0     | `state`     | `S`            | 操作的当前状态。它持有上次操作执行后返回的值。 |
+| 1     | `dispatch`  | `(P) => void`  | 传递给 `<form>` 的 `action` 属性以触发操作的函数。               |
+| 2     | `isPending` | `boolean`      | 一个布尔值，当操作正在进行时为 `true`，否则为 `false`。             |
 
-```javascript
+### 示例
+
+此示例展示了一个用于更新用户名的表单。`useActionState` Hook 管理待定状态以及从服务器操作返回的任何错误消息。
+
+```javascript Action State Form icon=logos:javascript
 import { useActionState } from 'react';
 
-async function increment(previousState, formData) {
-  // 模拟异步工作
+async function updateName(previousState, formData) {
+  const newName = formData.get('name');
+  if (newName.length < 3) {
+    return { error: 'Name must be at least 3 characters long.' };
+  }
+  // Simulate async update
   await new Promise(res => setTimeout(res, 500));
-  return previousState + 1;
+  return { error: null, success: `Name changed to ${newName}` };
 }
 
-function StatefulForm() {
-  const [count, formAction, isPending] = useActionState(increment, 0);
+function ChangeNameForm() {
+  const [state, formAction, isPending] = useActionState(updateName, { error: null });
 
   return (
     <form action={formAction}>
-      <p>Count: {count}</p>
+      <label htmlFor="name">Name:</label>
+      <input id="name" name="name" />
       <button type="submit" disabled={isPending}>
-        {isPending ? 'Incrementing...' : 'Increment'}
+        {isPending ? 'Updating...' : 'Update'}
       </button>
+      {state?.error && <p style={{ color: 'red' }}>{state.error}</p>}
+      {state?.success && <p style={{ color: 'green' }}>{state.success}</p>}
     </form>
   );
 }
+
 ```
-此示例展示了一个表单，其中点击按钮会增加一个计数器。在异步 `increment` action 运行时，`isPending` 为 `true`，这允许 UI 禁用按钮并显示加载消息。
-
-## 选择你的 State Hook
-
-决定使用哪个 state hook 取决于你组件 state 的复杂性。
-
-```d2
-direction: down
-
-State-Complexity: {
-  label: "你的组件 state 有多复杂？"
-  shape: diamond
-}
-
-Simple-State: {
-  label: "简单 State\n(布尔值、字符串、数字)"
-  shape: rectangle
-}
-
-Complex-State: {
-  label: "复杂 State\n(对象、数组、多个相互依赖的值)"
-  shape: rectangle
-}
-
-Use-useState: {
-  label: "使用 useState"
-  shape: oval
-  tooltip: "最适合简单、独立的 state 值。"
-}
-
-Use-useReducer: {
-  label: "使用 useReducer"
-  shape: oval
-  tooltip: "最适合可预测的 state 转换和复杂逻辑。"
-}
-
-Needs-Optimistic-UI: {
-  label: "是否需要为异步操作提供乐观 UI？"
-  shape: diamond
-}
-
-Use-useOptimistic: {
-  label: "使用 useOptimistic"
-  shape: oval
-  tooltip: "改善有延迟操作的感知性能。"
-}
-
-Is-Form-Action: {
-  label: "State 是否与表单操作绑定？"
-  shape: diamond
-}
-
-Use-useActionState: {
-  label: "使用 useActionState"
-  shape: oval
-  tooltip: "管理表单提价状态，包括挂起状态。"
-}
-
-State-Complexity -> Simple-State: "简单"
-State-Complexity -> Complex-State: "复杂"
-
-Simple-State -> Use-useState
-Complex-State -> Use-useReducer
-
-Use-useState -> Needs-Optimistic-UI
-Use-useReducer -> Needs-Optimistic-UI
-
-Needs-Optimistic-UI -> Use-useOptimistic: "是"
-Needs-Optimistic-UI -> Is-Form-Action: "否"
-
-Is-Form-Action -> Use-useActionState: "是"
-```
-
-*   **从 `useState` 开始：** 它非常适合简单、独立的 state 值。
-*   **升级到 `useReducer`：** 当 state 逻辑变得复杂、涉及多个子值，或者当下一个 state 以一种不简单的方式依赖于前一个 state 时。
-*   **添加 `useOptimistic`：** 当你需要为异步操作提供即时反馈以改善用户体验时。
-*   **使用 `useActionState`：** 当专门管理与表单提交相关的 state 时，特别是需要跟踪挂起状态和处理服务器响应时。
 
 ---
 
-现在你已经了解了如何管理 state，下一步是学习如何处理副作用，例如获取数据或订阅事件。请继续阅读 [Effect Hook](./hooks-effect.md) 指南以了解更多信息。
+这些 State Hook 是在 React 中创建动态和交互式组件的基础。掌握了状态管理之后，下一步是管理副作用，例如获取数据或设置订阅。请继续阅读 [Effect Hook](./hooks-effect.md) 部分以了解更多信息。

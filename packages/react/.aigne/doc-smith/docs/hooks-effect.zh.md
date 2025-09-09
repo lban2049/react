@@ -1,154 +1,142 @@
-# Effect Hooks
+# Effect Hook
 
-Effect Hooks 允许组件执行副作用，使其能够与 React 控制范围之外的系统进行交互和同步。副作用包括获取数据、设置订阅或手动操作 DOM 等行为。
+Effect Hook 允许你在函数组件中执行副作用。副作用是指那些能够影响其他组件、且无法在渲染期间完成的操作，例如数据获取、设置订阅或手动更改 DOM。
 
-React 提供了三个用于处理副作用的主要 Hook，每个 Hook 都在组件生命周期的不同时间点运行，以应对特定的使用场景。
+React 提供了三个主要的 Hook 来管理 Effect，每个 Hook 根据其在渲染周期中的执行时机而有不同的用途。
 
-```d2
-direction: down
-
-Render-Phase: {
-  label: "渲染阶段"
-  shape: rectangle
-  "1. React 渲染组件"
-}
-
-Commit-Phase: {
-  label: "提交阶段"
-  shape: rectangle
-  grid-columns: 1
-
-  "2. React 将变更提交到 DOM"
-
-  useInsertionEffect-run: {
-    label: "3. `useInsertionEffect` 运行\n（适用于 CSS-in-JS 库）"
-  }
-
-  useLayoutEffect-run: {
-    label: "4. `useLayoutEffect` 运行\n（在绘制前读取布局）"
-  }
-}
-
-Browser-Paint: {
-  label: "浏览器绘制"
-  shape: rectangle
-  "5. 浏览器绘制屏幕"
-}
-
-useEffect-Execution: {
-  label: "useEffect 执行"
-  shape: rectangle
-  "6. `useEffect` 运行\n（适用于大多数副作用）"
-}
-
-Render-Phase -> Commit-Phase: "触发"
-Commit-Phase -> Browser-Paint: "同步"
-Browser-Paint -> useEffect-Execution: "异步"
-```
+<x-cards data-columns="3">
+  <x-card data-title="useEffect" data-icon="lucide:play-circle">
+    最常用的副作用 Hook。它在渲染提交到屏幕后异步运行，因此不会阻塞绘制。
+  </x-card>
+  <x-card data-title="useLayoutEffect" data-icon="lucide:ruler">
+    在所有 DOM 变更之后、浏览器绘制之前同步触发。适用于从 DOM 读取布局信息并同步触发重新渲染的场景。
+  </x-card>
+  <x-card data-title="useInsertionEffect" data-icon="lucide:syringe">
+    在 React 对 DOM 进行更改之前同步运行。这适用于非常特定的用例，例如 CSS-in-JS 库注入样式。
+  </x-card>
+</x-cards>
 
 ---
 
-## `useEffect`
+## useEffect
 
-`useEffect` Hook 是处理副作用最常用的工具。它在 React 完成组件渲染且浏览器绘制屏幕*之后*运行，从而确保副作用代码不会阻塞视觉更新。
+`useEffect` 是处理大多数副作用的首选 Hook。通过将其执行推迟到浏览器绘制之后，可以确保你的副作用不会降低用户体验。
 
-**签名**
+你传递给 `useEffect` 的函数就是副作用本身。你可以选择性地从副作用中返回一个“清理”函数，React 会在组件卸载或副作用重新运行之前执行该函数。
 
-```javascript
-useEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
-): void
-```
+### 参数
 
-**参数**
-
-| Parameter | Type | Description |
+| 参数 | 类型 | 描述 |
 |---|---|---|
-| `create` | `function` | 包含副作用逻辑的函数。该函数可以视情况返回一个清理函数。 |
-| `deps` | `Array<mixed>` \| `null` \| `undefined` | 依赖项数组。仅当其中某个依赖项自上次渲染以来发生变化时，Effect 才会重新运行。如果省略，Effect 将在每次渲染后运行。如果提供一个空数组 `[]`，Effect 将只运行一次。 |
+| `create` | `() => (() => void) \| void` | 一个包含副作用逻辑的函数。它可以选择性地返回一个清理函数。 |
+| `deps` | `Array<mixed> \| void \| null` | 依赖项数组。只有当其中一个依赖项自上次渲染以来发生变化时，副作用才会重新运行。如果省略，副作用将在每次渲染后运行。如果传入一个空数组 `[]`，副作用仅在初始渲染后运行一次。 |
 
-**用法**
+### 示例：获取数据
 
-`useEffect` 非常适合用于数据获取、设置事件监听器或任何其他异步操作。
+此示例展示了如何从 API 获取数据并更新组件的状态。每当 `userId` prop 发生变化时，副作用会重新运行。
 
-**示例：获取数据**
-
-```javascript
+```javascript Fetching Data with useEffect icon=logos:javascript
 import React, { useState, useEffect } from 'react';
 
 function UserProfile({ userId }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 此函数包含副作用。
-    async function fetchUserData() {
+    setLoading(true);
+    const fetchUserData = async () => {
       const response = await fetch(`https://api.example.com/users/${userId}`);
       const data = await response.json();
       setUser(data);
-    }
+      setLoading(false);
+    };
 
     fetchUserData();
 
-    // 可选：返回一个清理函数。
-    return () => {
-      // 此代码在组件卸载时或 Effect 重新运行前执行。
-      // 例如，用于取消一个正在进行的请求。
-      console.log(`Cleaning up effect for user ${userId}`);
-    };
-  }, [userId]); // 仅在 userId 变更时，Effect 才会重新运行。
+    // 依赖项数组 [userId] 确保此副作用
+    // 仅在 userId prop 更改时运行。
+  }, [userId]);
 
-  if (!user) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
-  return <h1>{user.name}</h1>;
+  return <div>{user.name}</div>;
+}
+```
+
+### 示例：带清理的订阅
+
+此示例展示了如何订阅浏览器事件并使用清理函数取消订阅，以防止内存泄漏。
+
+```javascript Event Listener with Cleanup icon=logos:javascript
+import React, { useState, useEffect } from 'react';
+
+function MousePosition() {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    // 返回一个清理函数
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []); // 空数组表示此副作用在挂载时运行一次，在卸载时进行清理
+
+  return (
+    <p>
+      Mouse X: {position.x}, Y: {position.y}
+    </p>
+  );
 }
 ```
 
 ---
 
-## `useLayoutEffect`
+## useLayoutEffect
 
-`useLayoutEffect` 的签名与 `useEffect` 相同，但它在所有 DOM 变更*之后*、浏览器重绘屏幕*之前*同步触发。这对于从 DOM 读取布局信息并同步触发重新渲染非常有用。
+`useLayoutEffect` 的签名与 `useEffect` 相同，但它在所有 DOM 变更完成之后、浏览器绘制更改之前同步触发。这使其适用于需要从 DOM 读取布局（例如获取元素的尺寸）然后在用户看到任何视觉不一致之前同步触发重新渲染的任务。
 
-**签名**
+**警告：** 由于 `useLayoutEffect` 是同步的，它可能会阻塞视觉更新。尽可能优先使用 `useEffect` 以避免性能损失。
 
-```javascript
-useLayoutEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
-): void
-```
+### 参数
 
-**用法**
+| 参数 | 类型 | 描述 |
+|---|---|---|
+| `create` | `() => (() => void) \| void` | 一个包含副作用逻辑的函数。它可以选择性地返回一个清理函数。 |
+| `deps` | `Array<mixed> \| void \| null` | 用于控制副作用何时重新运行的依赖项数组。 |
 
-当您需要执行 DOM 测量（例如获取元素的滚动位置或尺寸）并在用户看到任何视觉不一致之前触发另一次渲染时，应使用此 Hook。由于它是同步的，可能会阻塞绘制，因此应尽可能优先使用 `useEffect`。
+### 示例：测量 DOM 节点
 
-**示例：测量元素高度**
+假设你需要根据按钮的宽度来定位一个工具提示。`useLayoutEffect` 确保你在按钮渲染后、用户看到它之前测量按钮，从而防止工具提示可能短暂出现在错误位置的闪烁现象。
 
-```javascript
+```javascript Positioning a Tooltip icon=logos:javascript
 import React, { useState, useLayoutEffect, useRef } from 'react';
 
-function Tooltip() {
-  const ref = useRef(null);
-  const [tooltipHeight, setTooltipHeight] = useState(0);
+function TooltipButton() {
+  const buttonRef = useRef(null);
+  const [tooltipWidth, setTooltipWidth] = useState(0);
 
   useLayoutEffect(() => {
-    // 在 tooltip 元素渲染到 DOM 后，测量其高度。
-    if (ref.current) {
-      const height = ref.current.offsetHeight;
-      setTooltipHeight(height);
-      console.log('Measured height:', height);
+    if (buttonRef.current) {
+      // 从 DOM 中读取按钮的宽度
+      const width = buttonRef.current.offsetWidth;
+      // 在浏览器绘制之前同步更新状态
+      setTooltipWidth(width);
     }
-  }, []); // 在初始渲染后运行一次。
+  }, []); // 仅在初始布局后运行一次
 
   return (
     <div>
-      <div ref={ref} style={{ position: 'absolute', top: '-9999px' }}>
-        This is a tooltip with some content.
+      <button ref={buttonRef}>Hover over me</button>
+      <div style={{ width: tooltipWidth, border: '1px solid black', marginTop: '5px' }}>
+        This tooltip has the same width as the button.
       </div>
-      <p>The tooltip's calculated height is: {tooltipHeight}px</p>
     </div>
   );
 }
@@ -156,53 +144,55 @@ function Tooltip() {
 
 ---
 
-## `useInsertionEffect`
+## useInsertionEffect
 
-`useInsertionEffect` 是一个专门的 Hook，它在 React 对 DOM 进行任何更改*之前*同步运行。其主要使用场景是供 CSS-in-JS 库在计算布局前将样式注入 DOM。
+`useInsertionEffect` 是一个专门的 Hook，它在任何 DOM 变更*之前*同步运行。其主要用例是供 CSS-in-JS 库在浏览器执行布局计算之前将样式规则注入 DOM。这确保了在渲染 React 组件时样式定义可用，从而防止与样式相关的闪烁。
 
-**此 Hook 主要面向库的作者。在应用程序代码中，您很可能不需要使用它。**
+**注意：** 应用程序开发人员很少需要使用此 Hook。它主要面向库的作者。你无法在 `useInsertionEffect` 内部访问 DOM `ref`。
 
-**签名**
+### 参数
 
-```javascript
-useInsertionEffect(
-  create: () => (() => void) | void,
-  deps: Array<mixed> | void | null,
-): void
-```
+| 参数 | 类型 | 描述 |
+|---|---|---|
+| `create` | `() => (() => void) \| void` | 一个包含样式插入逻辑的函数。它可以选择性地返回一个清理函数。 |
+| `deps` | `Array<mixed> \| void \| null` | 用于控制副作用何时重新运行的依赖项数组。 |
 
-**用法**
+### 示例：概念性样式注入
 
-CSS-in-JS 库可以使用此 Hook 注入具有最高优先级的样式标签，以确保在 `useLayoutEffect` 运行以读取布局信息之前，这些样式已经可用。
+此示例说明了 CSS-in-JS 库可能如何使用 `useInsertionEffect` 将 `<style>` 标签注入文档的 `<head>` 中。
 
-**概念示例**
+```javascript Conceptual CSS-in-JS Usage icon=logos:javascript
+import { useInsertionEffect } from 'react';
 
-```javascript
-// 在一个假设的 CSS-in-JS 库内部
-let ruleCache = new Map();
+let injectedRules = new Set();
 
 function useCSS(rule) {
   useInsertionEffect(() => {
-    if (!ruleCache.has(rule)) {
+    // 这会在浏览器有机会看到 DOM 更新之前运行。
+    if (!injectedRules.has(rule)) {
+      injectedRules.add(rule);
       const styleElement = document.createElement('style');
-      styleElement.textContent = rule;
+      styleElement.innerHTML = rule;
       document.head.appendChild(styleElement);
-      ruleCache.set(rule, styleElement);
+
+      // 可选：返回一个清理函数以移除样式
+      return () => {
+        document.head.removeChild(styleElement);
+        injectedRules.delete(rule);
+      };
     }
   }, [rule]);
+}
+
+function MyStyledComponent() {
+  // 库会对此进行抽象
+  useCSS('.my-class { color: blue; }');
+  return <div className="my-class">This is a styled component.</div>;
 }
 ```
 
 ---
 
-### 总结
+现在你已经了解了如何处理副作用，你可能需要直接与 DOM 节点交互或将 ref 转发给子组件。在下一节中学习如何操作。
 
-根据副作用所需的执行时机来选择 Effect Hook。
-
-| Hook | 执行时机 | 常见用例 |
-|---|---|---|
-| `useEffect` | 异步，在渲染和绘制后 | 数据获取、订阅、计时器。默认选择。 |
-| `useLayoutEffect` | 同步，在渲染后但在绘制前 | 测量 DOM 元素，需要在下次绘制前计算的动画。 |
-| `useInsertionEffect` | 同步，在 DOM 变更前 | **适用于库作者：**为 CSS-in-JS 库注入关键样式。 |
-
-接下来，我们将探讨如何管理那些不会触发重新渲染的值和 DOM 节点的引用。请继续阅读 [Ref Hooks](./hooks-ref.md) 章节。
+➡️ [下一节：Ref Hooks](./hooks-ref.md)

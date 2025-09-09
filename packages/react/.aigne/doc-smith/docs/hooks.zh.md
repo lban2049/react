@@ -1,90 +1,57 @@
-# Hook
+# Hooks
 
-Hook 是一些函数，可让你在函数组件中“钩入” React 的 state 和生命周期等功能。它们允许你在不编写 class 的情况下使用 state 和其他 React 功能，使你的组件更简洁、更易于复用。
+Hooks 是一些函数，可让你在函数组件中使用 state 和其他 React 功能。它们允许你从组件中“钩入”React 的 state 和生命周期功能，而无需编写类，使你的代码更具可重用性且更易于理解。
 
-Hook 只能在函数组件的顶层或自定义 Hook 中调用。你不能在循环、条件或嵌套函数中调用它们。这确保了每次组件渲染时，Hook 的调用顺序都是相同的，从而让 React 能够在多次 `useState` 和 `useEffect` 调用之间正确地保留 Hook 的状态。
+在使用 Hooks 之前，了解它们的两个主要规则至关重要：
+1.  **只在顶层调用 Hooks：** 不要在循环、条件或嵌套函数中调用 Hooks。
+2.  **只在 React 函数中调用 Hooks：** 从 React 函数组件中调用它们，而不是从常规的 JavaScript 函数中调用。
 
-### Hook 的工作原理
+如需深入了解这些规则，请参阅关于 [Hooks 规则](https://react.dev/link/invalid-hook-call) 的官方文档。
 
-从高层次来看，Hook 为你已知的 React 功能（如 state、lifecycle、context 和 refs）提供了直接的 API。当你调用像 `useState` 这样的 Hook 时，你就是在告诉 React，你的组件需要跟踪某些 state。
-
-```d2
-direction: down
-
-"函数组件": {
-  shape: rectangle
-  style.fill: "#e6f7ff"
-
-  "Hooks": {
-    label: "Hook 调用\n(useState, useEffect, ...)"
-    shape: rectangle
-    style.fill: "#f6ffed"
-  }
-}
-
-"React 核心": {
-  shape: package
-  label: "React 核心功能"
-  style.fill: "#fff7e6"
-
-  State: { shape: stored_data }
-  Lifecycle: { shape: step }
-  Context: { shape: stored_data }
-}
-
-"函数组件".Hooks -> "React 核心": "钩入"
-"React 核心" -> "函数组件": "提供 State 和生命周期"
-```
-
-### 探索 Hook
-
-React 提供了一系列内置 Hook 来涵盖广泛的使用场景。下面根据其主要用途对它们进行了分组。你可以深入每个部分以了解更多信息。
+本页按用途对内置 Hooks 进行了分类概述。选择一个类别以了解其中的具体 Hooks。
 
 <x-cards data-columns="2">
-  <x-card data-title="State Hook" data-icon="lucide:database" data-href="/hooks/state">
-    管理组件的本地 state。这些 Hook 可以让你的组件记住诸如用户输入、服务器响应或 UI state 之类的信息。
+  <x-card data-title="State Hooks" data-href="/hooks/state" data-icon="lucide:database">
+    使用 `useState`、`useReducer`、`useActionState` 和 `useOptimistic` 管理组件的 state。
   </x-card>
-  <x-card data-title="Effect Hook" data-icon="lucide:zap" data-href="/hooks/effect">
-    在组件中执行副作用。Effect 用于数据获取、设置订阅或手动更改 DOM。
+  <x-card data-title="Effect Hooks" data-href="/hooks/effect" data-icon="lucide:zap">
+    使用 `useEffect`、`useLayoutEffect` 和 `useInsertionEffect` 在组件中执行副作用。
   </x-card>
-  <x-card data-title="Ref Hook" data-icon="lucide:anchor" data-href="/hooks/ref">
-    引用无需用于渲染的值。可用于直接访问 DOM 节点或保留一个可变值。
+  <x-card data-title="Ref Hooks" data-href="/hooks/ref" data-icon="lucide:anchor">
+    使用 `useRef` 和 `useImperativeHandle` 引用不需要用于渲染的值。
   </x-card>
-  <x-card data-title="Performance Hook" data-icon="lucide:gauge-circle" data-href="/hooks/performance">
-    通过跳过昂贵的重新计算和在不阻塞用户的情况下管理 UI 更新来优化组件性能。
+  <x-card data-title="Performance Hooks" data-href="/hooks/performance" data-icon="lucide:gauge-circle">
+    使用 `useCallback`、`useMemo`、`useTransition` 和 `useDeferredValue` 优化组件的性能。
   </x-card>
-  <x-card data-title="其他 Hook" data-icon="lucide:puzzle" data-href="/hooks/other">
-    一系列用于其他特定使用场景的 Hook，例如读取 context、生成唯一 ID 或订阅外部 store。
+  <x-card data-title="Other Hooks" data-href="/hooks/other" data-icon="lucide:puzzle">
+    探索其他 Hooks，如 `useContext`、`useId`、`useDebugValue` 和 `useSyncExternalStore`。
   </x-card>
 </x-cards>
 
-### 完整的 API 参考
+## API 快速参考
 
-为了方便快速查找，这里列出了 React 中所有可用的内置 Hook。
+以下是 React 中所有内置 Hooks 的完整列表，以供快速参考。
 
 | Hook | 描述 |
 | --- | --- |
-| `useState` | 声明一个 state 变量，你可以更新它，从而触发重新渲染。 |
-| `useReducer` | `useState` 的替代方案，用于管理复杂 state 逻辑。 |
-| `useEffect` | 让你在函数组件中执行副作用。 |
-| `useLayoutEffect` | 在所有 DOM 变更后同步触发。使用它来从 DOM 读取布局并同步重新渲染。 |
-| `useInsertionEffect` | 允许在任何布局 effect 触发前将元素插入到 DOM 中。主要用于 CSS-in-JS 库。 |
-| `useContext` | 接收一个 context 对象并返回该 context 的当前值。 |
-| `useRef` | 返回一个可变的 ref 对象，其 `.current` 属性被初始化为传入的参数。 |
-| `useCallback` | 返回一个 memoized 的回调函数。 |
-| `useMemo` | 返回一个 memoized 的值。 |
-| `useImperativeHandle` | 在使用 `ref` 时，自定义暴露给父组件的实例值。 |
-| `useTransition` | 让你在不阻塞 UI 的情况下更新 state。返回一个表示 transition 挂起状态的 stateful 值，以及一个启动它的函数。 |
-| `useDeferredValue` | 让你延迟更新部分 UI。 |
-| `useId` | 一个用于生成在服务端和客户端之间保持稳定的唯一 ID 的 hook。 |
-| `useSyncExternalStore` | 一个推荐用于从外部数据源读取和订阅的 hook，其方式与并发渲染功能兼容。 |
-| `useDebugValue` | 可用于在 React DevTools 中为自定义 hook 显示标签。 |
-| `useActionState` | 一个用于管理表单 action 状态的 hook。 |
-| `useOptimistic` | 一个让你能够乐观地更新 UI 的 hook。 |
-| `use` | 一个允许你读取 Promise 或 context 等资源值的 hook。 |
+| `useState` | 声明一个可以直接更新的 state 变量。 |
+| `useReducer` | 声明一个 state 变量，其复杂的更新逻辑由 reducer 函数管理。 |
+| `useActionState` | 管理表单操作的状态，处理 pending 和 error 状态。 |
+| `useOptimistic` | 管理可以回滚的乐观 UI 更新。 |
+| `useEffect` | 将组件连接到外部系统，并在渲染后执行副作用。 |
+| `useLayoutEffect` | 在所有 DOM 变更后同步触发，可用于测量布局。 |
+| `useInsertionEffect` | 在 DOM 变更前同步触发，主要用于 CSS-in-JS 库。 |
+| `useRef` | 引用一个不需要用于渲染的值，通常用于访问 DOM 元素。 |
+| `useImperativeHandle` | 自定义暴露给父组件的 ref 句柄。 |
+| `useCallback` | 在重新渲染之间缓存函数定义以优化性能。 |
+| `useMemo` | 在重新渲染之间缓存计算结果。 |
+| `useTransition` | 将 state 更新标记为非阻塞过渡，以避免 UI 卡顿。 |
+| `useDeferredValue` | 延迟更新 UI 的非关键部分。 |
+| `useContext` | 读取并订阅 context，允许数据沿组件树向下传递。 |
+| `useId` | 生成一个在服务端和客户端渲染中保持稳定的唯一 ID。 |
+| `useDebugValue` | 在 React DevTools 中为自定义 Hook 显示标签。 |
+| `useSyncExternalStore` | 将组件订阅到外部数据存储。 |
+| `use` | 读取资源（如 Promise 或 context）的值。 |
 
-### 后续步骤
 
-首先，一个很好的起点是学习如何在组件中添加和管理 state。这是创建交互式用户界面的基础。
-
-下一步：[State Hook](./hooks-state.md)
+本概述提供了 React Hooks 世界的导览图。每个类别都包含了用于构建现代 React 应用的强大工具。我们建议从 [State Hooks](./hooks-state.md) 指南开始，因为它们是组件交互性的基础。

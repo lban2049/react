@@ -1,229 +1,226 @@
 # Performance Hooks
 
-React's rendering system is generally fast, but for complex applications, you may encounter performance bottlenecks. Performance Hooks provide tools to optimize your components by memoizing expensive calculations, preventing unnecessary re-renders, and scheduling non-urgent UI updates without blocking user interaction.
+Optimizing performance is a critical aspect of building responsive and fluid user interfaces. React provides a set of specialized Hooks designed to help you prevent unnecessary computations and renders, ensuring your application remains fast even as it scales. These Hooks are powerful tools for memoization and managing non-urgent UI updates.
 
-These hooks are powerful but should be used judiciously. Premature optimization can lead to more complex code. It's often best to first build your components without them and then use tools like the React Profiler to identify areas where optimization is genuinely needed.
-
-This section covers the primary hooks designed for performance tuning:
-
-<x-cards data-columns="2">
-  <x-card data-title="useCallback" data-icon="lucide:save">
-    Memoizes callback functions, preventing them from being re-created on every render.
-  </x-card>
-  <x-card data-title="useMemo" data-icon="lucide:calculator">
-    Memoizes the result of an expensive calculation, re-computing it only when dependencies change.
-  </x-card>
-  <x-card data-title="useTransition" data-icon="lucide:fast-forward">
-    Marks state updates as non-urgent, allowing other updates to render first without blocking the UI.
-  </x-card>
-  <x-card data-title="useDeferredValue" data-icon="lucide:hourglass">
-    Defers the update of a non-critical part of the UI, keeping the application responsive.
-  </x-card>
-</x-cards>
+This guide covers the primary performance Hooks. For Hooks related to state management, see [State Hooks](./hooks-state.md), and for side effects, refer to [Effect Hooks](./hooks-effect.md).
 
 ## useCallback
 
-`useCallback` returns a memoized version of a callback function. This is useful when passing callbacks to optimized child components that rely on reference equality to prevent unnecessary renders.
+The `useCallback` Hook memoizes a callback function, preventing it from being recreated on every render. This is particularly useful when passing callbacks to optimized child components that rely on reference equality to prevent unnecessary re-renders.
+
+`useCallback` will return a memoized version of the callback that only changes if one of the dependencies has changed.
 
 ### Syntax
 
-```javascript
-const memoizedCallback = useCallback(callback, deps);
+```javascript React Hook: useCallback icon=logos:react
+const memoizedCallback = useCallback(
+  () => {
+    doSomething(a, b);
+  },
+  [a, b],
+);
 ```
 
 ### Parameters
 
-| Parameter  | Type      | Description                                                                                                                                                              |
-| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `callback` | `function`| The function to be memoized.                                                                                                                                             |
-| `deps`     | `Array`   | An array of dependencies. The memoized callback will only be re-created if a value in this array changes. If omitted, a new function is returned on every render. |
+| Parameter | Type | Description |
+|---|---|---|
+| `callback` | `function` | The function to memoize. |
+| `deps` | `Array<any>` | A list of dependencies. The callback will only be re-created if a value in this array changes. |
 
 ### Example
 
-Consider a `ProductPage` that passes a `handleSubmit` function to a `ShippingForm` component. If `ShippingForm` is wrapped in `React.memo`, using `useCallback` for `handleSubmit` prevents the form from re-rendering every time `ProductPage` re-renders for other reasons.
+Consider a child component wrapped in `React.memo`. If the parent passes a new function instance on every render, the child will re-render unnecessarily. `useCallback` solves this.
 
-```jsx
+```javascript ParentComponent.js icon=logos:react
 import React, { useState, useCallback } from 'react';
+import MemoizedChild from './MemoizedChild';
 
-const ShippingForm = React.memo(function ShippingForm({ onSubmit }) {
-  console.log('ShippingForm rendered');
-  // ... form implementation
-  return <button onClick={onSubmit}>Submit</button>;
-});
+function ParentComponent() {
+  const [count, setCount] = useState(0);
+  const [otherState, setOtherState] = useState(false);
 
-function ProductPage({ productId }) {
-  const [theme, setTheme] = useState('dark');
-
-  const handleSubmit = useCallback(() => {
-    // This function's identity is stable across re-renders
-    // unless productId changes.
-    console.log(`Submitting form for product: ${productId}`);
-  }, [productId]);
+  // This function will only be recreated if `count` changes.
+  const handleClick = useCallback(() => {
+    console.log(`Button clicked! Count is ${count}`);
+  }, [count]);
 
   return (
     <div>
-      <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-        Toggle Theme
-      </button>
-      <ShippingForm onSubmit={handleSubmit} />
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment Count</button>
+      <button onClick={() => setOtherState(!otherState)}>Toggle Other State</button>
+      {/* handleClick function identity is stable across re-renders unless count changes */}
+      <MemoizedChild onClick={handleClick} />
     </div>
   );
 }
 ```
-In this example, toggling the theme will not cause `ShippingForm` to re-render because the `handleSubmit` function reference remains stable.
+
+In this example, clicking "Toggle Other State" re-renders `ParentComponent` but does not recreate `handleClick`. Therefore, `MemoizedChild` does not re-render because its `onClick` prop has not changed.
 
 ## useMemo
 
-`useMemo` returns a memoized value. It re-computes the value only when one of its dependencies has changed, which is useful for avoiding expensive calculations on every render.
+Similar to `useCallback`, `useMemo` is for memoization, but instead of memoizing a function, it memoizes the *result* of a function call. It's ideal for avoiding expensive calculations on every render.
+
+`useMemo` will only recompute the memoized value when one of the dependencies has changed.
 
 ### Syntax
 
-```javascript
-const memoizedValue = useMemo(create, deps);
+```javascript React Hook: useMemo icon=logos:react
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
 ```
 
 ### Parameters
 
-| Parameter | Type       | Description                                                                                                                                                  |
-| --------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `create`  | `function` | A function that computes and returns the value to be memoized.                                                                                               |
-| `deps`    | `Array`    | An array of dependencies. The `create` function will only be re-executed if a value in this array changes. If omitted, the value is recomputed on every render. |
+| Parameter | Type | Description |
+|---|---|---|
+| `create` | `() => T` | The function that returns the value to be memoized. |
+| `deps` | `Array<any>` | A list of dependencies. The value will only be re-calculated if a dependency changes. |
 
 ### Example
 
-If you have a component that needs to filter a large list of items, you can use `useMemo` to ensure the filtering operation only runs when the list or the filter text changes.
+If you have a component that needs to compute a value from a large dataset, `useMemo` can prevent this computation from running every time the component re-renders for other reasons.
 
-```jsx
+```javascript DataDisplay.js icon=logos:react
 import React, { useState, useMemo } from 'react';
 
-function TodoList({ todos, filter }) {
-  const visibleTodos = useMemo(() => {
-    console.log('Filtering todos...');
-    return todos.filter(todo => todo.text.includes(filter));
-  }, [todos, filter]); // Only re-runs if 'todos' or 'filter' changes
+function expensiveCalculation(num) {
+  console.log('Performing expensive calculation...');
+  // Imagine a heavy computation here
+  let total = 0;
+  for (let i = 0; i < 1000000000; i++) {
+    total += num;
+  }
+  return total % 100;
+}
+
+function DataDisplay({ data }) {
+  const [theme, setTheme] = useState('light');
+
+  // expensiveCalculation will only run when `data.number` changes.
+  const computedValue = useMemo(() => expensiveCalculation(data.number), [data.number]);
 
   return (
-    <ul>
-      {visibleTodos.map(todo => (
-        <li key={todo.id}>{todo.text}</li>
-      ))}
-    </ul>
+    <div className={theme}>
+      <p>Computed Value: {computedValue}</p>
+      <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+        Toggle Theme
+      </button>
+    </div>
   );
 }
 ```
-Here, `visibleTodos` is only recalculated when the `todos` array or the `filter` string changes, not on other component re-renders.
+
+Here, toggling the theme will not trigger `expensiveCalculation` because its dependency, `data.number`, has not changed.
 
 ## useTransition
 
-`useTransition` is a hook that lets you update state without blocking the UI. It returns a pending state and a function to wrap state updates that could be disruptive.
+`useTransition` lets you update state without blocking the UI. It marks specific state updates as "transitions," which tells React they can be interrupted if more urgent updates (like typing into an input) arrive.
+
+This Hook is ideal for keeping your application responsive during data-fetching or when rendering large component trees.
 
 ### Syntax
 
-```javascript
+It returns an array with two items:
+
+```javascript React Hook: useTransition icon=logos:react
 const [isPending, startTransition] = useTransition();
 ```
 
-### Returns
+### Return Value
 
-A tuple with two values:
-
-| Value             | Type       | Description                                                                                             |
-| ----------------- | ---------- | ------------------------------------------------------------------------------------------------------- |
-| `isPending`       | `boolean`  | A boolean that is `true` if a transition is currently active. You can use this to show a loading state. |
-| `startTransition` | `function` | A function that takes a callback. State updates inside this callback are marked as non-urgent transitions. |
+| Item | Type | Description |
+|---|---|---|
+| `isPending` | `boolean` | A boolean flag that is `true` while the transition is pending. You can use this to show a loading indicator. |
+| `startTransition` | `(callback: () => void) => void` | A function that allows you to mark a state update as a transition. |
 
 ### Example
 
-When a user types into a search field, you might want to keep the input responsive while the search results are being filtered. `useTransition` can mark the state update for the search results as a lower-priority transition.
+When filtering a large list, wrapping the filter logic in `startTransition` keeps the input field responsive.
 
-```jsx
+```javascript FilterableList.js icon=logos:react
 import React, { useState, useTransition } from 'react';
 
-function SearchResults({ query }) {
-  // ... component to render search results
-  return <div>Searching for: {query}</div>;
-}
+const allItems = Array.from({ length: 10000 }, (_, i) => `Item ${i + 1}`);
 
-function App() {
+function FilterableList() {
   const [isPending, startTransition] = useTransition();
-  const [inputValue, setInputValue] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState('');
+  const [filteredItems, setFilteredItems] = useState(allItems);
 
-  const handleInputChange = (e) => {
-    // Urgent: update the input field immediately
-    setInputValue(e.target.value);
-
-    // Non-urgent: wrap the disruptive update in a transition
+  const handleFilterChange = (e) => {
+    const nextFilter = e.target.value;
+    setFilter(nextFilter);
+    // The input state updates immediately, but the list update is deferred.
     startTransition(() => {
-      setSearchQuery(e.target.value);
+      setFilteredItems(allItems.filter(item => item.includes(nextFilter)));
     });
   };
 
   return (
     <div>
-      <input value={inputValue} onChange={handleInputChange} />
-      {isPending ? (
-        <div>Loading...</div>
-      ) : (
-        <SearchResults query={searchQuery} />
-      )}
+      <input type="text" value={filter} onChange={handleFilterChange} />
+      {isPending && <p>Updating list...</p>}
+      <ul>
+        {filteredItems.map(item => <li key={item}>{item}</li>)}
+      </ul>
     </div>
   );
 }
 ```
-In this example, the text input remains fluid and responsive, even if rendering `SearchResults` is slow. The UI shows a "Loading..." message while the transition is pending.
-
-For more advanced use cases, see the [Transitions](./advanced-transitions.md) guide.
 
 ## useDeferredValue
 
-`useDeferredValue` accepts a value and returns a new copy of the value that will defer to more urgent updates. It's similar to `useTransition` but is often simpler for cases where you don't have direct access to the state-setting function.
+`useDeferredValue` lets you defer re-rendering a non-urgent part of the UI. It is similar in purpose to `useTransition` but is often easier to use when you don't have direct control over the state-setting call.
+
+The Hook returns a deferred version of the value that will "lag behind" the most recent value during urgent re-renders.
 
 ### Syntax
 
-```javascript
+```javascript React Hook: useDeferredValue icon=logos:react
 const deferredValue = useDeferredValue(value);
 ```
 
 ### Parameters
 
-| Parameter | Type  | Description                                                                                                                                     |
-| --------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `value`   | `any` | The value to be deferred. React will initially render with the old value and then attempt a re-render with the new value after urgent updates. |
+| Parameter | Type | Description |
+|---|---|---|
+| `value` | `T` | The value you want to defer. |
+| `initialValue` | `T` | (Optional) The initial value to use before the first deferred value is computed. |
 
 ### Example
 
-This hook can be used to implement the same search-as-you-type behavior as `useTransition` but in a different way. It's particularly useful when the value comes from props or another hook.
+This example achieves the same result as the `useTransition` example but with a different approach. We defer the `filter` value itself before using it to compute the list.
 
-```jsx
-import React, { useState, useDeferredValue } from 'react';
+```javascript DeferredList.js icon=logos:react
+import React, { useState, useDeferredValue, useMemo } from 'react';
 
-function SearchResults({ query }) {
-  // Memoize the component to show the effect clearly
-  const deferredQuery = useDeferredValue(query);
-  const isStale = query !== deferredQuery;
+const allItems = Array.from({ length: 10000 }, (_, i) => `Item ${i + 1}`);
 
-  // ... expensive rendering logic based on deferredQuery
-
-  return (
-    <div style={{ opacity: isStale ? 0.5 : 1 }}>
-      Showing results for "{deferredQuery}"
-    </div>
-  );
+function List({ items }) {
+  return <ul>{items.map(item => <li key={item}>{item}</li>)}</ul>;
 }
 
-function App() {
-  const [query, setQuery] = useState('');
+function DeferredList() {
+  const [filter, setFilter] = useState('');
+  const deferredFilter = useDeferredValue(filter);
+
+  const filteredItems = useMemo(() => {
+    return allItems.filter(item => item.includes(deferredFilter));
+  }, [deferredFilter]);
+
   return (
     <div>
-      <input value={query} onChange={e => setQuery(e.target.value)} />
-      <SearchResults query={query} />
+      <input type="text" value={filter} onChange={e => setFilter(e.target.value)} />
+      <List items={filteredItems} />
     </div>
   );
 }
 ```
-Here, the `SearchResults` component receives the `query` immediately but uses `useDeferredValue` to create a `deferredQuery`. While the component waits for the new query to be rendered, the `deferredQuery` holds the previous value, allowing the UI to remain responsive. The `isStale` flag can be used to provide visual feedback, like dimming the old results.
+
+As the user types, the `input` updates immediately with the `filter` state. However, the `deferredFilter` value updates with a delay, so the expensive list filtering and re-rendering don't block the user's input.
 
 ---
 
-After mastering these performance optimizations, you can explore other specialized hooks. For more information, proceed to the [Other Hooks](./hooks-other.md) guide.
+By leveraging these performance Hooks, you can build highly optimized and responsive React applications. For more tools in the React toolkit, continue to [Other Hooks](./hooks-other.md).

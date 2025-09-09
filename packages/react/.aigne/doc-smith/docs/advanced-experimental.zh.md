@@ -1,121 +1,144 @@
 # 实验性 API
 
-本节介绍 React 中可用的实验性和不稳定的 API。这些功能旨在供社区测试和提供反馈。它们可能会在不另行通知的情况下发生变更，不应在生产环境中使用。
+欢迎来到 React 的前沿。本节介绍了可用于测试和反馈的实验性和不稳定 API。这些功能仍在开发中，其行为或签名可能会在未来版本中发生变化。我们强烈建议不要在生产环境中使用它们，除非您已准备好应对潜在的破坏性变更。
 
-> **警告：**实验性 API 可能存在错误、经历重大变更或在未来版本中被完全移除。使用它们需要您自担风险。
+这些 API 提供了对新功能的早期访问，例如高级安全控制和更精细的渲染管理。
 
-## 用于安全的 Taint API (仅限服务器端)
+## Tainting：防止敏感数据泄露
 
-Taint API 是一种安全功能，旨在防止敏感数据从服务器环境传递到客户端。当一个值被“污染 (tainted)”时，如果你试图将其包含在客户端组件的 props 中或服务器操作的闭包中，React 将会抛出错误，从而防止意外的数据泄露。
+在使用 React Server Components 时，防止服务器端的敏感数据意外传递给客户端至关重要。Taint API 提供了一种机制，可将某些值或对象标记为“受污染的”，如果尝试为客户端序列化这些值或对象，React 将会抛出错误。
 
-这些 API 仅在 React 的服务器环境中使用。
+对于构建稳健的以服务器为中心的应用来说，这是一项强大的安全功能。
 
-### `experimental_taintUniqueValue(message, lifetime, value)`
+### `experimental_taintUniqueValue`
 
-此函数会污染一个唯一的原始值，例如密钥或用户特定的令牌。它确保此特定值不能被序列化到客户端。
+此函数用于污染唯一的原始值，如机密信息、API 密钥或令牌。它有助于确保特定的字符串或数字无法离开服务器环境。
 
-**参数**
+**用法**
 
-| Name | Type | Description |
-|---|---|---|
-| `message` | `string` | 当尝试序列化被污染的值时，将显示的可选错误信息。 |
-| `lifetime`| `object` | 一个对象，其垃圾回收生命周期与被污染的值绑定。当此对象被垃圾回收时，污染状态将被移除。 |
-| `value` | `string` \| `bigint` \| `ArrayBufferView` | 要污染的唯一原始值。它不能是普通的对象或函数。 |
-
-**示例**
-
-```javascript
-// 在服务器端数据获取函数中
+```javascript Server Component icon=logos:react
 import { experimental_taintUniqueValue } from 'react';
 
 async function getUserData(userId) {
-  const user = await db.users.find({ id: userId });
-  const apiSecret = user.apiSecret; // 一个敏感值
+  const userSecret = await getSecretFromVault(userId);
 
-  // 污染密钥。user 对象用于生命周期管理。
+  // 创建一个生命周期对象。当该对象被垃圾回收时，
+  // 值的污染标记可能会被移除。
+  const lifetime = {};
+
+  // 污染这个机密值。如果该值被传递给客户端组件，
+  // React 将会抛出错误。
   experimental_taintUniqueValue(
-    '不要将 API 密钥泄露给客户端。',
-    user,
-    apiSecret
+    'User secret must not be exposed to the client.',
+    lifetime,
+    userSecret
   );
 
-  return user;
+  return { secret: userSecret };
 }
-
-// 如果之后你尝试将 apiSecret 传递给客户端组件，React 将会抛出错误。
 ```
-
-### `experimental_taintObjectReference(message, object)`
-
-此函数会污染整个对象或函数引用。这对于污染那些绝不应离开服务器的复杂对象（如数据库连接或配置实例）非常有用。
 
 **参数**
 
-| Name | Type | Description |
+| Parameter | Type | Description |
 |---|---|---|
-| `message` | `string` | 当尝试序列化被污染的对象引用时，将显示的可选错误信息。 |
-| `object` | `object` \| `function` | 要污染的对象或函数引用。它不能是字符串或数字等原始值。 |
+| `message` | `string` | 如果被污染的值传递给客户端，则显示此错误信息。 |
+| `lifetime` | `object` | 一个对象，其垃圾回收生命周期与污染标记绑定。当该对象被回收时，污染标记可能会被移除。 |
+| `value` | `string \| bigint \| $ArrayBufferView` | 要污染的唯一原始值。 |
 
-**示例**
 
-```javascript
-// 在服务器端模块中
+### `experimental_taintObjectReference`
+
+此函数会污染整个对象或函数引用。它对于将数据库连接或文件句柄等复杂对象标记为仅限服务器使用非常有用。
+
+**用法**
+
+```javascript Server Component icon=logos:react
 import { experimental_taintObjectReference } from 'react';
 
-// 假设 dbConnection 是一个活动的数据库连接对象
-const dbConnection = createDatabaseConnection();
+async function getDatabaseConnection() {
+  const dbConnection = await createDbConnection();
 
-// 污染整个数据库连接对象，以防止其被传递到客户端。
-experimental_taintObjectReference('数据库连接不能发送到客户端。', dbConnection);
+  // 污染整个数据库连接对象。
+  // 它不能被传递给客户端组件或在服务器操作中使用。
+  experimental_taintObjectReference(
+    'Database connection objects are server-only and cannot be serialized.',
+    dbConnection
+  );
 
-export function getDB() {
   return dbConnection;
 }
 ```
 
-## `postpone(reason)` (仅限服务器端)
-
-`postpone` 函数允许你以给定的原因中断当前的服务器渲染。与等待 promise 解析的 `Suspense` 不同，`postpone` 是一个有意停止渲染组件子树的选择。React 可能会在稍后重试渲染。这对于推迟依赖于缓慢或非关键数据的 UI 非必要部分非常有用。
-
-它仅在 React 的服务器环境中使用。
-
 **参数**
 
-| Name | Type | Description |
+| Parameter | Type | Description |
 |---|---|---|
-| `reason` | `string` | 一个字符串，用于解释渲染被推迟的原因。 |
+| `message` | `string` | 如果被污染的对象传递给客户端，则显示此错误信息。 |
+| `object` | `object \| function` | 要污染的对象或函数引用。 |
 
-**示例**
 
-```javascript
-import { postpone } from 'react';
-import { fetchOptionalWidgetData } from './api';
+## 使用 postpone 推迟渲染
 
-async function OptionalWidget() {
-  const data = await fetchOptionalWidgetData();
-  if (!data) {
-    // 如果数据不可用，暂时不要渲染此组件。
-    // 这不会阻塞初始页面加载。
-    postpone('可选的小部件数据此时不可用。');
+The `unstable_postpone` 函数允许服务器组件声明式地暂停其渲染并等待数据，而不会阻塞服务器线程。调用该函数时，它会抛出一个特殊的信号，React 会捕获该信号。然后，React 会显示最近的 `<Suspense>` fallback，并稍后重试渲染该组件。
+
+这对于处理未封装在基于 Promise 的 API 中的数据依赖项特别有用。
+
+**用法**
+
+```javascript Page with Postponed Component icon=logos:react
+import { Suspense } from 'react';
+import { unstable_postpone as postpone } from 'react';
+import { dataCache } from './data';
+
+function NewsFeed() {
+  const articles = dataCache.get('articles');
+  if (!articles) {
+    // 如果缓存中没有文章，则推迟渲染。
+    // React 将显示 Suspense fallback 并重试。
+    postpone('News feed is not ready yet.');
   }
 
-  return <div>{data.content}</div>;
+  return (
+    <div>
+      {articles.map(article => <p key={article.id}>{article.title}</p>)}
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Suspense fallback={<div>Loading news...</div>}>
+      <NewsFeed />
+    </Suspense>
+  );
 }
 ```
 
-## 其他不稳定和实验性 API
+这提供了一种将非标准数据获取模式与 React 的流式服务器渲染功能集成的方法。
 
-其他一些 API 在 `unstable_` 或 `experimental_` 前缀下可用。这些 API 暴露出来供框架和库进行测试。
+## 其他实验性 API
 
-| API 名称 | 描述 |
-|---|---|
-| `experimental_useOptimistic` | `useOptimistic` 的旧别名。它现在处于 Canary 版本中，应改用 `useOptimistic`。该前缀将被移除。 |
-| `unstable_Activity` | 一个用于控制屏幕外内容可见性的组件，常用于框架中的 keep-alive 缓存等功能。 |
-| `unstable_SuspenseList` | 一个用于协调多个 `Suspense` 边界外观的组件，防止内容加载时出现突兀的 UI。 |
-| `unstable_ViewTransition` | 一个帮助在不同 UI 状态或视图之间创建平滑视觉过渡的 API。 |
-| `unstable_getCacheForType` | 一种访问特定类型共享缓存的机制，主要用于服务器上的数据缓存。 |
-| `unstable_useCacheRefresh` | 一个提供函数来使 React 缓存失效的 Hook，从而触发缓存数据的刷新。 |
+以下是在某些 React 构建版本中可用的其他实验性或不稳定 API 的列表。它们的用途和用法可能会有所不同。
+
+| API | Environment | Description |
+|---|---|---|
+| `experimental_useOptimistic` | 客户端 | 一个用于管理乐观 UI 更新的 Hook。此后，它已在 Canary 和稳定渠道中升级为 `useOptimistic`。使用 `experimental_` 前缀会产生控制台警告。 |
+| `experimental_useEffectEvent` | 客户端 | 一个提议中的 Hook，用于从 `useEffect` 中提取非响应式逻辑，以防止其不必要地重新运行。 |
+| `unstable_Activity` | 客户端 | 一个用于控制屏幕外内容的可见性和状态的组件，对虚拟化列表或标签面板等功能很有用。 |
+| `unstable_SuspenseList` | 客户端 / 服务器端 | 一个帮助协调多个 `<Suspense>` 边界加载顺序的组件，以创建更受控制且不那么混乱的加载体验。 |
+| `unstable_ViewTransition` | 客户端 | 一个帮助协调不同视图或 UI 状态之间动画过渡的 API，与浏览器的 View Transitions API 集成。 |
+| `unstable_getCacheForType` | 服务器端 | 一个仅限服务器使用的函数，用于访问给定类型的请求作用域缓存实例，在单次渲染过程中跨组件记忆化数据时非常有用。 |
 
 ---
 
-以上是 React 实验性 API 的概述。虽然它们让我们得以一窥未来的功能，但在生产应用中应始终优先使用稳定的 API。有关服务器和客户端差异的更多详细信息，请参阅 [服务器与客户端环境](./advanced-server-vs-client.md) 指南。
+探索这些 API 可以深入了解 React 的未来发展方向。由于它们以服务器为中心，您可能会发现以下指南对理解相关背景很有帮助。
+
+<x-cards>
+  <x-card data-title="服务器端与客户端环境" data-icon="lucide:server-cog" data-href="/advanced/server-vs-client">
+    了解 React 两种渲染环境之间的根本区别及其各自的功能。
+  </x-card>
+  <x-card data-title="缓存" data-icon="lucide:database" data-href="/advanced/caching">
+    深入了解 React 的缓存机制，这对于构建高性能的服务器渲染应用至关重要。
+  </x-card>
+</x-cards>

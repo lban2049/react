@@ -1,41 +1,37 @@
 # Package Exports
 
-The `react` npm package exposes several distinct entry points to support different environments and build configurations. These exports, defined in the package's `package.json`, allow tools like bundlers and frameworks to automatically select the correct version of React—for example, switching between development and production builds or providing specialized runtimes for JSX and server environments.
+The `react` package is designed for modern JavaScript environments and bundlers. It leverages Node.js Package Exports to provide multiple entry points, allowing tools to select the appropriate version of the library for different use cases and environments, such as development versus production, or client versus server.
+
+Understanding these exports is useful for configuring build tools or for advanced use cases where you need to interact with specific parts of the React ecosystem, like the JSX runtime.
 
 ## Main Entry Points
 
-The `react` package provides different entry points for various runtimes and modes.
+The `react` package defines several entry points in its `package.json`. Here is a summary of the primary exports you will encounter:
 
-<x-cards data-columns="2">
-  <x-card data-title="react" data-icon="lucide:box">
-    The main entry point for the React library. It automatically selects the appropriate build (development or production) based on your environment.
-  </x-card>
-  <x-card data-title="react/jsx-runtime" data-icon="lucide:code">
-    The production JSX runtime. It contains the functions that transpile JSX syntax into React function calls without development warnings.
-  </x-card>
-  <x-card data-title="react/jsx-dev-runtime" data-icon="lucide:terminal">
-    The development JSX runtime. This version includes extra warnings and checks to help you debug your application during development.
-  </x-card>
-  <x-card data-title="react/compiler-runtime" data-icon="lucide:cpu">
-    Provides runtime helpers required by the React Compiler. This is typically managed automatically by the compiler itself.
-  </x-card>
-</x-cards>
+| Export Path | Description |
+|---|---|
+| `react` | The main entry point for the core React library. This is what you get when you write `import React from 'react'`. It provides access to APIs like `useState`, `useEffect`, `createElement`, etc. |
+| `react/jsx-runtime` | The production JSX runtime. This entry point is used by compilers (like Babel or TypeScript) for the automatic JSX transform, which converts JSX syntax into `jsx()` function calls. You typically don't import this directly. |
+| `react/jsx-dev-runtime` | The development version of the JSX runtime. It includes additional warnings and debugging information, such as source file and line number tracking, which is helpful during development. |
+| `react/compiler-runtime` | Contains runtime helper functions required by the React Compiler. This code is automatically injected by the compiler where needed and is not intended for direct use by developers. |
+| `react/package.json` | Exposes the package's `package.json` file, which can be useful for tools that need to inspect package metadata. |
+
+---
 
 ## Conditional Exports
 
-React uses conditional exports to serve the correct code for different environments. This is most notable in the distinction between client and server environments (like React Server Components) and between development and production modes.
+React uses conditional exports to serve different files based on the environment. This ensures that you get the best performance in production while having helpful warnings and tools during development.
 
-### Server vs. Client Environments
+### Development vs. Production Builds
 
-Many entry points have a `react-server` condition. This allows bundlers to resolve to a version of React specifically designed for server-side rendering and React Server Components, which has a different set of capabilities than the client-side version.
+Most entry points, including the main `react` export and the JSX runtimes, check the `process.env.NODE_ENV` variable. Based on its value, they load either a development or a production build.
 
-For a deeper dive into this topic, see the [Server vs. Client Environments](./advanced-server-vs-client.md) guide.
+- **Development (`NODE_ENV !== 'production'`)**: The development builds are larger and include extensive warnings, error messages, and debugging aids.
+- **Production (`NODE_ENV === 'production'`)**: The production builds are minified and optimized for performance, with all development-only code stripped out.
 
-### Development vs. Production
+Here is the logic from the main `index.js` entry point, which illustrates this pattern:
 
-React automatically switches between development and production builds based on the `process.env.NODE_ENV` variable. The entry point files typically contain logic like this:
-
-```javascript
+```javascript index.js icon=logos:javascript
 'use strict';
 
 if (process.env.NODE_ENV === 'production') {
@@ -45,16 +41,24 @@ if (process.env.NODE_ENV === 'production') {
 }
 ```
 
-When `NODE_ENV` is set to `'production'`, you get a minified, optimized version of React. In development, you get a version with helpful warnings and debugging features.
+Your build tool (like Webpack, Vite, or Parcel) is responsible for setting `process.env.NODE_ENV` correctly, which automatically enables these optimizations for your production application.
 
-## Summary of Package Exports
+### React Server vs. Client Environments
 
-The following table provides an overview of the primary entry points available in the `react` package and their intended use cases.
+The `exports` map also includes a `"react-server"` condition. This allows bundlers and frameworks that support React Server Components to resolve to a specific build of React that is designed to run in a server-only environment.
 
-| Export Path | Description | Supported Conditions |
-|---|---|---|
-| `.` | The main React library export. | `react-server`, `default` |
-| `./jsx-runtime` | The production JSX transform runtime. | `react-server`, `default` |
-| `./jsx-dev-runtime` | The development JSX transform runtime. | `react-server`, `default` |
-| `./compiler-runtime` | Runtime helpers for the React Compiler. | `react-server`, `default` |
-| `./package.json` | Exposes the package's `package.json` file. | N/A |
+For example, the main `.` export is defined as:
+
+```json package.json icon=logos:npm
+"exports": {
+  ".": {
+    "react-server": "./react.react-server.js",
+    "default": "./index.js"
+  },
+  // ...other exports
+}
+```
+
+In an environment that understands the `"react-server"` condition, importing `react` will resolve to `react.react-server.js`. In all other environments (like a traditional client-side application), it will resolve to the `default` export, `index.js`.
+
+This same conditional logic applies to the JSX runtimes, ensuring that the correct version is used whether your components are rendering on the server or the client. For a deeper dive into this topic, see our guide on [Server vs. Client Environments](./advanced-server-vs-client.md).

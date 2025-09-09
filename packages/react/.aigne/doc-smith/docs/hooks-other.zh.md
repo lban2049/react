@@ -1,148 +1,192 @@
 # 其他 Hook
 
-除了管理状态、副作用和性能之外，React 还提供了其他几个专门的 Hook 来满足组件内的不同需求。本节将介绍用于消费上下文、生成稳定 ID、订阅外部存储以及辅助调试的 Hook。
+除了管理 state、effect 和 ref，React 还提供了一组专门的 Hook 来解决其他常见问题。这些 Hook 用于处理诸如无需通过 props 逐层传递即可访问共享数据、为可访问性生成唯一 ID、与外部数据源集成以及改进自定义 Hook 的调试体验等任务。本节将探讨这些强大的实用工具。
 
-这些 Hook 为 prop 逐层传递、无障碍性、与非 React 系统集成以及改善开发体验等常见挑战提供了解决方案。
-
-有关上下文概念的介绍，请参见 [Context](./core-apis-context.md) 文档。
+<x-cards>
+  <x-card data-title="useContext" data-icon="lucide:merge">
+    无需在每一层手动向下传递 props，即可从父级 context provider 访问数据。
+  </x-card>
+  <x-card data-title="useId" data-icon="lucide:fingerprint">
+    生成唯一的、稳定的 ID，这些 ID 对于服务器渲染和客户端 hydration 是安全的。
+  </x-card>
+  <x-card data-title="useDebugValue" data-icon="lucide:bug">
+    在 React DevTools 中为你的自定义 Hook 显示自定义的、有用的标签。
+  </x-card>
+  <x-card data-title="useSyncExternalStore" data-icon="lucide:database-zap">
+    以与并发渲染兼容的方式订阅外部数据源和 store。
+  </x-card>
+</x-cards>
 
 ---
 
-## `useContext`
+## useContext
 
-`useContext` Hook 允许组件订阅 React 上下文，而无需引入嵌套。它提供了一种更简洁的方式来消费组件树中上层 `Context.Provider` 提供的值。
+`useContext` Hook 提供了一种从 `React.Context` 消费值的方法。它接受一个 context 对象（`React.createContext` 返回的值），并返回该 context 的当前值。这使你可以将数据深入传递到组件树中，而无需手动逐层向下传递 props。
 
-### 语法
+有关创建和提供 context 的更多详细信息，请参阅 [Context](./core-apis-context.md) 文档。
 
+**签名**
 ```javascript
-const value = useContext(ContextObject);
+const value = useContext(MyContext);
 ```
 
-### 参数
+**参数**
 
 | Parameter | Type | Description |
 |---|---|---|
-| `ContextObject` | `ReactContext` | 由 `React.createContext` 返回的上下文对象。 |
+| `MyContext` | React Context 对象 | 由 `React.createContext` 返回的、你希望订阅的 context 对象。 |
 
-### 返回值
+**示例**
 
-组件的当前上下文值，由组件树中其上方最近的 `Context.Provider` 的 `value` prop 决定。
-
-### 示例
-
-此示例演示了深度嵌套的 `ThemedButton` 组件如何在没有通过 props 逐层传递的情况下访问 `theme` 值。
-
-```javascript
-import React, { createContext, useContext } from 'react';
+```javascript ThemeContext Example icon=logos:react
+import React, { createContext, useContext, useState } from 'react';
 
 // 1. 创建一个 context
 const ThemeContext = createContext('light');
 
-// 一个使用该 hook 的组件
+// 2. 一个消费 context 的组件
 function ThemedButton() {
-  // 3. 消费 context 的值
   const theme = useContext(ThemeContext);
-  return <button style={{ background: theme === 'dark' ? '#333' : '#FFF', color: theme === 'dark' ? '#FFF' : '#333' }}>I am a {theme} button</button>;
+  const style = {
+    background: theme === 'dark' ? '#282c34' : '#ffffff',
+    color: theme === 'dark' ? '#ffffff' : '#282c34',
+    border: '1px solid #ccc',
+    padding: '8px 16px',
+    cursor: 'pointer'
+  };
+  return <button style={style}>当前主题：{theme}</button>;
 }
 
-// 一个无需了解 theme 的中间组件
-function Toolbar() {
-  return (
-    <div>
-      <ThemedButton />
-    </div>
-  );
-}
-
+// 3. 提供 context 的父组件
 export default function App() {
-  // 2. 提供 context 的值
+  const [theme, setTheme] = useState('light');
+
+  const toggleTheme = () => {
+    setTheme(current => (current === 'light' ? 'dark' : 'light'));
+  };
+
   return (
-    <ThemeContext.Provider value="dark">
-      <Toolbar />
+    <ThemeContext.Provider value={theme}>
+      <button onClick={toggleTheme}>切换主题</button>
+      <hr style={{margin: '1em 0'}} />
+      <ThemedButton />
     </ThemeContext.Provider>
   );
 }
 ```
+在此示例中，无论 `App` 和 `ThemedButton` 之间有多少层组件，`ThemedButton` 都使用 `useContext(ThemeContext)` 直接从 `App` 中的 `ThemeContext.Provider` 获取当前主题值。
 
 ---
 
-## `useId`
+## useId
 
-`useId` 是一个用于生成在服务端和客户端渲染之间保持稳定的唯一 ID 的 Hook。这主要用于为 `htmlFor` 和 `id` 等无障碍属性生成 ID 时，避免 hydration 不匹配的问题。
+`useId` 是一个用于生成在服务器和客户端都保持稳定的唯一 ID 的 Hook。这对于避免服务器渲染应用中的 hydration 不匹配问题至关重要。其主要用例是为可访问性连接相关元素，例如将 `<label>` 链接到 `<input>`。
 
-### 语法
-
+**签名**
 ```javascript
 const uniqueId = useId();
 ```
 
-### 参数
+**示例**
 
-无。
-
-### 返回值
-
-一个唯一的、稳定的字符串 ID。该 ID 在服务端渲染和客户端渲染的输出之间保证相同。
-
-### 示例
-
-在这里，`useId` 生成一个一致的 ID 来关联 `label` 和 `input` 元素，这对于无障碍性至关重要。
-
-```javascript
+```javascript Accessible Form Field icon=logos:react
 import React, { useId } from 'react';
 
 function EmailField() {
   const id = useId();
   return (
-    <>
-      <label htmlFor={id}>Email address</label>
+    <div>
+      <label htmlFor={id}>邮箱：</label>
       <input id={id} type="email" name="email" />
-    </>
+    </div>
   );
 }
 
-export default function SignupForm() {
+export default function NewsletterForm() {
   return (
     <form>
+      <h3>注册我们的时事通讯</h3>
       <EmailField />
-      {/* 你可以渲染多个实例，每个实例都会有唯一的 ID */}
       <EmailField />
     </form>
   );
 }
 ```
+每个 `EmailField` 实例都将生成一个唯一的、稳定的 ID。这确保了 label 的 `htmlFor` 属性与其 input 字段的 `id` 正确对应，从而在不产生冲突的情况下保持可访问性。
 
 ---
 
-## `useSyncExternalStore`
+## useDebugValue
 
-此 Hook 旨在让 React 组件能够安全高效地订阅外部数据源或存储。它能确保在外部数据发生变化时组件正确地重新渲染，并与并发渲染功能兼容，从而防止视觉撕裂 (visual tearing)。
+`useDebugValue` 是一个仅限开发人员使用的 Hook，可让你在 React DevTools 中为自己的自定义 Hook 显示自定义标签。这可以通过一目了然地提供更有意义的信息，使调试复杂的自定义 Hook 变得更加容易。
 
-它通常被状态管理库使用，或在与浏览器 API 集成时使用。
+此 Hook 在生产构建中无效。
 
-### 语法
-
+**签名**
 ```javascript
-const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?);
+useDebugValue(value, formatFn?);
 ```
 
-### 参数
+**参数**
 
 | Parameter | Type | Description |
 |---|---|---|
-| `subscribe` | `(() => void) => () => void` | 一个接收 `callback` 函数并将其订阅到 store 的函数。它必须返回一个用于处理清理/取消订阅的函数。 |
-| `getSnapshot` | `() => T` | 一个返回 store 中当前数据快照的函数。如果返回值发生变化，组件将重新渲染。 |
-| `getServerSnapshot` | `() => T` | （可选）一个为服务端渲染 (SSR) 返回数据初始快照的函数。 |
+| `value` | `any` | 要在 React DevTools 中显示的值。 |
+| `formatFn` | `(value) => formattedValue` | 可选。一个用于格式化显示值的函数。它仅在检查组件时被调用，这可以为复杂的格式化操作优化性能。 |
 
-### 返回值
+**示例**
 
-来自外部 store 的当前数据快照。
+```javascript Custom Hook with Debug Value icon=logos:react
+import { useState, useDebugValue, useEffect } from 'react';
 
-### 示例
+function useFriendStatus(friendID) {
+  const [isOnline, setIsOnline] = useState(null);
 
-此示例展示了如何使用 `useSyncExternalStore` 订阅浏览器的在线状态。
+  useEffect(() => {
+    // 在实际应用中，你会订阅一个状态服务
+    const status = friendID % 2 === 0; // 模拟状态
+    setIsOnline(status);
+  }, [friendID]);
 
+  // 在 DevTools 中显示一个有用的标签
+  useDebugValue(isOnline ? 'Online' : 'Offline');
+
+  return isOnline;
+}
+
+export default function FriendListItem({ friend }) {
+  const isOnline = useFriendStatus(friend.id);
+  return (
+    <li style={{ color: isOnline ? 'green' : 'black' }}>
+      {friend.name}
+    </li>
+  );
+}
+```
+当你在 React DevTools 中检查 `FriendListItem` 组件时，你会看到 `FriendStatus` Hook 及其状态被标记为“Online”或“Offline”，从而可以轻松查看该 Hook 的状态。
+
+---
+
+## useSyncExternalStore
+
+`useSyncExternalStore` 是一个专为订阅外部数据源而设计的 Hook。它能确保你的组件与 React 外部管理的数据（如第三方状态管理库、浏览器 API 或 WebSocket 连接）保持同步，并且这种同步方式与并发渲染功能兼容。这有助于防止 UI tearing（UI 撕裂）——即在渲染过程中 UI 显示不一致的状态。
+
+**签名**
 ```javascript
+const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?);
+```
+
+**参数**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `subscribe` | `(callback) => unsubscribe` | 一个将 `callback` 订阅到外部 store 的函数。它必须返回一个处理取消订阅的清理函数。 |
+| `getSnapshot` | `() => snapshot` | 一个返回 store 中数据当前值（快照）的函数。返回的值应该是不可变的。 |
+| `getServerSnapshot` | `() => snapshot` | 可选。一个为服务器端渲染 (SSR) 和 hydration 返回初始数据快照的函数。 |
+
+**示例：订阅浏览器 API**
+
+```javascript Subscribing to Network Status icon=logos:react
 import { useSyncExternalStore } from 'react';
 
 function subscribe(callback) {
@@ -150,7 +194,7 @@ function subscribe(callback) {
   window.addEventListener('offline', callback);
   return () => {
     window.removeEventListener('online', callback);
-    window.removeEventListener('offline',callback);
+    window.removeEventListener('offline', callback);
   };
 }
 
@@ -158,75 +202,13 @@ function getSnapshot() {
   return navigator.onLine;
 }
 
-// 服务端快照总是假定用户初始状态为在线。
-function getServerSnapshot() {
-  return true;
-}
-
-export default function OnlineStatus() {
-  const isOnline = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-
-  return <h1>{isOnline ? '✅ Online' : '❌ Disconnected'}</h1>;
+export default function ChatIndicator() {
+  const isOnline = useSyncExternalStore(subscribe, getSnapshot);
+  return <h1>{isOnline ? '✅ 在线' : '❌ 连接已断开'}</h1>;
 }
 ```
+该组件安全地订阅了浏览器的网络状态。`useSyncExternalStore` 保证了当网络状态改变时，组件会正确地重新渲染，并且即使在并发模式下，UI 也能保持一致。
 
 ---
 
-## `useDebugValue`
-
-`useDebugValue` 是一个可以在 React DevTools 中为你的自定义 Hook 显示自定义标签的 Hook。它仅用于调试，在生产构建中无效。
-
-### 语法
-
-```javascript
-useDebugValue(value, formatFn?);
-```
-
-### 参数
-
-| Parameter | Type | Description |
-|---|---|---|
-| `value` | `any` | 在 React DevTools 中显示在自定义 Hook 名称旁边的值。 |
-| `formatFn` | `(value) => formattedValue` | （可选）一个用于格式化显示值的函数。该函数仅在 DevTools 中检查组件时被调用，从而避免在其他情况下执行可能开销很大的格式化操作。 |
-
-### 示例
-
-在此示例中，我们创建了一个自定义 `useOnlineStatus` Hook，并使用 `useDebugValue` 在 DevTools 中显示一个用户友好的状态字符串。
-
-```javascript
-import React, { useState, useEffect, useDebugValue } from 'react';
-
-// 自定义 Hook
-function useOnlineStatus() {
-  const [isOnline, setIsOnline] = useState(true);
-
-  useEffect(() => {
-    function handleOnline() { setIsOnline(true); }
-    function handleOffline() { setIsOnline(false); }
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  // 在 React DevTools 中显示一个自定义标签
-  useDebugValue(isOnline ? 'Online' : 'Offline');
-
-  return isOnline;
-}
-
-export default function App() {
-  const isOnline = useOnlineStatus();
-  return <p>User is: {isOnline ? 'Online' : 'Offline'}</p>;
-}
-
-```
-当你在 React DevTools 中检查 `App` 组件时，你将在 Hooks 树中看到 `OnlineStatus: "Online"`，这使你能够轻松地一目了然地查看自定义 Hook 的当前状态。
-
----
-
-本节介绍了一系列处理从上下文到调试等特定问题的 Hook。在对所有内置 Hook 有了深入的理解后，你就能够构建复杂且高效的 React 应用程序。
-
-要探索更复杂的 React 功能、模式和环境，请继续阅读[高级指南](./advanced.md)。
+通过掌握这些 Hook，你可以编写出更高效、更易于访问和维护的 React 应用。对于更复杂的场景和模式，请继续阅读我们的[高级指南](./advanced.md)。

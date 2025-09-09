@@ -1,25 +1,27 @@
 # 高级指南
 
-一旦你对 [核心 API](./core-apis.md) 和 [Hooks](./hooks.md) 有了扎实的掌握，就可以开始探索 React 更强大的功能。本节将深入探讨用于构建复杂、高性能应用程序的高级模式和 API。在这里，你将学习如何优化应用程序的性能、处理不同的渲染环境以及优雅地管理复杂的 UI 状态更新。
+欢迎阅读高级指南。本部分专为已熟悉 React 核心概念并希望构建更复杂、高效和可扩展应用的开发者而设计。
 
-这些指南专为熟悉 React 基础并希望解决更具挑战性问题的开发者而设计。
+在这里，我们将深入探讨强大的功能、复杂的模式以及 React 不同渲染环境的细微差别。掌握这些主题将使您能够微调应用程序的性能，平滑地管理复杂的状态转换，并充分利用 React 生态系统的全部功能。
+
+浏览以下指南，深化您的专业知识。
 
 <x-cards data-columns="2">
-  <x-card data-title="服务器与客户端环境" data-icon="lucide:server-cog" data-href="/advanced/server-vs-client">
-    了解 React 服务器和客户端环境之间的关键区别，以及如何为各自环境使用合适的 API 来构建通用应用程序。
+  <x-card data-title="服务器环境与客户端环境" data-icon="lucide:arrow-left-right" data-href="/advanced/server-vs-client">
+    了解 React 服务器环境和客户端环境之间的主要区别及其各自的 API。
   </x-card>
-  <x-card data-title="使用 lazy 和 Suspense 进行代码分割" data-icon="lucide:scissors" data-href="/advanced/code-splitting">
-    通过将代码分割成更小的块，并使用 `React.lazy` 和 `Suspense` 按需加载组件，从而缩短应用程序的初始加载时间。
+  <x-card data-title="使用 lazy 和 Suspense 进行代码分割" data-icon="lucide:split" data-href="/advanced/code-splitting">
+    通过仅在需要时加载组件来提高应用的初始加载时间和性能。
   </x-card>
-  <x-card data-title="缓存" data-icon="lucide:database" data-href="/advanced/caching">
-    探索 React 的内置缓存机制（如 `cache`），对数据请求和计算进行记忆化，以减少服务器和客户端的冗余工作。
+  <x-card data-title="缓存" data-icon="lucide:brain-circuit" data-href="/advanced/caching">
+    学习如何在客户端和服务器上使用 React 的缓存功能进行数据获取和记忆化。
   </x-card>
-  <x-card data-title="过渡" data-icon="lucide:hourglass" data-href="/advanced/transitions">
-    在复杂的屏幕更新期间保持用户界面的响应。使用过渡来标记非紧急更新，以防止其阻塞用户输入。
+  <x-card data-title="过渡" data-icon="lucide:fast-forward" data-href="/advanced/transitions">
+    使用 `startTransition` 和 `useTransition` 管理复杂的 UI 更新，而不会阻塞主线程。
   </x-card>
   <x-card data-title="实验性 API" data-icon="lucide:flask-conical" data-href="/advanced/experimental">
-    抢先了解即将推出的功能。这些 API 尚不稳定，但可以让你一窥 React 的未来并提供反馈机会。
+    探索实验性和不稳定的 API，让您一窥 React 的未来。
   </x-card>
 </x-cards>
 
-每篇指南都提供了深入的解释和实践范例，以帮助你掌握这些概念。选择一个你感兴趣的主题开始学习，或浏览完整的 [API 参考](./api-reference.md) 以获取每个函数和组件的详细文档。
+熟悉这些高级主题后，您可能需要浏览完整的 [API 参考](./api-reference.md)，以全面了解每个可用的 API。

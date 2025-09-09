@@ -1,148 +1,192 @@
 # Other Hooks
 
-Beyond managing state, effects, and performance, React provides several other specialized Hooks that address distinct needs within a component. This section covers hooks for consuming context, generating stable IDs, subscribing to external stores, and aiding in debugging.
+Beyond managing state, effects, and refs, React provides a set of specialized Hooks to solve other common problems. These Hooks handle tasks like accessing shared data without prop drilling, generating unique IDs for accessibility, integrating with external data sources, and improving the debugging experience for custom Hooks. This section explores these powerful utilities.
 
-These Hooks provide solutions for common challenges like prop drilling, accessibility, integration with non-React systems, and improving the development experience.
-
-For an introduction to the concept of context, see the [Context](./core-apis-context.md) documentation.
+<x-cards>
+  <x-card data-title="useContext" data-icon="lucide:merge">
+    Access data from a parent context provider without passing props down manually at every level.
+  </x-card>
+  <x-card data-title="useId" data-icon="lucide:fingerprint">
+    Generate unique, stable IDs that are safe for server rendering and client hydration.
+  </x-card>
+  <x-card data-title="useDebugValue" data-icon="lucide:bug">
+    Display custom, helpful labels for your custom Hooks in React DevTools.
+  </x-card>
+  <x-card data-title="useSyncExternalStore" data-icon="lucide:database-zap">
+    Subscribe to external data sources and stores in a way that is compatible with concurrent rendering.
+  </x-card>
+</x-cards>
 
 ---
 
-## `useContext`
+## useContext
 
-The `useContext` Hook allows a component to subscribe to React context without introducing nesting. It provides a cleaner way to consume a value from a `Context.Provider` higher up in the component tree.
+The `useContext` Hook provides a way to consume a value from a `React.Context`. It accepts a context object (the value returned from `React.createContext`) and returns the current value for that context. This allows you to pass data deep into the component tree without having to manually pass props down through every level.
 
-### Syntax
+For more details on creating and providing context, see the [Context](./core-apis-context.md) documentation.
 
+**Signature**
 ```javascript
-const value = useContext(ContextObject);
+const value = useContext(MyContext);
 ```
 
-### Parameters
+**Parameters**
 
 | Parameter | Type | Description |
 |---|---|---|
-| `ContextObject` | `ReactContext` | The context object returned by `React.createContext`. |
+| `MyContext` | React Context Object | The context object returned by `React.createContext` that you want to subscribe to. |
 
-### Returns
+**Example**
 
-The current context value for the component, determined by the `value` prop of the nearest `Context.Provider` above it in the tree.
-
-### Example
-
-This example demonstrates how a deeply nested `ThemedButton` can access the `theme` value without it being passed down through props.
-
-```javascript
-import React, { createContext, useContext } from 'react';
+```javascript ThemeContext Example icon=logos:react
+import React, { createContext, useContext, useState } from 'react';
 
 // 1. Create a context
 const ThemeContext = createContext('light');
 
-// A component that uses the hook
+// 2. A component that consumes the context
 function ThemedButton() {
-  // 3. Consume the context value
   const theme = useContext(ThemeContext);
-  return <button style={{ background: theme === 'dark' ? '#333' : '#FFF', color: theme === 'dark' ? '#FFF' : '#333' }}>I am a {theme} button</button>;
+  const style = {
+    background: theme === 'dark' ? '#282c34' : '#ffffff',
+    color: theme === 'dark' ? '#ffffff' : '#282c34',
+    border: '1px solid #ccc',
+    padding: '8px 16px',
+    cursor: 'pointer'
+  };
+  return <button style={style}>Current theme: {theme}</button>;
 }
 
-// A middle component that doesn't need to know about the theme
-function Toolbar() {
-  return (
-    <div>
-      <ThemedButton />
-    </div>
-  );
-}
-
+// 3. The parent component that provides the context
 export default function App() {
-  // 2. Provide the context value
+  const [theme, setTheme] = useState('light');
+
+  const toggleTheme = () => {
+    setTheme(current => (current === 'light' ? 'dark' : 'light'));
+  };
+
   return (
-    <ThemeContext.Provider value="dark">
-      <Toolbar />
+    <ThemeContext.Provider value={theme}>
+      <button onClick={toggleTheme}>Toggle Theme</button>
+      <hr style={{margin: '1em 0'}} />
+      <ThemedButton />
     </ThemeContext.Provider>
   );
 }
 ```
+In this example, `ThemedButton` uses `useContext(ThemeContext)` to get the current theme value directly from the `ThemeContext.Provider` in `App`, no matter how many components are between them.
 
 ---
 
-## `useId`
+## useId
 
-`useId` is a Hook for generating unique IDs that are stable across both server and client rendering. This is primarily useful for avoiding hydration mismatches when generating IDs for accessibility attributes like `htmlFor` and `id`.
+`useId` is a Hook for generating unique IDs that are stable on both the server and the client. This is essential for avoiding hydration mismatches in server-rendered applications. Its primary use case is for connecting related elements for accessibility, such as linking a `<label>` to an `<input>`.
 
-### Syntax
-
+**Signature**
 ```javascript
 const uniqueId = useId();
 ```
 
-### Parameters
+**Example**
 
-None.
-
-### Returns
-
-A unique, stable string ID. The ID is guaranteed to be the same between the server-rendered and client-rendered output.
-
-### Example
-
-Here, `useId` generates a consistent ID to link a `label` and an `input` element, which is crucial for accessibility.
-
-```javascript
+```javascript Accessible Form Field icon=logos:react
 import React, { useId } from 'react';
 
 function EmailField() {
   const id = useId();
   return (
-    <>
-      <label htmlFor={id}>Email address</label>
+    <div>
+      <label htmlFor={id}>Email:</label>
       <input id={id} type="email" name="email" />
-    </>
+    </div>
   );
 }
 
-export default function SignupForm() {
+export default function NewsletterForm() {
   return (
     <form>
+      <h3>Sign up for our newsletter</h3>
       <EmailField />
-      {/* You can render multiple instances, and each will have a unique ID */}
       <EmailField />
     </form>
   );
 }
 ```
+Each `EmailField` instance will generate a unique, stable ID. This ensures that the `htmlFor` attribute of the label correctly corresponds to the `id` of its input field, maintaining accessibility without conflicts.
 
 ---
 
-## `useSyncExternalStore`
+## useDebugValue
 
-This Hook is designed to let React components safely and efficiently subscribe to an external data source or store. It ensures that the component re-renders correctly when the external data changes and is compatible with concurrent rendering features, preventing visual tearing.
+`useDebugValue` is a developer-only Hook that lets you display a custom label for your own custom Hooks in the React DevTools. This can make debugging complex custom Hooks much easier by providing more meaningful information at a glance.
 
-It is often used by state management libraries or when integrating with browser APIs.
+This hook has no effect in production builds.
 
-### Syntax
-
+**Signature**
 ```javascript
-const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?);
+useDebugValue(value, formatFn?);
 ```
 
-### Parameters
+**Parameters**
 
 | Parameter | Type | Description |
 |---|---|---|
-| `subscribe` | `(() => void) => () => void` | A function that takes a `callback` and subscribes it to the store. It must return a function that handles the cleanup/unsubscription. |
-| `getSnapshot` | `() => T` | A function that returns a snapshot of the current data in the store. The component will re-render if the returned value changes. |
-| `getServerSnapshot` | `() => T` | (Optional) A function that returns the initial snapshot of the data for server-side rendering (SSR). |
+| `value` | `any` | The value to display in React DevTools. |
+| `formatFn` | `(value) => formattedValue` | Optional. A function to format the displayed value. It's only called when the component is inspected, which can optimize performance for complex formatting. |
 
-### Returns
+**Example**
 
-The current snapshot of the data from the external store.
+```javascript Custom Hook with Debug Value icon=logos:react
+import { useState, useDebugValue, useEffect } from 'react';
 
-### Example
+function useFriendStatus(friendID) {
+  const [isOnline, setIsOnline] = useState(null);
 
-This example shows how to use `useSyncExternalStore` to subscribe to the browser's online status.
+  useEffect(() => {
+    // In a real app, you'd subscribe to a status service
+    const status = friendID % 2 === 0; // Mock status
+    setIsOnline(status);
+  }, [friendID]);
 
+  // Display a helpful label in DevTools
+  useDebugValue(isOnline ? 'Online' : 'Offline');
+
+  return isOnline;
+}
+
+export default function FriendListItem({ friend }) {
+  const isOnline = useFriendStatus(friend.id);
+  return (
+    <li style={{ color: isOnline ? 'green' : 'black' }}>
+      {friend.name}
+    </li>
+  );
+}
+```
+When you inspect a `FriendListItem` component in React DevTools, you will see the `FriendStatus` hook and its state labeled as either "Online" or "Offline", making it easy to see the hook's status.
+
+---
+
+## useSyncExternalStore
+
+`useSyncExternalStore` is a Hook designed for subscribing to external data sources. It ensures that your component stays in sync with data managed outside of React (like a third-party state management library, a browser API, or a WebSocket connection) in a way that is compatible with concurrent rendering features. This helps prevent UI tearing—where the UI shows inconsistent state during a render.
+
+**Signature**
 ```javascript
+const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot?);
+```
+
+**Parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `subscribe` | `(callback) => unsubscribe` | A function that subscribes a `callback` to the external store. It must return a cleanup function that handles the unsubscription. |
+| `getSnapshot` | `() => snapshot` | A function that returns the current value (snapshot) of the data in the store. The returned value should be immutable. |
+| `getServerSnapshot` | `() => snapshot` | Optional. A function that returns the initial data snapshot for server-side rendering (SSR) and hydration. |
+
+**Example: Subscribing to a Browser API**
+
+```javascript Subscribing to Network Status icon=logos:react
 import { useSyncExternalStore } from 'react';
 
 function subscribe(callback) {
@@ -150,7 +194,7 @@ function subscribe(callback) {
   window.addEventListener('offline', callback);
   return () => {
     window.removeEventListener('online', callback);
-    window.removeEventListener('offline',callback);
+    window.removeEventListener('offline', callback);
   };
 }
 
@@ -158,75 +202,13 @@ function getSnapshot() {
   return navigator.onLine;
 }
 
-// The server snapshot always assumes the user is online initially.
-function getServerSnapshot() {
-  return true;
-}
-
-export default function OnlineStatus() {
-  const isOnline = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-
+export default function ChatIndicator() {
+  const isOnline = useSyncExternalStore(subscribe, getSnapshot);
   return <h1>{isOnline ? '✅ Online' : '❌ Disconnected'}</h1>;
 }
 ```
+This component safely subscribes to the browser's network status. `useSyncExternalStore` guarantees that the component will re-render correctly when the network status changes and that the UI will remain consistent, even in concurrent mode.
 
 ---
 
-## `useDebugValue`
-
-`useDebugValue` is a Hook that lets you display a custom label for your custom Hooks in React DevTools. It is intended for debugging and has no effect in production builds.
-
-### Syntax
-
-```javascript
-useDebugValue(value, formatFn?);
-```
-
-### Parameters
-
-| Parameter | Type | Description |
-|---|---|---|
-| `value` | `any` | The value to display in React DevTools next to your custom hook's name. |
-| `formatFn` | `(value) => formattedValue` | (Optional) A function to format the displayed value. This function is only called when the component is inspected in DevTools, allowing you to avoid potentially expensive formatting operations otherwise. |
-
-### Example
-
-In this example, we create a custom `useOnlineStatus` Hook and use `useDebugValue` to display a user-friendly status string in DevTools.
-
-```javascript
-import React, { useState, useEffect, useDebugValue } from 'react';
-
-// Custom Hook
-function useOnlineStatus() {
-  const [isOnline, setIsOnline] = useState(true);
-
-  useEffect(() => {
-    function handleOnline() { setIsOnline(true); }
-    function handleOffline() { setIsOnline(false); }
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  // Display a custom label in React DevTools
-  useDebugValue(isOnline ? 'Online' : 'Offline');
-
-  return isOnline;
-}
-
-export default function App() {
-  const isOnline = useOnlineStatus();
-  return <p>User is: {isOnline ? 'Online' : 'Offline'}</p>;
-}
-
-```
-When you inspect the `App` component in React DevTools, you will see `OnlineStatus: "Online"` in the Hooks tree, making it easy to see the current state of your custom hook at a glance.
-
----
-
-This section has covered a variety of Hooks that handle specific concerns from context to debugging. With a solid understanding of all the built-in Hooks, you are well-equipped to build complex and efficient React applications.
-
-To explore more complex React features, patterns, and environments, continue to the [Advanced Guides](./advanced.md).
+By mastering these Hooks, you can write more efficient, accessible, and maintainable React applications. For more complex scenarios and patterns, continue to our [Advanced Guides](./advanced.md).

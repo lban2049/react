@@ -1,134 +1,148 @@
 # Transitions
 
-Transitions in React help you manage complex UI updates without blocking the main thread, ensuring your application remains responsive to user input. By marking certain state updates as "transitions," you tell React that they are not urgent and can be interrupted if a more critical update, like a key press or a click, comes in.
+Transitions are a core feature in React for keeping your application responsive, even during complex and potentially slow UI updates. By marking certain updates as "transitions," you tell React that they are not urgent and can be interrupted if a more important update, like user input, comes in. This prevents the main thread from being blocked and avoids a janky user experience.
 
-This is primarily achieved through two main APIs: the `useTransition` Hook for components and the standalone `startTransition` function.
+React provides two primary APIs for working with transitions: the `useTransition` Hook for use within components, and the `startTransition` function for use outside of components.
+
+For a component-centric guide, you can also refer to the [Performance Hooks](./hooks-performance.md) documentation.
 
 ## The `useTransition` Hook
 
-The `useTransition` hook is the standard way to use transitions within your function components. It provides a stateful value for the pending status of the transition and a function to start it.
+The `useTransition` hook is the most common way to handle transitions within your function components. It provides a stateful value to track the pending state of the transition and a function to start it.
 
-For a detailed guide on performance-related hooks, see the [Performance Hooks](./hooks-performance.md) documentation.
+It returns an array with two items:
+1.  `isPending`: A boolean that is `true` while the transition is active. You can use this to display loading indicators or provide visual feedback to the user.
+2.  `startTransition`: A function that takes a callback. You wrap your slow state update(s) inside this callback to mark them as a transition.
 
-### Usage
+### Example: Filtering a Large List
 
-Calling `useTransition` returns an array with two items:
+Imagine you have an input field that filters a very long list of items. Without a transition, typing into the input could feel sluggish because each keystroke triggers an expensive re-render of the list. With `useTransition`, the input field remains responsive while the list updates in the background.
 
-1.  `isPending` (boolean): A flag that is `true` while the transition is active. You can use this to show loading indicators or other pending UI states.
-2.  `startTransition` (function): A function that you wrap around a state update to mark it as a transition.
-
-```javascript
-const [isPending, startTransition] = useTransition();
-```
-
-### Example: Filtering a List
-
-Imagine you have an input field that filters a large list of items. Without a transition, typing quickly could cause the UI to lag as it tries to re-render the list on every keystroke. With `useTransition`, you can keep the input field responsive while the list updates in the background.
-
-```jsx
+```javascript Filterable List with Transition icon=logos:react
 import { useState, useTransition } from 'react';
 
-function App() {
+// Generate a large list for demonstration purposes
+const allItems = Array.from({ length: 10000 }, (_, i) => `Item #${i + 1}`);
+
+function MyComponent() {
   const [isPending, startTransition] = useTransition();
   const [inputValue, setInputValue] = useState('');
-  const [filterTerm, setFilterTerm] = useState('');
+  const [filteredItems, setFilteredItems] = useState(allItems);
 
-  const handleInputChange = (e) => {
-    // Update the input field immediately - this is an urgent update.
+  const handleChange = (e) => {
+    // Update the input field state immediately - this is an urgent update
     setInputValue(e.target.value);
 
-    // Wrap the list filtering logic in a transition - this is a non-urgent update.
+    // Wrap the expensive filtering logic in startTransition
     startTransition(() => {
-      setFilterTerm(e.target.value);
+      const filtered = allItems.filter((item) =>
+        item.toLowerCase().includes(e.target.value.toLowerCase())
+      );
+      setFilteredItems(filtered);
     });
   };
 
   return (
     <div>
-      <input type="text" value={inputValue} onChange={handleInputChange} />
+      <input
+        type="text"
+        value={inputValue}
+        onChange={handleChange}
+        placeholder="Search through 10,000 items..."
+      />
       {isPending && <p>Updating list...</p>}
-      {/* A component that renders a list based on `filterTerm` */}
-      {/* <FilteredList term={filterTerm} /> */}
+      <ul style={{ opacity: isPending ? 0.5 : 1 }}>
+        {filteredItems.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
     </div>
   );
 }
 ```
 
-In this example, the `inputValue` state updates immediately, so the user sees their typing without delay. The `filterTerm` state, which might trigger an expensive re-render, is updated inside `startTransition`. React will handle this update with a lower priority, and the `isPending` flag will be true until the transition completes.
+In this example, the `setInputValue` update is considered urgent and executes immediately, so the user sees their typing without delay. The `startTransition` call wraps the expensive filtering and `setFilteredItems` update. React can now interrupt this rendering if the user types another character, ensuring the app feels fluid.
 
 ## The `startTransition` Function
 
-React also exports a standalone `startTransition` function that can be used when the `useTransition` hook is not available, such as in data libraries or outside of React components.
+Sometimes you need to trigger a non-urgent update from outside a component, such as in a data library, an external store, or a complex event handler. For these cases, you can import and use the standalone `startTransition` function.
 
-### Usage
+It works similarly to the function returned by the `useTransition` hook, wrapping a callback that contains state updates.
 
-You import `startTransition` directly from React and pass it a callback function containing the non-urgent state updates.
+### Example: Updating from a Data Source
 
-```javascript
+```javascript Standalone startTransition icon=logos:javascript
 import { startTransition } from 'react';
 
-// Some event handler or data-fetching logic
-function handleUpdate() {
-  // State updates inside this callback are marked as non-urgent.
+// Assume this function is part of a data fetching library
+// and `updateReactState` is a function that calls a React state setter.
+function fetchAndUpdate(data) {
+  // The state update might cause a large re-render in the UI.
+  // We wrap it in startTransition to prevent blocking.
   startTransition(() => {
-    // e.g., setSomeState(newValue);
+    updateReactState(data);
   });
 }
 ```
 
-### Parameters
+This allows you to leverage transitions for any state update, regardless of where it originates, keeping your UI architecture flexible and performant.
 
-| Name      | Type         | Description                                                                                                                                                             |
-| :-------- | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scope`   | `() => void` | A function that contains one or more state updates (e.g., `setState`). React immediately calls this function and treats any updates within it as transitions.          |
-| `options` | `object`     | *(Optional)* An object with options. If the `enableTransitionTracing` feature flag is on, you can provide a `name` for the transition, which helps in debugging with React DevTools. |
+## How Transitions Work
 
-## Conceptual Model
+Under the hood, transitions allow React to work on multiple state updates concurrently. When an update is wrapped in a transition, React understands it can be paused to handle more urgent tasks and resumed later. This mechanism is central to React's concurrent rendering capabilities.
 
-Transitions allow React to differentiate between urgent and non-urgent updates. This ensures that user interactions that require immediate feedback are not delayed by slower, background rendering tasks.
-
-```d2
+```d2 Transition Interruption Flow
 direction: down
 
-"User-Interaction": {
-  shape: person
-  label: "User Interaction"
+User-Input: {
+  shape: c4-person
+  label: "User Input\n(e.g., typing)"
 }
 
-"High-Priority-Update": {
-  shape: rectangle
-  label: "Urgent Update\n(e.g., typing in input)"
-  style.stroke: "#ff4d4f"
+React-Scheduler: {
+  label: "React Scheduler"
+  shape: diamond
 }
 
-"Low-Priority-Update": {
-  shape: rectangle
-  label: "Transition Update\n(e.g., updating list)"
-  style.stroke: "#faad14"
+Urgent-Update: {
+  label: "Urgent State Update\n(e.g., input field)"
 }
 
-"UI-Render": {
-  shape: rectangle
+Transition-Update: {
+  label: "Transition Update\n(e.g., filtering list)"
+}
+
+UI-Render: {
   label: "UI Render"
-  style.fill: "#f6ffed"
 }
 
-"User-Interaction" -> "High-Priority-Update": "Triggers"
-"High-Priority-Update" -> "UI-Render": "High Priority\nCannot be interrupted"
-
-"User-Interaction" -> "Low-Priority-Update": "Triggers"
-"Low-Priority-Update" -> "UI-Render": "Low Priority\nCan be interrupted by urgent updates"
+User-Input -> React-Scheduler: "Triggers update"
+React-Scheduler -> Urgent-Update: "Prioritizes urgent work"
+React-Scheduler -- "Interrupts" --> Transition-Update
+Urgent-Update -> UI-Render: "Renders immediately"
+Transition-Update -> UI-Render: "Renders when idle"
 ```
 
 ## Experimental Transition APIs
 
-While `useTransition` and `startTransition` are the primary stable APIs, the React team is exploring more advanced capabilities related to transitions. These APIs are unstable and their behavior may change.
+While `useTransition` and `startTransition` are stable, the React team is exploring more advanced transition capabilities. The following APIs are considered experimental and should not be used in production without caution.
 
--   **`unstable_addTransitionType`**: This function allows associating a specific type (a string) with a currently active transition. This is intended to be used with features like View Transitions to apply different animations or behaviors based on the type of transition occurring.
--   **`unstable_startGestureTransition`**: This function is designed for transitions that are tied to continuous user gestures, like dragging or swiping. It requires a `GestureProvider` to manage the lifecycle of the gesture-based transition.
-
-These are available for experimentation but should not be used in production environments. For more on this, please refer to the [Experimental APIs](./advanced-experimental.md) guide.
+*   `unstable_startGestureTransition`: Designed for smoother UI updates that are tied to user gestures, like dragging or swiping. It requires a `GestureProvider` to function.
+*   `unstable_addTransitionType`: Part of the experimental View Transitions feature, this function allows you to associate a specific type (a string) with a running transition, enabling more granular control over animations and behaviors.
 
 ---
 
-By leveraging transitions, you can build more complex and responsive user interfaces that handle data-intensive updates gracefully. To learn about other ways to optimize rendering, continue to the [Performance Hooks](./hooks-performance.md) section.
+Transitions are a powerful tool for building sophisticated, highly responsive user interfaces in React. By distinguishing between urgent and non-urgent updates, you can ensure a smooth experience for your users, even in data-intensive applications.
+
+### Next Steps
+
+Explore these related concepts to further enhance your application's performance and user experience.
+
+<x-cards>
+  <x-card data-title="useDeferredValue" data-icon="lucide:arrow-down-right" data-href="/hooks/performance">
+    Learn about a related hook that helps defer rendering of non-urgent parts of the UI, which is particularly useful for values that come from props or other hooks.
+  </x-card>
+  <x-card data-title="Code Splitting with lazy and Suspense" data-icon="lucide:box-select" data-href="/advanced/code-splitting">
+    Discover how to improve initial load times by splitting your code and using Suspense for loading states, which works seamlessly with transitions.
+  </x-card>
+</x-cards>
