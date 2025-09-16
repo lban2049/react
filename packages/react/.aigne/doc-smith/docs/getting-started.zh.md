@@ -1,14 +1,12 @@
 # 快速入门
 
-欢迎来到 React！本指南将逐步引导你创建第一个 React 组件。React 是一个用于构建用户界面的 JavaScript 库，本介绍旨在帮助你快速上手。
+本指南旨在通过一个简单的 React 应用设置，提供一份实用的入门介绍。我们将通过一个基础的代码示例，演示如何定义组件并将其渲染至 DOM，帮助你快速上手。
 
-我们将构建一个简单的计数器应用，以展示组件、状态和渲染等基本概念。
+## 基本用法示例
 
-### 你的第一个 React 组件
+React 允许你使用称为组件的独立部分来构建用户界面。以下是一个简单的 `Counter` 组件示例，该组件会显示一个数字和一个用于递增该数字的按钮。
 
-下面是一个简单计数器组件的完整、可运行的示例。我们将在接下来的章节中详细讲解其工作原理。
-
-```javascript 你的第一个 React 组件 icon=logos:react
+```javascript 一个简单的计数器组件 icon=logos:javascript
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -28,56 +26,25 @@ const root = createRoot(document.getElementById('root'));
 root.render(<Counter />);
 ```
 
-要让这段代码在浏览器中运行，你需要一个 HTML 文件作为应用的入口点。
+### 工作原理
 
-### 第 1 步：设置 HTML 文件
+1.  **`import`**：我们导入了必要的函数。`useState` 是一个用于向组件添加状态的 React Hook，而 `createRoot` 来自 `react-dom`，用于将组件渲染到网页中。
+2.  **`Counter` 组件**：这是一个函数组件。它使用 `useState` Hook 创建了一个初始化为 `0` 的 `count` 状态变量。
+3.  **渲染逻辑**：该组件返回用于描述用户界面的 JSX。它显示当前的 `count` 和一个按钮。当按钮被点击时，它会调用 `setCount` 来更新状态，这会使 React 使用新值重新渲染该组件。
+4.  **挂载应用**：最后，`createRoot` 告知 React 在 HTML 中的何处渲染应用——即在 ID 为 `root` 的元素内部。然后，`root.render()` 会显示 `Counter` 组件。
 
-React 组件会渲染到 HTML 文件中的一个特定 DOM 元素中。创建一个 `index.html` 文件，其中包含一个 `<div>`，它将作为我们应用的根容器。
+要使此代码正常工作，你需要一个包含 `id` 为 `root` 的 `<div>` 元素的 HTML 文件。这通常与打包工具和开发服务器结合使用，但其核心概念保持不变。
 
-```html index.html icon=logos:html-5
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>我的第一个 React 应用</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <!-- 你的 React 代码将在这里加载 -->
-    <script type="module" src="index.js"></script>
-  </body>
-</html>
-```
+## 使用生产版本
 
-### 第 2 步：定义和渲染组件
+默认情况下，React 在开发模式下运行，该模式会针对常见错误提供有用的警告。当你准备将应用部署给用户时，使用生产版本至关重要。
 
-React 的核心是定义可复用的组件。`react` 包提供了创建这些组件所需的函数，而像 `react-dom` 这样的渲染器则用于在浏览器中显示它们。
+生产版本针对性能进行了优化，并移除了开发过程中的警告和错误信息。有关如何进行设置的更多详情，请参阅关于[优化性能](https://reactjs.org/docs/optimizing-performance.html#use-the-production-build)的官方指南。
 
-- **`function Counter() { ... }`**：这是一个 React 组件。它是一个标准的 JavaScript 函数，返回对 UI 的描述，该描述使用一种名为 JSX 的语法编写。
-- **`useState(0)`**：这是一个 **Hook**。它允许我们向函数组件添加状态。`useState` 返回一个值对：当前状态（`count`）和一个更新状态的函数（`setCount`）。我们将状态初始化为 `0`。
-- **`onClick={() => setCount(count + 1)}`**：这是一个事件处理程序。当按钮被点击时，它会调用 `setCount` 函数，并传入新的状态值（`count + 1`）。然后，React 会使用更新后的 `count` 重新渲染 `Counter` 组件，UI 随之改变以显示新的数字。
+## 后续步骤
 
-### 第 3 步：挂载应用
+既然你已经看过一个基本示例，接下来可以更深入地探索 React 的功能：
 
-定义组件后，我们需要告诉 React 将其渲染到我们在 HTML 文件中创建的根 `<div>` 中。
-
-- **`createRoot(document.getElementById('root'))`**：这个来自 `react-dom/client` 的函数为指定的 DOM 容器创建一个 React 根。
-- **`root.render(<Counter />)`**：这将我们的 `Counter` 组件渲染到根中，使其在屏幕上可见。
-
-### 开发模式与生产模式
-
-默认情况下，React 在开发模式下运行。该版本在开发过程中很有用，因为它会针对常见错误提供额外的警告。当你准备将应用部署给用户时，使用生产版本至关重要。生产版本针对性能进行了优化，并移除了仅在开发模式下出现的警告。
-
-更多详情，请参阅[使用生产版本](https://reactjs.org/docs/optimizing-performance.html#use-the-production-build)。
-
-### 后续步骤
-
-你已成功创建了第一个 React 组件！现在，你可以深入了解使 React 如此强大的核心概念了。
-
-<x-cards>
-  <x-card data-title="核心 API" data-icon="lucide:cuboid" data-href="/core-apis" data-cta="探索核心 API">
-    了解 React 的基本构建块，从组件和 JSX 到 context 和 refs。
-  </x-card>
-  <x-card data-title="Hooks" data-icon="lucide:anchor" data-href="/hooks" data-cta="学习 Hooks">
-    一份关于所有内置 Hooks 的详细指南，这些 Hooks 能让你在不编写类的情况下使用 state 和其他功能。
-  </x-card>
-</x-cards>
+*   **[概述](./overview.md)**：获取关于 React 用途和主要特性的高级介绍。
+*   **[API 参考](./api-reference.md)**：探索完整的 React API，获取有关钩子、组件和函数的详细信息。
+*   **[官方文档](https://react.dev/)**：访问 React 官方网站，获取全面的教程、指南和社区资源。

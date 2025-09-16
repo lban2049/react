@@ -1,86 +1,68 @@
 # API Reference
 
-This page provides a comprehensive reference for all public APIs exported from the `react` package. It covers built-in components, Hooks, and various utilities for both client and server environments. For more in-depth explanations and usage examples, please refer to the specific guides in the [Core APIs](./core-apis.md), [Hooks](./hooks.md), and [Advanced Guides](./advanced.md) sections.
+The `react` package provides the core APIs necessary to define and manage components in a React application. This section serves as a comprehensive reference for all public APIs, including Hooks, built-in components, classes, and top-level utilities. 
 
-## Components
+Whether you're building with modern functional components or traditional class-based components, you can find the detailed information you need in the following sections.
 
-These are the built-in components you can use in your JSX.
+<x-cards data-columns="2">
+  <x-card data-title="Hooks" data-icon="lucide:anchor" data-href="/api-reference/hooks">
+    Detailed documentation for all built-in React Hooks, such as useState, useEffect, and useContext, with usage examples for each.
+  </x-card>
+  <x-card data-title="Components & Classes" data-icon="lucide:box" data-href="/api-reference/components">
+    Reference for built-in components and classes like Component, PureComponent, Fragment, and Suspense, which form the foundation of React applications.
+  </x-card>
+  <x-card data-title="Top-Level APIs" data-icon="lucide:function-square" data-href="/api-reference/top-level">
+    Documentation for top-level React functions such as createElement, createContext, forwardRef, lazy, and memo, used for various advanced patterns and optimizations.
+  </x-card>
+  <x-card data-title="React.Children" data-icon="lucide:cuboid" data-href="/api-reference/children">
+    A guide to using the React.Children utility for working with the props.children data structure, allowing for powerful manipulation and inspection of child elements.
+  </x-card>
+</x-cards>
 
-| Component | Description |
-|---|---|
-| `Component` | The base class for React components defined as ES6 classes. |
-| `PureComponent` | Similar to `Component` but implements `shouldComponentUpdate()` with a shallow prop and state comparison. |
-| `Fragment` | Lets you group a list of children without adding extra nodes to the DOM. Can be written as `<>...</>`. |
-| `Profiler` | Measures rendering performance of a React tree for performance optimization. |
-| `StrictMode` | A tool for highlighting potential problems in an application. It activates additional checks and warnings for its descendants. |
-| `Suspense` | Lets you display a fallback UI until its children have finished loading. Used for code splitting and data fetching. |
+## Complete Export List
 
-## Hooks
+For a quick overview, the following table lists all major public APIs exported from the `react` package.
 
-Hooks let you use state and other React features in function components. They can be categorized by purpose, such as State, Effect, and Performance. For a detailed guide on each, visit the main [Hooks documentation](./hooks.md).
+| API                  | Category                | Description                                                                                             |
+| -------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| `Component`            | Components & Classes    | The base class for React components when using ES6 classes.                                             |
+| `PureComponent`        | Components & Classes    | Similar to `Component`, but with a built-in shallow prop and state comparison to prevent re-renders.    |
+| `Fragment`             | Components & Classes    | Lets you group a list of children without adding an extra node to the DOM.                                |
+| `Profiler`             | Components & Classes    | Measures rendering performance of a React tree for optimization purposes.                               |
+| `StrictMode`           | Components & Classes    | A tool for highlighting potential problems in an application during development.                        |
+| `Suspense`             | Components & Classes    | Lets you specify a loading indicator for parts of your component tree that are not yet ready to render. |
+| `use`                  | Hook                    | A Hook for reading the value of a resource, such as a Promise or context.                               |
+| `useCallback`          | Hook                    | Returns a memoized callback function.                                                                   |
+| `useContext`           | Hook                    | Accepts a context object and returns its current value.                                                 |
+| `useDebugValue`        | Hook                    | Displays a label for custom hooks in React DevTools.                                                    |
+| `useDeferredValue`     | Hook                    | Defers updating a part of the UI.                                                                       |
+| `useEffect`            | Hook                    | Lets you perform side effects in function components.                                                   |
+| `useId`                | Hook                    | A Hook for generating unique IDs that are stable across server and client rendering.                    |
+| `useImperativeHandle`  | Hook                    | Customizes the instance value that is exposed to parent components when using `ref`.                    |
+| `useInsertionEffect`   | Hook                    | Similar to `useEffect`, but it fires synchronously before all DOM mutations.                            |
+| `useLayoutEffect`      | Hook                    | Fires synchronously after all DOM mutations.                                                            |
+| `useMemo`              | Hook                    | Returns a memoized value.                                                                               |
+| `useOptimistic`        | Hook                    | A Hook that lets you optimistically update the UI.                                                      |
+| `useReducer`           | Hook                    | An alternative to `useState` for managing complex state logic.                                          |
+| `useRef`               | Hook                    | Returns a mutable ref object.                                                                           |
+| `useState`             | Hook                    | A Hook that lets you add state to function components.                                                  |
+| `useSyncExternalStore` | Hook                    | A Hook that lets you subscribe to an external store.                                                    |
+| `useTransition`        | Hook                    | A Hook to mark state updates as non-urgent, improving user experience for slow renders.               |
+| `useActionState`       | Hook                    | A Hook to manage the state of a form action.                                                            |
+| `cloneElement`         | Top-Level API           | Clones and returns a new React element using an element as the starting point.                          |
+| `createContext`        | Top-Level API           | Creates a Context object for passing data through the component tree.                                   |
+| `createElement`        | Top-Level API           | Creates and returns a new React element. Usually used via JSX.                                          |
+| `createRef`            | Top-Level API           | Creates a ref that can be attached to React elements via the ref attribute.                             |
+| `forwardRef`           | Top-Level API           | Creates a component that forwards a ref to a child component.                                           |
+| `isValidElement`       | Top-Level API           | Verifies if an object is a React element.                                                               |
+| `lazy`                 | Top-Level API           | Lets you define a component that is loaded dynamically (code-splitting).                                |
+| `memo`                 | Top-Level API           | A higher-order component that memoizes a component, preventing re-renders if its props are unchanged. |
+| `startTransition`      | Top-Level API           | Lets you mark state updates as non-urgent.                                                              |
+| `Children`             | React.Children          | An object with utilities for working with `props.children`.                                             |
+| `version`              | Package Information     | A string containing the current version of React.                                                       |
 
-| Hook | Description |
-|---|---|
-| `useActionState` | A hook to manage the state of a form action. |
-| `useCallback` | Returns a memoized callback function, useful for performance optimizations. |
-| `useContext` | Accepts a context object (the value returned from `React.createContext`) and returns the current context value for that context. |
-| `useDebugValue` | Can be used to display a label for custom hooks in React DevTools. |
-| `useDeferredValue` | Defers updating a part of the UI, helping to keep the interface responsive during heavy computations. |
-| `useEffect` | Accepts a function that contains imperative, possibly effectful code. It runs after render commits to the screen. |
-| `useId` | A hook for generating unique IDs that are stable across the server and client. |
-| `useImperativeHandle` | Customizes the instance value that is exposed to parent components when using `ref`. |
-| `useInsertionEffect` | Similar to `useEffect`, but it fires synchronously *before* all DOM mutations. Useful for CSS-in-JS libraries. |
-| `useLayoutEffect` | Fires synchronously after all DOM mutations. Use this to read layout from the DOM and synchronously re-render. |
-| `useMemo` | Returns a memoized value, recomputing it only when one of the dependencies has changed. |
-| `useOptimistic` | A hook that lets you optimistically update the UI, assuming a data submission will be successful. |
-| `useReducer` | An alternative to `useState`. Accepts a reducer of type `(state, action) => newState`, and returns the current state paired with a `dispatch` method. |
-| `useRef` | Returns a mutable ref object whose `.current` property is initialized to the passed argument. |
-| `useState` | A hook that lets you add React state to function components. |
-| `useSyncExternalStore` | A hook that lets you subscribe to an external store, ensuring UI consistency. |
-| `useTransition` | A hook to mark state updates as non-urgent, preventing them from blocking user input. |
-| `use` | A hook that lets you read the value of a resource like a Promise or context. |
+---
 
-## Utilities
+This reference provides a high-level overview of the APIs available in the `react` package. For in-depth explanations and code examples, please explore the detailed guides for each category.
 
-These are top-level utilities for working with React elements and components.
-
-| Utility | Description |
-|---|---|
-| `Children` | Provides utilities for dealing with the `props.children` opaque data structure. Includes `Children.map`, `Children.forEach`, etc. |
-| `cloneElement` | Clones and returns a new React element using an element as the starting point. |
-| `createElement` | Creates and returns a new React element of the given type. JSX compiles to this function call. |
-| `isValidElement` | Verifies the object is a React element. Returns `true` or `false`. |
-| `version` | A string containing the current version of React. |
-| `act` | A testing utility that ensures all updates related to state changes are processed and applied to the DOM before making assertions. (DEV-only) |
-
-## APIs
-
-These top-level APIs are used to create contexts, refs, and higher-order components.
-
-| API | Description |
-|---|---|
-| `createContext` | Creates a Context object. Components can subscribe to this context to read its value. |
-| `createRef` | Creates a ref object that can be attached to React elements via the `ref` attribute. |
-| `forwardRef` | Creates a React component that forwards the `ref` attribute it receives to another component below in the tree. |
-| `lazy` | Lets you define a component that is loaded dynamically. Used for code-splitting. |
-| `memo` | A higher-order component for memoizing a component's render output to prevent re-rendering if its props are the same. |
-| `startTransition` | A function that lets you mark state updates as non-urgent transitions. |
-| `cache` | A function to cache the result of a data fetch or computation. |
-
-## Unstable & Experimental APIs
-
-> **Warning**
-> These APIs are not yet stable and may be changed or removed in a future release. Use them at your own risk in production applications.
-
-| API | Description |
-|---|---|
-| `unstable_Activity` | A component for coordinating transitions on offscreen content. |
-| `unstable_SuspenseList` | Helps coordinate the loading state for multiple `Suspense` components. |
-| `unstable_LegacyHidden` | A component that hides its children from view but keeps their state. |
-| `unstable_Scope` | An experimental component for creating scoped event systems. |
-| `unstable_TracingMarker` | An experimental component for marking performance traces. |
-| `unstable_ViewTransition` | An experimental component for coordinating view transitions. |
-| `unstable_useCacheRefresh` | An experimental Hook to invalidate the React `cache`. |
-| `unstable_getCacheForType` | An experimental function to access a cache instance for a given type. |
-| `unstable_addTransitionType` | An experimental function to add metadata to transitions. |
-| `experimental_useEffectEvent` | An experimental hook to extract non-reactive logic from `useEffect`. |
+To get started with the most common APIs for building modern applications, head to the [Hooks](./api-reference-hooks.md) documentation next.

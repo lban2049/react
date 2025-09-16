@@ -1,301 +1,156 @@
 [
   {
     "title": "Overview",
-    "description": "A high-level introduction to the React library, its purpose, core principles, and how the documentation is structured.",
+    "description": "A high-level introduction to the React library, its purpose, and key features. This section covers what React is and how it helps in building user interfaces.",
     "path": "/overview",
-    "parentId": null,
     "sourceIds": [
-      "README.md",
       "package.json",
+      "README.md",
       "index.js",
-      "index.stable.js",
-      "react.react-server.js",
       "src/ReactClient.js",
       "src/ReactServer.js"
-    ]
+    ],
+    "parentId": ""
   },
   {
     "title": "Getting Started",
-    "description": "A step-by-step guide to setting up a new project and creating your first React component.",
+    "description": "A practical guide to setting up a simple React application, demonstrating the basic usage with a working code example to get you started quickly.",
     "path": "/getting-started",
-    "parentId": null,
     "sourceIds": [
-      "README.md",
-      "index.js",
-      "src/ReactClient.js",
-      "src/ReactHooks.js"
-    ]
-  },
-  {
-    "title": "Core APIs",
-    "description": "Understand the fundamental building blocks of React applications, from components and JSX to context and refs.",
-    "path": "/core-apis",
-    "parentId": null,
-    "sourceIds": [
-      "index.js",
-      "src/ReactClient.js",
-      "src/ReactBaseClasses.js",
-      "src/jsx/ReactJSXElement.js",
-      "src/ReactCreateRef.js",
-      "src/ReactForwardRef.js",
-      "src/ReactContext.js",
-      "src/ReactChildren.js"
-    ]
-  },
-  {
-    "title": "Components & Props",
-    "description": "Learn how to create and compose UI using function and class components, and how to pass data using props.",
-    "path": "/core-apis/components-and-props",
-    "parentId": "/core-apis",
-    "sourceIds": [
-      "src/ReactBaseClasses.js",
-      "src/ReactClient.js",
-      "index.js",
-      "src/ReactNoopUpdateQueue.js"
-    ]
-  },
-  {
-    "title": "JSX",
-    "description": "Explore how to use JSX syntax to describe your UI and understand the different runtimes for client and server.",
-    "path": "/core-apis/jsx",
-    "parentId": "/core-apis",
-    "sourceIds": [
-      "jsx-runtime.js",
-      "jsx-dev-runtime.js",
-      "jsx-runtime.react-server.js",
-      "jsx-dev-runtime.react-server.js",
-      "src/jsx/ReactJSX.js",
-      "src/jsx/ReactJSXServer.js",
-      "src/jsx/ReactJSXElement.js"
-    ]
-  },
-  {
-    "title": "Creating & Manipulating Elements",
-    "description": "Learn about `createElement`, `cloneElement`, and other utilities for working with React elements directly.",
-    "path": "/core-apis/creating-elements",
-    "parentId": "/core-apis",
-    "sourceIds": [
-      "src/jsx/ReactJSXElement.js",
-      "src/ReactClient.js",
-      "index.js"
-    ]
-  },
-  {
-    "title": "Refs",
-    "description": "Access and interact with DOM nodes or React components directly using `createRef` and `forwardRef`.",
-    "path": "/core-apis/refs",
-    "parentId": "/core-apis",
-    "sourceIds": [
-      "src/ReactCreateRef.js",
-      "src/ReactForwardRef.js",
-      "src/ReactClient.js",
-      "index.js"
-    ]
-  },
-  {
-    "title": "Context",
-    "description": "Pass data through the component tree without having to pass props down manually at every level.",
-    "path": "/core-apis/context",
-    "parentId": "/core-apis",
-    "sourceIds": [
-      "src/ReactContext.js",
-      "src/ReactClient.js",
-      "index.js"
-    ]
-  },
-  {
-    "title": "Children Utilities",
-    "description": "Work with the `props.children` opaque data structure using the `React.Children` API helpers.",
-    "path": "/core-apis/children-utilities",
-    "parentId": "/core-apis",
-    "sourceIds": [
-      "src/ReactChildren.js",
-      "src/ReactClient.js",
-      "index.js"
-    ]
-  },
-  {
-    "title": "Hooks",
-    "description": "A detailed guide to all the built-in Hooks that let you use state and other React features without writing a class.",
-    "path": "/hooks",
-    "parentId": null,
-    "sourceIds": [
-      "src/ReactHooks.js",
-      "src/ReactClient.js",
-      "index.js",
-      "index.stable.js"
-    ]
-  },
-  {
-    "title": "State Hooks",
-    "description": "Manage component's state with `useState`, `useReducer`, `useActionState`, and `useOptimistic`.",
-    "path": "/hooks/state",
-    "parentId": "/hooks",
-    "sourceIds": [
-      "src/ReactHooks.js",
-      "src/ReactClient.js",
-      "index.stable.js",
-      "index.experimental.js"
-    ]
-  },
-  {
-    "title": "Effect Hooks",
-    "description": "Perform side effects in your components with `useEffect`, `useLayoutEffect`, and `useInsertionEffect`.",
-    "path": "/hooks/effect",
-    "parentId": "/hooks",
-    "sourceIds": [
-      "src/ReactHooks.js",
-      "src/ReactClient.js",
-      "index.stable.js"
-    ]
-  },
-  {
-    "title": "Ref Hooks",
-    "description": "Reference values that aren’t needed for rendering with `useRef` and `useImperativeHandle`.",
-    "path": "/hooks/ref",
-    "parentId": "/hooks",
-    "sourceIds": [
-      "src/ReactHooks.js",
-      "src/ReactClient.js",
-      "index.stable.js"
-    ]
-  },
-  {
-    "title": "Performance Hooks",
-    "description": "Optimize your components' performance with `useCallback`, `useMemo`, `useTransition`, and `useDeferredValue`.",
-    "path": "/hooks/performance",
-    "parentId": "/hooks",
-    "sourceIds": [
-      "src/ReactHooks.js",
-      "src/ReactClient.js",
-      "index.stable.js",
-      "src/ReactStartTransition.js"
-    ]
-  },
-  {
-    "title": "Other Hooks",
-    "description": "Explore other Hooks like `useContext`, `useId`, `useDebugValue`, and `useSyncExternalStore`.",
-    "path": "/hooks/other",
-    "parentId": "/hooks",
-    "sourceIds": [
-      "src/ReactHooks.js",
-      "src/ReactClient.js",
-      "index.stable.js"
-    ]
-  },
-  {
-    "title": "Advanced Guides",
-    "description": "Dive deeper into more complex React features, patterns, and environments.",
-    "path": "/advanced",
-    "parentId": null,
-    "sourceIds": [
-      "react.react-server.js",
-      "src/ReactServer.js",
-      "src/ReactLazy.js",
-      "src/ReactCacheImpl.js",
-      "src/ReactStartTransition.js",
-      "index.experimental.js"
-    ]
-  },
-  {
-    "title": "Server vs. Client Environments",
-    "description": "Understand the differences between React's server and client environments and their respective APIs.",
-    "path": "/advanced/server-vs-client",
-    "parentId": "/advanced",
-    "sourceIds": [
-      "react.react-server.js",
-      "src/ReactServer.js",
-      "src/ReactClient.js",
-      "src/ReactSharedInternalsServer.js",
-      "src/ReactSharedInternalsClient.js",
-      "package.json"
-    ]
-  },
-  {
-    "title": "Code Splitting with `lazy` and `Suspense`",
-    "description": "Improve app performance by loading components only when they are needed.",
-    "path": "/advanced/code-splitting",
-    "parentId": "/advanced",
-    "sourceIds": [
-      "src/ReactLazy.js",
-      "src/ReactClient.js",
-      "src/ReactServer.js",
-      "index.js"
-    ]
-  },
-  {
-    "title": "Caching",
-    "description": "Learn how to use React's caching capabilities for data fetching and memoization on both client and server.",
-    "path": "/advanced/caching",
-    "parentId": "/advanced",
-    "sourceIds": [
-      "src/ReactCacheClient.js",
-      "src/ReactCacheServer.js",
-      "src/ReactCacheImpl.js",
-      "src/ReactHooks.js",
-      "src/ReactCompilerRuntime.js",
-      "compiler-runtime.js",
-      "index.js"
-    ]
-  },
-  {
-    "title": "Transitions",
-    "description": "Manage complex UI updates without blocking the main thread using `startTransition` and `useTransition`.",
-    "path": "/advanced/transitions",
-    "parentId": "/advanced",
-    "sourceIds": [
-      "src/ReactStartTransition.js",
-      "src/ReactTransitionType.js",
-      "src/ReactHooks.js",
-      "src/ReactClient.js"
-    ]
-  },
-  {
-    "title": "Experimental APIs",
-    "description": "Explore experimental and unstable APIs, including security features like Taint and the `postpone` function.",
-    "path": "/advanced/experimental",
-    "parentId": "/advanced",
-    "sourceIds": [
-      "index.experimental.js",
-      "index.experimental.development.js",
-      "src/ReactServer.experimental.js",
-      "src/ReactServer.experimental.development.js",
-      "src/ReactTaint.js",
-      "src/ReactTaintRegistry.js",
-      "src/ReactPostpone.js"
-    ]
+      "README.md"
+    ],
+    "parentId": ""
   },
   {
     "title": "API Reference",
-    "description": "A comprehensive, A-Z reference for all public React APIs, including components, hooks, and utilities.",
+    "description": "A comprehensive reference for all public APIs exported by the React package. Use this section to find detailed information on specific functions, classes, and hooks.",
     "path": "/api-reference",
-    "parentId": null,
     "sourceIds": [
       "index.js",
       "index.stable.js",
-      "index.stable.development.js",
-      "index.fb.js",
-      "index.experimental.js",
-      "react.react-server.js",
       "src/ReactClient.js",
-      "src/ReactServer.js",
-      "src/ReactHooks.js"
-    ]
+      "src/ReactServer.js"
+    ],
+    "parentId": ""
   },
   {
-    "title": "Package Exports",
-    "description": "Details on the different entry points provided by the 'react' package, such as `jsx-runtime` and `compiler-runtime`.",
-    "path": "/package-exports",
-    "parentId": null,
+    "title": "Hooks",
+    "description": "Detailed documentation for all built-in React Hooks, such as useState, useEffect, and useContext, with usage examples for each.",
+    "path": "/api-reference/hooks",
     "sourceIds": [
-      "package.json",
-      "npm/index.js",
-      "npm/jsx-runtime.js",
-      "npm/jsx-dev-runtime.js",
-      "npm/compiler-runtime.js",
-      "npm/react.react-server.js",
-      "npm/jsx-runtime.react-server.js",
-      "npm/jsx-dev-runtime.react-server.js"
-    ]
+      "src/ReactHooks.js",
+      "src/ReactClient.js",
+      "index.stable.js"
+    ],
+    "parentId": "/api-reference"
+  },
+  {
+    "title": "Components & Classes",
+    "description": "Reference for built-in components and classes like Component, PureComponent, Fragment, and Suspense, which form the foundation of React applications.",
+    "path": "/api-reference/components",
+    "sourceIds": [
+      "src/ReactBaseClasses.js",
+      "src/ReactClient.js",
+      "src/ReactServer.js"
+    ],
+    "parentId": "/api-reference"
+  },
+  {
+    "title": "Top-Level APIs",
+    "description": "Documentation for top-level React functions such as createElement, createContext, forwardRef, lazy, and memo, used for various advanced patterns and optimizations.",
+    "path": "/api-reference/top-level",
+    "sourceIds": [
+      "src/jsx/ReactJSXElement.js",
+      "src/ReactContext.js",
+      "src/ReactForwardRef.js",
+      "src/ReactLazy.js",
+      "src/ReactMemo.js",
+      "src/ReactCreateRef.js",
+      "src/ReactClient.js"
+    ],
+    "parentId": "/api-reference"
+  },
+  {
+    "title": "React.Children",
+    "description": "A guide to using the React.Children utility for working with the props.children data structure, allowing for powerful manipulation and inspection of child elements.",
+    "path": "/api-reference/children",
+    "sourceIds": [
+      "src/ReactChildren.js",
+      "src/ReactClient.js",
+      "src/ReactServer.js"
+    ],
+    "parentId": "/api-reference"
+  },
+  {
+    "title": "Advanced Guides",
+    "description": "Explores advanced topics, environments, and features for experienced React developers looking to optimize their applications or use cutting-edge functionality.",
+    "path": "/advanced-guides",
+    "sourceIds": [
+      "react.react-server.js",
+      "compiler-runtime.js",
+      "index.experimental.js",
+      "jsx-runtime.js"
+    ],
+    "parentId": ""
+  },
+  {
+    "title": "Server Environment",
+    "description": "Explains the APIs and exports available specifically for server environments, including React Server Components and data tainting for security.",
+    "path": "/advanced-guides/server-environment",
+    "sourceIds": [
+      "src/ReactServer.js",
+      "react.react-server.js",
+      "src/ReactSharedInternalsServer.js",
+      "src/ReactCacheServer.js",
+      "src/ReactTaint.js",
+      "src/ReactTaintRegistry.js"
+    ],
+    "parentId": "/advanced-guides"
+  },
+  {
+    "title": "JSX Runtime",
+    "description": "Details on the modern JSX transform and the jsx and jsxs functions it compiles to, including environment-specific runtimes.",
+    "path": "/advanced-guides/jsx-runtime",
+    "sourceIds": [
+      "jsx-runtime.js",
+      "jsx-dev-runtime.js",
+      "src/jsx/ReactJSX.js",
+      "src/jsx/ReactJSXElement.js",
+      "src/jsx/ReactJSXServer.js"
+    ],
+    "parentId": "/advanced-guides"
+  },
+  {
+    "title": "Compiler Runtime",
+    "description": "Information on the experimental React Compiler ('Forget') and the runtime helpers it uses to optimize your components automatically.",
+    "path": "/advanced-guides/compiler-runtime",
+    "sourceIds": [
+      "compiler-runtime.js",
+      "src/ReactCompilerRuntime.js",
+      "src/ReactHooks.js"
+    ],
+    "parentId": "/advanced-guides"
+  },
+  {
+    "title": "Experimental APIs",
+    "description": "Documentation for unstable and experimental APIs that are subject to change. Use these features with caution in production environments.",
+    "path": "/advanced-guides/experimental",
+    "sourceIds": [
+      "index.experimental.js",
+      "src/ReactServer.experimental.js",
+      "src/ReactStartTransition.js",
+      "src/ReactTransitionType.js",
+      "src/ReactPostpone.js"
+    ],
+    "parentId": "/advanced-guides"
+  },
+  {
+    "title": "Package Information",
+    "description": "Provides metadata about the `react` npm package, including the current version, license, repository links, and dependencies.",
+    "path": "/package-information",
+    "sourceIds": [
+      "package.json"
+    ],
+    "parentId": ""
   }
 ]
