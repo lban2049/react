@@ -1,0 +1,623 @@
+{
+  "timestamp": "2025-09-16T08:31:26.514Z",
+  "metadata": {
+    "version": "1.0.0",
+    "generatedBy": "doc-smith",
+    "documentCount": 13
+  },
+  "structureEvaluation": {
+    "type": "document-structure",
+    "results": {
+      "purposeCoverage": {
+        "score": 4,
+        "covered": [
+          "快速开始（Getting Started模块）",
+          "查找答案（API Reference模块）",
+          "完成特定任务（Advanced Guides模块）"
+        ],
+        "missing": [
+          "快速开始缺少30分钟内从零到工作的承诺",
+          "任务指南缺少常见工作流的分步说明"
+        ],
+        "reason": "覆盖了所有三个目标，但'快速开始'模块未明确强调速度目标，'高级指南'侧重于高级特性而非常见任务流程，影响有限"
+      },
+      "audienceCoverage": {
+        "score": 4,
+        "covered": [
+          "开发者集成（所有模块都提供代码示例和API文档）"
+        ],
+        "missing": [
+          "缺少专门的集成指南或SDK使用示例"
+        ],
+        "reason": "整体内容面向开发者，提供了代码示例和技术文档，但缺少专门的'集成指南'模块来展示如何将React添加到现有项目中"
+      },
+      "coverageDepthAlignment": {
+        "score": 5,
+        "reason": "完美符合'平衡覆盖'要求：Overview提供概览，API Reference覆盖大部分功能，Advanced Guides处理边缘情况，每个模块都有实用示例，深度适中"
+      }
+    }
+  },
+  "documentEvaluations": {
+    "type": "document-content",
+    "individual": [
+      {
+        "documentInfo": {
+          "path": "/overview",
+          "title": "Overview"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "中文翻译流畅自然，但存在少量表述可以优化的地方，如'钩入'可以用更常见的'使用'替代"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "逻辑结构清晰，从React概述到核心概念再到后续步骤，层次分明，无矛盾或跳跃"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "覆盖了React的核心概念和特性，但对于'快速开始'目标缺少具体的安装和环境配置步骤"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "翻译准确忠实原文，术语统一（如component统一译为组件），符合中文技术文档习惯"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "术语使用一致，格式统一，中英文版本结构完全对应"
+          },
+          "purposeAlignment": {
+            "score": 3,
+            "reason": "作为'快速开始'文档，缺少关键的安装步骤、环境配置和Hello World示例，更像是概念介绍"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者受众需求，技术术语准确，代码相关概念清晰，适合集成React的工程师"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "非常适合有类似工具经验的读者，突出了React的独特性（组件化、Hooks、平台无关性），避免了基础概念"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/getting-started",
+          "title": "Getting Started"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "中文翻译流畅自然，语言清晰，无语法错误，技术术语使用准确"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "逻辑结构清晰：从基本示例→工作原理→生产部署→后续步骤，层层递进，无跳跃"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "实现了快速上手目标，提供可运行代码示例，但缺少环境搭建步骤（如安装Node.js、创建项目）"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "翻译准确流畅，但按钮文本'Increment'未翻译为'递增'，保留了英文"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "术语使用一致（组件、状态、渲染等），格式统一，代码风格一致"
+          },
+          "purposeAlignment": {
+            "score": 4,
+            "reason": "符合'快速开始'目标，提供了可工作示例，但缺少从零开始的环境准备步骤"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者需求：代码优先、可复制粘贴、包含技术准确的解释"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "符合'使用过类似工具'的读者：跳过React基础概念，直接展示特定用法，强调与其他框架的差异点"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/api-reference",
+          "title": "API Reference"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "语言清晰流畅，无语法拼写错误，标题层级清晰，表格格式规范"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "逻辑结构清晰：总览→分类展示→完整列表→导航指引，前后呼应无矛盾"
+          },
+          "contentQuality": {
+            "score": 5,
+            "reason": "100%实现内容规划目标，提供了完整的API参考列表、分类导航卡片和详细表格"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "翻译准确自然，术语统一（如Hook、组件、顶层API），符合中文技术文档习惯"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "术语、格式、风格完全一致，API命名保持原文，分类标准统一"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "完全符合'Find answers fast'目标：提供可搜索的完整API列表、分类索引和快速导航"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者受众需求：技术准确、API列表完整、提供类别和描述便于快速定位"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "完全匹配'使用过类似工具'的读者：聚焦API差异和分类，无冗余基础解释"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/api-reference/hooks",
+          "title": "Hooks"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "整体语言流畅，但存在少量表述问题：如'钩入'不如'接入'自然；个别术语翻译不统一（State Hooks未译）"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "逻辑结构清晰，从概念介绍到分类展示再到详细API说明，层次分明，段落衔接自然"
+          },
+          "contentQuality": {
+            "score": 5,
+            "reason": "完整覆盖所有内置Hooks的详细文档，每个Hook都有签名、参数说明、返回值和实例代码，可直接使用"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "翻译基本准确，但存在不一致：部分标题如'State Hooks'未译；表格中Description列未译；'memoized'等术语处理不统一"
+          },
+          "consistency": {
+            "score": 3,
+            "reason": "多处不一致：1)术语混用(state/状态)；2)标题翻译不统一；3)代码注释部分英文部分中文；4)表格内容未完全翻译"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "完美符合'Find answers fast'目标：提供了所有Hooks的可搜索参考，包含全面的API签名、参数说明和示例"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者需求：代码优先，每个Hook都有可复制粘贴的示例，技术准确性高，API说明详尽"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "非常适合'使用过类似工具'的读者：跳过基础概念，直接展示API差异和使用方法，重点突出React特有功能"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/api-reference/components",
+          "title": "Components & Classes"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "整体语言清晰，但存在少量问题：'false-negatives'未翻译保留英文，'备忘录（memoization）'术语翻译不够自然，建议改为'记忆化'"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "文档结构清晰，从基类到内置组件递进合理，各部分逻辑连贯，示例与说明紧密配合"
+          },
+          "contentQuality": {
+            "score": 5,
+            "reason": "完整覆盖React核心组件和类的参考文档，包含Component、PureComponent、Fragment、Suspense等所有规划内容，代码示例丰富实用"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "翻译基本准确，但有改进空间：'false-negatives'应翻译为'误判'，表格标题未翻译，部分术语如'备忘录'可用更常见的'记忆化'"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "格式和风格基本一致，但存在不一致：英文版用Parameters，中文版混用了Parameters和Props标题，应统一为中文"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "完美符合'Find answers fast'目标，提供了全面的API参考，包含所有方法、属性、参数说明和代码示例，便于快速查找"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者集成需求，代码示例丰富且可直接复制使用，技术细节准确，API调用清晰明了"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "非常适合有类似工具经验的读者，重点突出React特有概念（如PureComponent的浅比较），对比了类组件与函数组件，标注了废弃API及替代方案"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/api-reference/top-level",
+          "title": "Top-Level APIs"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "语言清晰流畅，仅在示例代码注释中存在中英文混用（如'The ref gives us direct access'），其余部分表达自然"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "逻辑结构清晰，从基础API到高级API递进，各API说明格式统一，段落衔接自然，无矛盾"
+          },
+          "contentQuality": {
+            "score": 5,
+            "reason": "完整覆盖React顶层API（createElement、createContext、forwardRef、lazy、memo等），每个API都提供了参数说明、返回值说明和实用示例代码"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "翻译准确自然，术语统一（如Context译为'上下文'），仅代码示例中保留英文注释未翻译，不影响理解"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "术语、格式、风格高度一致，所有API采用相同结构（功能描述-参数-返回值-示例），x-field标签使用规范"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "完全符合'Find answers fast'目标，提供了全面的API参考，每个函数都有详细说明和可复制的代码示例"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者需求，代码示例可直接复制使用，技术准确性高，参数类型标注清晰"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "符合'使用过类似工具'的读者水平，重点介绍React特有API，与现代Hooks对比，突出差异性特征"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/api-reference/children",
+          "title": "React.Children"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "语言清晰流畅，无语法错误，术语准确，句子结构简洁易懂"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "逻辑结构清晰，从概念介绍到各方法详解循序渐进，内容前后呼应"
+          },
+          "contentQuality": {
+            "score": 5,
+            "reason": "完整覆盖React.Children所有API方法，每个方法都有参数说明、返回值和实用示例代码"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "翻译准确自然，术语统一（如children、props等保持英文），符合中文技术文档习惯"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "格式完全统一，每个方法都遵循相同结构：描述-参数-返回值-示例"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "完全符合'查找答案快速'目标，提供了全面的API参考，包含所有方法和可复制示例"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者需求，代码示例直接可用，技术准确性高，注释清晰"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "符合'使用过类似工具'水平，直接介绍API用法，突出与数组方法的差异，无冗余基础解释"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/advanced-guides",
+          "title": "Advanced Guides"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "整体语言流畅，但存在少量翻译不够地道的表达，如'肩负着确保AI生成文档质量的重任'过于书面化"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "文档结构清晰，从总览到各个具体指南逐层深入，各部分之间逻辑连贯，衔接自然"
+          },
+          "contentQuality": {
+            "score": 5,
+            "reason": "完整覆盖了高级主题的四个核心领域，每个指南都提供了详细的API说明和实用示例，可直接使用"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "翻译基本准确，术语统一，但个别地方如'记忆化'(memoizing)可用更自然的'缓存'表达"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "术语使用一致，格式统一，各部分风格保持一致，代码示例格式规范"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "完全符合'Find answers fast'目标，提供了全面的API参考、详细示例和可搜索的结构化内容"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者集成需求，提供大量代码示例、配置片段，API说明技术准确且可复制粘贴"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "适合有类似工具经验的读者，重点突出React独特功能，对比传统方法，跳过基础概念"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/advanced-guides/server-environment",
+          "title": "Server Environment"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "表格格式存在问题：中文翻译的API表格仍使用英文表头(Export/Type/Description)；少量术语翻译不一致(如'开发模式'与'DEV mode'混用)"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构清晰，从概述到API列表再到特有功能逐层深入，逻辑连贯，段落衔接自然"
+          },
+          "contentQuality": {
+            "score": 5,
+            "reason": "完整覆盖了react/server的核心API和特有功能，提供了实用的代码示例，cache和taint功能解释详细，可直接复制使用"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "整体翻译准确流畅，但存在少量问题：API表格表头未翻译；'污染'作为taint的翻译略显生硬；个别术语如'记忆化'可能不如'缓存'直观"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "代码注释保持英文与正文中文不一致；表格格式中英文混用；其他术语和格式基本统一"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "作为API参考文档完全符合'Find answers fast'目标：提供了完整的API列表、详细的功能说明和可复制的代码示例"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者需求：代码示例可直接复制使用，技术细节准确，API说明清晰，适合集成到项目中"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "完美匹配'使用过类似工具'的读者：重点介绍了与标准React的差异(如排除useState等)，突出服务器端特有功能(cache/taint)，跳过了基础概念"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/advanced-guides/jsx-runtime",
+          "title": "JSX Runtime"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "中文翻译整体流畅，但存在少量不够自然的表达：如'仅开发版本'应为'仅在开发环境使用的版本'，'内置元素'更常用'原生元素'，部分术语翻译不够统一"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "文档结构清晰，从概念介绍到具体实现，再到与旧版对比，逻辑层次分明，各部分衔接自然，无跳跃或矛盾"
+          },
+          "contentQuality": {
+            "score": 5,
+            "reason": "完整覆盖了JSX运行时的核心功能，提供了清晰的代码示例展示编译前后对比，函数签名详细说明，完全实现了文档规划目标"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "翻译基本准确，保留了表格中的英文术语便于对照，但部分术语选择可优化：'内置元素'→'原生元素'，'仅开发版本'表达不够自然"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "术语大体一致，但存在细微差异：'JSX源代码'与'JSX 源代码'（空格不一致），代码块标题中英文混用（有的翻译有的未翻译）"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "完美符合'Find answers fast'目标：提供了JSX运行时的完整API参考，函数签名详细，示例代码可直接复制使用，便于快速查找"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者需求：代码示例丰富且可复制，技术细节准确，提供了编译前后对比，API签名清晰，正是集成React的开发者所需"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "非常适合'使用过类似工具'的读者：直接对比了新旧JSX转换的区别，突出了新运行时的独特优势，跳过了基础概念介绍，效率很高"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/advanced-guides/compiler-runtime",
+          "title": "Compiler Runtime"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "语言清晰流畅，无语法错误，术语使用专业且一致，句子结构自然易懂"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "逻辑结构清晰，从概念介绍到具体用法再到示例，层层递进，前后呼应"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "准确介绍了编译器运行时的核心概念和用法，但缺少更多实际场景的深入示例"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "翻译准确自然，术语统一（如memoizing译为记忆化），符合中文技术文档习惯"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "术语、格式、风格完全一致，代码示例格式统一，标题层级清晰"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "完全符合'Find answers fast'目标：提供了API参考、参数说明、返回值、概念示例"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者需求：代码示例可复制，技术准确，包含实际集成所需信息"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 4,
+            "reason": "适合有经验开发者，突出了与其他工具的差异（自动vs手动memoization），但对迁移细节略少"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/advanced-guides/experimental",
+          "title": "Experimental APIs"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "文档语言清晰，但有约2%的小问题：如'（例如，forwards、together）'中文翻译未完成，'unstable_' 前缀说明在中文版中未更新"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "逻辑结构清晰，从Hook到UI过渡、渲染缓存、服务器端安全层层递进，各部分衔接自然，无矛盾或跳跃"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "覆盖约85%规划点，提供了详细的API签名和可用示例，但缺少部分API（如ViewTransition、Activity等）的具体示例代码"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "整体翻译准确，但有3处问题：表格Description列未翻译、'forwards/together'未译、部分代码注释保留英文"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "术语基本一致，但存在2处不一致：'Hook'与'钩子'混用，部分API保留experimental_前缀说明未同步更新"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "完全符合'Find answers fast'目标：提供了完整的API参考、签名、示例，便于快速查找和使用"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完美匹配开发者受众：代码优先，示例可直接复制使用，包含TypeScript类型定义，技术准确性高"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "符合'使用过类似工具'的读者水平：直接展示API差异（如experimental_前缀），强调与稳定版区别，跳过基础React概念"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/package-information",
+          "title": "Package Information"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "中文版本整体流畅自然，但存在个别不一致：英文版 'Bug Tracker' 翻译为 '问题跟踪'，而表格中 'Not specified' 翻译为 '未指定'，术语统一性可改进"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "文档结构清晰，从基本信息到发布文件再到模块导出，逻辑递进合理，各部分内容衔接自然，无跳跃或矛盾"
+          },
+          "contentQuality": {
+            "score": 5,
+            "reason": "完整实现了提供 React 包元数据的目标，包含版本、许可证、仓库链接等关键信息，表格形式清晰，链接可点击，开发者可直接使用"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "翻译准确自然，术语基本统一。但 'Package Information' 翻译为 '软件包信息' 而非更常用的 '包信息'，'Published Files' 翻译为 '已发布文件' 略显生硬"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "格式完全一致，所有表格样式统一，链接格式一致，标题层级规范，术语使用统一"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "完美符合 '快速查找答案' 的目标，提供了结构化的参考信息，表格形式便于扫描查找，包含所有必要的包元数据"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "完全符合开发者需求，提供了集成所需的技术信息如版本号、入口点、模块导出配置，代码级别的精确信息可直接复制使用"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "适合有经验的开发者，直接展示技术细节如 exports 配置、React Server 环境差异，无冗余的基础解释，高效传达关键信息"
+          }
+        }
+      }
+    ],
+    "aggregated": {
+      "readability": {
+        "score": 4.3,
+        "reason": "Average from 13 documents: 中文翻译流畅自然，但存在少量表述可以优化的地方，如'钩入'可以用更常见的'使用'替代; 中文翻译流畅自然，语言清晰，无语法错误，技术术语使用准确; 语言清晰流畅，无语法拼写错误，标题层级清晰，表格格式规范"
+      },
+      "coherence": {
+        "score": 5,
+        "reason": "Average from 13 documents: 逻辑结构清晰，从React概述到核心概念再到后续步骤，层次分明，无矛盾或跳跃; 逻辑结构清晰：从基本示例→工作原理→生产部署→后续步骤，层层递进，无跳跃; 逻辑结构清晰：总览→分类展示→完整列表→导航指引，前后呼应无矛盾"
+      },
+      "contentQuality": {
+        "score": 4.7,
+        "reason": "Average from 13 documents: 覆盖了React的核心概念和特性，但对于'快速开始'目标缺少具体的安装和环境配置步骤; 实现了快速上手目标，提供可运行代码示例，但缺少环境搭建步骤（如安装Node.js、创建项目）; 100%实现内容规划目标，提供了完整的API参考列表、分类导航卡片和详细表格"
+      },
+      "translationQuality": {
+        "score": 4.3,
+        "reason": "Average from 13 documents: 翻译准确忠实原文，术语统一（如component统一译为组件），符合中文技术文档习惯; 翻译准确流畅，但按钮文本'Increment'未翻译为'递增'，保留了英文; 翻译准确自然，术语统一（如Hook、组件、顶层API），符合中文技术文档习惯"
+      },
+      "consistency": {
+        "score": 4.5,
+        "reason": "Average from 13 documents: 术语使用一致，格式统一，中英文版本结构完全对应; 术语使用一致（组件、状态、渲染等），格式统一，代码风格一致; 术语、格式、风格完全一致，API命名保持原文，分类标准统一"
+      },
+      "purposeAlignment": {
+        "score": 4.8,
+        "reason": "Average from 13 documents: 作为'快速开始'文档，缺少关键的安装步骤、环境配置和Hello World示例，更像是概念介绍; 符合'快速开始'目标，提供了可工作示例，但缺少从零开始的环境准备步骤; 完全符合'Find answers fast'目标：提供可搜索的完整API列表、分类索引和快速导航"
+      },
+      "audienceAlignment": {
+        "score": 5,
+        "reason": "Average from 13 documents: 完全符合开发者受众需求，技术术语准确，代码相关概念清晰，适合集成React的工程师; 完全符合开发者需求：代码优先、可复制粘贴、包含技术准确的解释; 完全符合开发者受众需求：技术准确、API列表完整、提供类别和描述便于快速定位"
+      },
+      "knowledgeLevelAlignment": {
+        "score": 4.9,
+        "reason": "Average from 13 documents: 非常适合有类似工具经验的读者，突出了React的独特性（组件化、Hooks、平台无关性），避免了基础概念; 符合'使用过类似工具'的读者：跳过React基础概念，直接展示特定用法，强调与其他框架的差异点; 完全匹配'使用过类似工具'的读者：聚焦API差异和分类，无冗余基础解释"
+      }
+    }
+  },
+  "summary": {
+    "structureScores": {
+      "purposeCoverage": 4,
+      "audienceCoverage": 4,
+      "coverageDepthAlignment": 5,
+      "average": 4.3
+    },
+    "documentScores": {
+      "readability": 4.3,
+      "coherence": 5,
+      "contentQuality": 4.7,
+      "translationQuality": 4.3,
+      "consistency": 4.5,
+      "purposeAlignment": 4.8,
+      "audienceAlignment": 5,
+      "knowledgeLevelAlignment": 4.9,
+      "average": 4.7
+    },
+    "overallScore": 4.5,
+    "issues": [
+      "Missing purposes: 快速开始缺少30分钟内从零到工作的承诺, 任务指南缺少常见工作流的分步说明",
+      "Missing audiences: 缺少专门的集成指南或SDK使用示例"
+    ]
+  }
+}
