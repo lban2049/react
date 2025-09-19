@@ -1,0 +1,618 @@
+{
+  "timestamp": "2025-09-17T03:09:31.608Z",
+  "metadata": {
+    "version": "1.0.0",
+    "generatedBy": "doc-smith",
+    "documentCount": 13
+  },
+  "structureEvaluation": {
+    "type": "document-structure",
+    "results": {
+      "purposeCoverage": {
+        "score": 4,
+        "reason": "总体覆盖良好：用于“快速上手”的核心模块（Getting Started、Overview）存在；用于“快速查找答案”的参考型模块（API Reference 及其子页：Hooks、Components & Classes、Top-Level APIs、React.Children）存在。但“完成具体任务”（按场景的逐步工作流/recipes/How‑to）缺乏专门的任务驱动章节，Advanced Guides 只部分替代，无法替代针对常见用例的分步操作文档，影响实际操作效率。",
+        "covered": [
+          "Get started quickly",
+          "Find answers fast"
+        ],
+        "missing": [
+          "Complete specific tasks"
+        ]
+      },
+      "audienceCoverage": {
+        "score": 5,
+        "reason": "针对“集成产品/API 的开发者”定位明确：提供了代码优先的 Getting Started 示例、全面的 API Reference（含 Hooks、Top-Level APIs、Components & Classes、React.Children）和与运行时/服务端相关的 Advanced Guides，满足工程师查阅 API、复制粘贴示例和环境配置所需的核心内容。",
+        "covered": [
+          "Developers integrating your product/API"
+        ],
+        "missing": []
+      },
+      "coverageDepthAlignment": {
+        "score": 3,
+        "reason": "深度部分符合但不均衡：API Reference 和 Advanced Guides 偏深入，符合“覆盖大部分特性”的要求；但缺少面向“平衡覆盖”所需的中间层内容——即大量的按任务划分的 How‑to/recipes、多个变体示例、常见边界/故障排查与迁移指南。部分实验性/编译时内容（Compiler Runtime、Experimental APIs）可能超出平衡深度，增加维护负担。"
+      }
+    }
+  },
+  "documentEvaluations": {
+    "type": "document-content",
+    "individual": [
+      {
+        "documentInfo": {
+          "path": "/overview",
+          "title": "Overview"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "中英文内容表述清晰、语法与拼写无明显错误，句子自然流畅，95%以上句子无需回读。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构清晰（概述→核心概念→模式→后续步骤），段落衔接合理，前后呼应，无明显逻辑跳跃。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "实现了高层次介绍并覆盖主要概念与渲染分离等要点，但缺少可复制的快速上手步骤、安装/构建命令和最小可运行示例，实用性受限。建议补充安装、创建项目与运行示例代码片段。"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "译文忠实且自然，术语（如“组件”“Hooks”“渲染器”）统一使用，技术表达符合中文读者习惯。"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "术语、风格和格式保持一致（英中对应明确），段落与卡片样式统一；仅存在自定义标签展示，但不影响一致性。"
+          },
+          "purposeAlignment": {
+            "score": 3,
+            "reason": "与“快速上手”目标部分匹配（提供概念与后续链接），但未满足“30分钟内从零到可运行”的需求：缺少安装步骤、CLI 命令、示例项目和代码片段；若目标为参考手册亦不够全面。建议增加逐步安装与最小示例。"
+          },
+          "audienceAlignment": {
+            "score": 2,
+            "reason": "目标受众为集成/工程师，期望代码优先、可复制示例和配置说明，当前内容偏概念性且缺少代码片段与集成示例，不符合开发者即插即用需求。建议增加代码样例、package/依赖说明和常见集成示例。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 2,
+            "reason": "读者已使用过类似工具，期望比较、迁移建议和差异化说明；文档停留在基础层面，缺乏“从 X 迁移到 React”的实用对比与注意事项。建议增加迁移指南与与其他框架的差异要点。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/getting-started",
+          "title": "Getting Started"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "语言清晰、句子流畅，无明显语法或拼写错误，说明性段落简洁易读。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构合理（示例→原理→生产构建→后续步骤），段落衔接自然，无逻辑跳跃。"
+          },
+          "contentQuality": {
+            "score": 3,
+            "reason": "提供了可运行的示例并解释工作原理，但缺少关键快速入门步骤（如创建项目、安装依赖、HTML 示例或运行/构建命令），对目标“30 分钟内从零到运行”支持不足。"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "中文译文忠实且自然，技术术语翻译一致，示例与原文保持一致。"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "术语和风格总体一致，但有小不一致：文中同时引用 reactjs.org 与 react.dev 两个不同站点链接；代码块头部注释在两版中格式略有差异。"
+          },
+          "purposeAlignment": {
+            "score": 3,
+            "reason": "部分符合“快速入门”目标（有直观示例与解释），但缺少安装/运行命令和项目初始化步骤，未完全满足从零到可运行的需求。"
+          },
+          "audienceAlignment": {
+            "score": 4,
+            "reason": "面向开发者的代码优先风格合适、示例可复制，但缺少集成/配置细节（如与常见构建工具或脚手架的对接示例）。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 3,
+            "reason": "面向“有类似工具经验、对该解决方案陌生”的读者时过于基础，缺少与其他框架的对比、迁移提示或常见坑说明，深度偏浅。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/api-reference",
+          "title": "API Reference"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "语言总体清晰、示例代码可读；但文中存在模板标记（如 <x-field>、<x-cards>）和代码块标题冗余（例如 \"javascript ListWrapper Component...\"），以及中英文混用，略微影响直接阅读和复制粘贴体验。"
+          },
+          "coherence": {
+            "score": 4,
+            "reason": "结构按类别组织（Hooks、组件、顶层 API 等），逻辑清晰且前后呼应；但翻译部分与原文有部分重复，且局部存在内容跳转或冗余，需精简重复段落。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "覆盖了大多数公共 API 并提供示例与签名，适合作为快速参考；但缺少安装/快速启动步骤、部分高级/实验性 API 说明不足（如 use 的用例、边界情况），以及没有搜索/索引优化的快速定位支持。"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "译文总体准确、术语基本统一且自然流畅；但存在少量直译或表述不够本地化的地方，以及模板标记未被清理导致可读性小幅下降。"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "大部分术语和风格一致（如 Hooks、Component 等）；但有 1–2 处命名/格式差异（中英文混用、代码块元数据不统一），以及同一信息在不同段落出现不同表达。"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "非常符合“查找答案/参考”的目标：包含完整导出列表、按类别组织的 API 参考、示例和链接，便于查阅具体 API。"
+          },
+          "audienceAlignment": {
+            "score": 4,
+            "reason": "面向开发者，代码优先、示例丰富，符合工程师集成需求；但模板噪声影响复制使用，且缺少迁移/对比片段（从其他框架或旧版本迁移的具体注意点）。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 3,
+            "reason": "文档深度适合已有相似经验的开发者查阅 API；但针对“来自类似工具/迁移”的读者缺少对比、迁移指南与高级实战细节（性能陷阱、实现原理等），不完全满足希望突出差异的需求。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/api-reference/hooks",
+          "title": "Hooks"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "语言清晰、句式流畅、示例注释明确，拼写和语法无明显错误，开发者读者无需回读即可理解。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构层次清晰（State / Effect / Ref / 其他），段落与示例衔接自然，前后无逻辑矛盾。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "覆盖多数常用 Hook（签名、参数、返回、示例），但不完整：部分 Hook（如 useContext/useMemo/useCallback 等）仅以表格列出且缺少示例与详解；此外包含像 useActionState、useOptimistic 的说明，需确认这些 API 是否为 React 官方内置以避免误导。建议补全剩余 Hook 的用法示例、常见陷阱与最佳实践，并标注哪些为框架特有 API。"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "中译本准确自然，术语统一且符合开发者阅读习惯，示例与说明保持原意无需修正。"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "总体格式与术语较为统一，但存在少量风格差异（例如文中既使用英文术语 state 又在部分处用中文描述），以及 code-block 标注（icon=...）格式不一致。建议统一术语翻译策略并清理示例注释格式。"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "作为 API 参考与快速查阅文档非常契合：包含签名、参数说明、返回值与示例，便于开发者快速查找与复制使用。"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "面向集成/开发者的定位明确，文档以代码为主、提供签名与示例，满足工程师的直接使用需求。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 4,
+            "reason": "对已有类似经验的开发者友好（签名与示例层次适中），但未包含“从其他方案迁移”的对比或进阶用法，若读者需要迁移指南或高级优化建议会感觉不足。建议增加“Coming from class components / from Vue / from Redux”的对比与进阶示例。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/api-reference/components",
+          "title": "Components & Classes"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "语言清晰、术语准确，段落与示例表述自然，几乎无语法或拼写错误，易于逐段阅读。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构层次分明（Component / PureComponent / 内置组件等），段落衔接良好，示例与说明前后呼应，无明显逻辑跳跃。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "覆盖了常用类与内置组件并提供代码示例与主要 prop 描述；但对若干重要细节（如 Suspense 针对数据获取的限制/实验性说明、PureComponent 在深层可变数据上的具体陷阱、setState 合并语义的更多细节）缺乏深入说明，未包含更多高级用例或常见陷阱示例。"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "中英文内容对应准确且自然，技术术语一致，译文流畅且保留了原示例与注释信息。"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "总体术语与格式一致；但存在少量格式/标签杂项（如代码块里的“icon=…”元数据和 x-field 标签在渲染上可能显得突兀），导致表现层面有小幅不一致。"
+          },
+          "purposeAlignment": {
+            "score": 4,
+            "reason": "作为快速检索型参考文档（'Find answers fast'）较为匹配：有 API 描述与示例；但若目标为“30 分钟上手”或“按步骤完成具体任务”，文档缺少安装、项目配置、端到端示例和任务导向步骤，因此对其他两个目的支持有限。"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "面向开发者，风格为代码优先并包含可复制示例，符合工程师集成/开发需求。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "适合已有类似工具经验但对该具体解决方案不熟的读者：以差异与实践为导向，示例与说明对该水平读者恰当。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/api-reference/top-level",
+          "title": "Top-Level APIs"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "语言清晰、示例可读；存在少量呈现/标记瑕疵（如 x-field 标签和示例注释中夹带英文），会影响极少数句子的流畅性。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构清晰：概述→各 API 条目（参数/返回/示例）→补充卡片，段落衔接自然且无矛盾。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "涵盖了主要顶层 API 并提供可复制示例，适合作为快速参考；但对部分 API（如 cloneElement/createRef/isValidElement）仅做简短卡片说明，缺少深层用例和常见陷阱提示。"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "中文译文忠实且自然，专业术语翻译一致，示例代码与原文一致（仅少量注释保留英文，影响甚微）。"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "术语、格式、每个 API 的参数/返回/示例模块化一致，命名统一（createElement、createContext 等）。"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "非常符合“快速查找/参考”目标：按 API 列表组织、每项都有参数说明和示例，便于快速检索与复制使用。"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "面向集成/开发者的代码优先风格，提供可复制示例和用法，符合工程师快速上手需求。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 5,
+            "reason": "深度与难度契合有类似工具经验的读者：重点在用法和差异、示例而非基础概念或理论，适配“熟悉问题域，初学特定工具”的读者。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/api-reference/children",
+          "title": "React.Children"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 4,
+            "reason": "语言总体清晰、示例可读且句子通顺，但存在少量格式化残留（如 code block 标题中的 \"javascript ListWrapper Component icon=logos:javascript\" 等工具性标记）和个别标点不一致，建议清理这些格式化痕迹以提升可读性。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构严谨：按方法分节、每节包含参数/返回/示例，前后衔接自然，逻辑清晰，无明显跳跃或矛盾。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "覆盖了 React.Children 的主要方法并提供实用示例，适合作为快速参考；但缺少若干重要细节与注意事项（例如使用 index 作为 key 的风险、children 中 null/boolean/string 的处理细节、toArray 对 key 的保留细节、only 抛错的具体信息及 TypeScript 签名），建议补充这些常见用例与坑。"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "中文翻译准确且自然，术语（如 props.children、React.Children）一致且符合中文技术文档习惯，仅原文的代码标签在翻译中被原样保留并非翻译问题。"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "术语总体一致，但存在少量表述差异（比如 \"children prop\" 与 \"props.children\" 混用）和格式化不一致的痕迹，建议统一术语表述并清理样式标记。"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "与‘快速查找/参考’和‘完成具体任务’目标高度匹配：方法说明简洁、每项均有可复制示例，便于工程师快速上手与实用。"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "面向工程师，风格代码优先、示例可复制，满足集成/开发者的实际需求与习惯。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 4,
+            "reason": "适合有相关经验的开发者（直接给出可用示例）；但对高级用户或迁移场景（如更复杂的 key 管理、性能/边界情况）深度不够，建议增加进阶注意事项或迁移提示。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/advanced-guides",
+          "title": "Advanced Guides"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "语言清晰流畅，术语准确，示例与叙述并列展示，几乎无拼写或语法错误，阅读顺畅。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构明确（各指南分节清晰），段落衔接合理，示例和解释前后呼应，无明显逻辑矛盾。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "覆盖了高阶主题、示例和 API 参考，适合作为进阶参考；但缺少针对迁移/从其它方案过渡的专门对比或快速上手步骤，部分实验 API 的使用场景与限制可补充更多细节。"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "中文翻译总体准确自然，术语处理良好；存在少量不一致或省略前缀（如 experimental_/unstable_ 命名、导入路径提示）导致轻微歧义。"
+          },
+          "consistency": {
+            "score": 3,
+            "reason": "术语与命名有数处不一致（例如 experimental_ 前缀的不统一、导入路径注释差异），示例注释风格与包名偶有差别，需统一命名与格式。"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "文档作为高级指南/参考完全契合为开发者快速查找高级特性与 API 的目标，包含可复制示例与说明，便于完成特定任务。"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "面向集成类开发者，代码优先、示例丰富、技术细节到位，风格与受众需求高度匹配。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 4,
+            "reason": "总体深度适合有相似工具经验的开发者；但对“来自 X 的迁移”或突出差异的对比说明较少，若读者期望逐步迁移指导会感到欠缺。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/advanced-guides/server-environment",
+          "title": "Server Environment"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "语言清晰流畅，语法与拼写无明显错误，段落与表格格式可读，代码示例易于理解。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构逻辑清晰（API 列表 → 服务器特性 → 示例 → 内部导出），章节衔接自然，无明显前后矛盾。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "准确且包含实用示例与重要 API 列表，但缺少快速开始的安装/配置步骤、导入路径的明确说明（experimental vs server）、以及对 cache 生命周期、enableTaint 启用方式和异常场景的更详细行为说明。"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "中文翻译忠实且自然，术语翻译统一（例如将 taint 翻为“污染”），示例与字段描述完整保留。"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "整体术语与格式一致；但示例中导入路径存在不一致（文档主体以 react/server 为主，示例使用 react/experimental），以及少量术语翻译选择可能引起歧义。"
+          },
+          "purposeAlignment": {
+            "score": 4,
+            "reason": "较符合“快速查找参考/API 说明”的目标，提供全面的 API 列表与示例，但不完全满足“30 分钟上手”的快速开始需求，也缺少针对常见工作流的分步教程。"
+          },
+          "audienceAlignment": {
+            "score": 4,
+            "reason": "面向开发者写法以代码为主、技术准确，适合作为工程集成参考；但缺少迁移对比、直接可复制的端到端快速示例，降低了对初次集成者的即刻可用性。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 4,
+            "reason": "深度与难度总体适合有类似经验且初次接触本方案的开发者，能覆盖差异点与关键概念，但对某些高级细节（如 taint 生命周期、cacheSignal 的高级用法、错误/边界情形）说明不足。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/advanced-guides/jsx-runtime",
+          "title": "JSX Runtime"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "语言清晰、句子流畅且无明显语法拼写错误，示例代码简洁易读；总体上读者无需回读即可理解。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构逻辑清晰（导出、工作原理、环境区分、签名、比较），段落衔接自然；仅有个别示例中导入写法可优化以避免轻微混淆（建议在示例中合并 import 声明）。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "覆盖了核心概念、函数和示例，适合作为快速参考；但缺少实操配置（如 Babel/TS 的开启方式、tsconfig/babel 插件示例）、编译器如何判定使用 jsx vs jsxs 的具体规则和迁移步骤，建议补充配置片段、迁移清单与常见故障排查。"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "中文翻译总体准确、术语基本统一，但表格表头和部分注释（如代码块标签）保留了英文，建议将表头与标签本地化并统一术语（例如统一使用“运行时/运行时包”）。"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "术语（jsx、jsxs、jsxDEV）使用基本一致，格式和风格多数统一；存在少量不一致（表格未翻译、示例 import 写法不统一），建议统一术语翻译和代码格式。"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "最匹配“快速查找答案/参考”型目的：提供明确的函数列表、签名与示例，便于检索；若要同时服务“快速开始”或“完成任务”，应新增快速配置与迁移实例。"
+          },
+          "audienceAlignment": {
+            "score": 4,
+            "reason": "面向开发者、以代码为主的风格适配良好，示例可直接参考；但缺少可复制的项目配置（tsconfig/babel 配置、packager 注意点）和常见错误示例，建议补充可粘贴的配置片段与小故障排查节。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 4,
+            "reason": "假定读者已熟悉 React/JSX，内容深度与该读者群体大体匹配；对有类似工具经验但需迁移指导的开发者仍显不足，建议增加迁移步骤、构建配置与编译器判定 heuristics 说明。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/advanced-guides/compiler-runtime",
+          "title": "Compiler Runtime"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "中英文文本表达清晰、句子通顺，示例代码注释明确，几乎无需回读。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构合理（介绍 → API 描述 → 参数/返回 → 概念性示例 → 相关链接），前后衔接良好，无逻辑跳跃。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "覆盖了核心概念、参数和示例，适合作为快速参考；但缺少使用前提（如何启用编译器）、错误/边界行为及性能影响等细节，对工具作者或深入调试者稍显不足。"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "中文翻译忠实且自然，术语一致、技术细节保留完整。"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "术语、风格和格式统一（如 useMemoCache 与 c 的说明、一致的示例风格），无明显不一致处。"
+          },
+          "purposeAlignment": {
+            "score": 5,
+            "reason": "高度契合“快速查找/参考”目的：提供 API 名称、参数、返回值和示例，便于快速定位和理解运行时助手。"
+          },
+          "audienceAlignment": {
+            "score": 4,
+            "reason": "面向开发者，代码示例明确，符合工程师需求；但缺少如何在项目中开启/配置编译器、版本兼容性和迁移说明，降低了即刻可用性。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 4,
+            "reason": "针对有类似工具经验的开发者，概念与示例足够理解区别与优势；但不够深入（实现细节、性能权衡、调试方法），对高级读者仍有改进空间。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/advanced-guides/experimental",
+          "title": "Experimental APIs"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "语言清晰、句子通顺，示例与签名说明直观，整体无明显语法或拼写错误。"
+          },
+          "coherence": {
+            "score": 4,
+            "reason": "结构按主题分明（Hooks、Transitions、Rendering、Server-Side），逻辑清晰；少数处衔接或表格标题保留英文，造成小幅不连贯。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "覆盖了大量实验性 API 且提供签名与示例，适合作为速查与实用参考；但缺少安装/兼容性、版本约束、错误处理/边缘案例与迁移建议等深度细节。"
+          },
+          "translationQuality": {
+            "score": 4,
+            "reason": "中文译文总体准确自然，术语统一性较好；但存在少量未翻译项（如表格列标题“Description”等）和个别小措辞差异。"
+          },
+          "consistency": {
+            "score": 4,
+            "reason": "术语大体一致（experimental_/unstable_ 等前缀明确），但代码块中的 icon 标注格式、表格标题语言以及少量命名风格出现不统一。"
+          },
+          "purposeAlignment": {
+            "score": 4,
+            "reason": "较好地满足“查找答案/参考”和“完成具体任务”目的（有签名与可复制示例）；但不适合作为“30 分钟上手”文档，缺少安装、环境要求和一步步快速入门。"
+          },
+          "audienceAlignment": {
+            "score": 5,
+            "reason": "面向集成该 API 的开发者，风格偏代码优先、示例充足，满足工程师的写法与可复用需求。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 4,
+            "reason": "假定读者已有类似工具经验（如 React 基础、Suspense），深度与示例对中级开发者合适；对高级用户缺少深入内部机制和调优建议。"
+          }
+        }
+      },
+      {
+        "documentInfo": {
+          "path": "/package-information",
+          "title": "Package Information"
+        },
+        "evaluation": {
+          "readability": {
+            "score": 5,
+            "reason": "中英文内容表述清晰、语法正确、表格与段落组织良好，句子易读无明显歧义（仅含少量 HTML 链接标签，不影响理解）。"
+          },
+          "coherence": {
+            "score": 5,
+            "reason": "结构合理（General Info → Published Files → Module Exports），信息前后呼应，未见逻辑矛盾或跳跃。"
+          },
+          "contentQuality": {
+            "score": 4,
+            "reason": "准确列出版本、许可、发布文件和 exports 映射，适合作为元数据参考；但未列出依赖项、安装/使用示例、兼容性/迁移信息，细节可补充。"
+          },
+          "translationQuality": {
+            "score": 5,
+            "reason": "中文翻译忠实且自然，术语一致，核心信息未丢失（仅保留了原文中的 HTML 链接形式）。"
+          },
+          "consistency": {
+            "score": 5,
+            "reason": "术语、表格格式和风格统一（如 Name/名称、Version/版本 等），中英文对应一致，未见多处风格冲突。"
+          },
+          "purposeAlignment": {
+            "score": 4,
+            "reason": "作为“快速查找/参考”类文档基本匹配，提供必要元数据与 exports 映射；但未包含索引、示例或快速搜索提示，降低了检索效率。"
+          },
+          "audienceAlignment": {
+            "score": 3,
+            "reason": "面向开发者的元数据呈现恰当，但目标受众（集成/接入工程师）通常还需安装命令、导入示例、兼容性与常见配置，文档未提供这些可直接复制粘贴的内容。"
+          },
+          "knowledgeLevelAlignment": {
+            "score": 3,
+            "reason": "对有类似工具经验的读者能快速定位包元信息，但缺乏迁移点、与其它版本/工具的差异说明及使用示例，深度对经验用户而言偏浅。"
+          }
+        }
+      }
+    ],
+    "aggregated": {
+      "readability": {
+        "score": 4.8,
+        "reason": "Average from 13 documents: 中英文内容表述清晰、语法与拼写无明显错误，句子自然流畅，95%以上句子无需回读。; 语言清晰、句子流畅，无明显语法或拼写错误，说明性段落简洁易读。; 语言总体清晰、示例代码可读；但文中存在模板标记（如 <x-field>、<x-cards>）和代码块标题冗余（例如 \"javascript ListWrapper Component...\"），以及中英文混用，略微影响直接阅读和复制粘贴体验。"
+      },
+      "coherence": {
+        "score": 4.8,
+        "reason": "Average from 13 documents: 结构清晰（概述→核心概念→模式→后续步骤），段落衔接合理，前后呼应，无明显逻辑跳跃。; 结构合理（示例→原理→生产构建→后续步骤），段落衔接自然，无逻辑跳跃。; 结构按类别组织（Hooks、组件、顶层 API 等），逻辑清晰且前后呼应；但翻译部分与原文有部分重复，且局部存在内容跳转或冗余，需精简重复段落。"
+      },
+      "contentQuality": {
+        "score": 3.9,
+        "reason": "Average from 13 documents: 实现了高层次介绍并覆盖主要概念与渲染分离等要点，但缺少可复制的快速上手步骤、安装/构建命令和最小可运行示例，实用性受限。建议补充安装、创建项目与运行示例代码片段。; 提供了可运行的示例并解释工作原理，但缺少关键快速入门步骤（如创建项目、安装依赖、HTML 示例或运行/构建命令），对目标“30 分钟内从零到运行”支持不足。; 覆盖了大多数公共 API 并提供示例与签名，适合作为快速参考；但缺少安装/快速启动步骤、部分高级/实验性 API 说明不足（如 use 的用例、边界情况），以及没有搜索/索引优化的快速定位支持。"
+      },
+      "translationQuality": {
+        "score": 4.7,
+        "reason": "Average from 13 documents: 译文忠实且自然，术语（如“组件”“Hooks”“渲染器”）统一使用，技术表达符合中文读者习惯。; 中文译文忠实且自然，技术术语翻译一致，示例与原文保持一致。; 译文总体准确、术语基本统一且自然流畅；但存在少量直译或表述不够本地化的地方，以及模板标记未被清理导致可读性小幅下降。"
+      },
+      "consistency": {
+        "score": 4.2,
+        "reason": "Average from 13 documents: 术语、风格和格式保持一致（英中对应明确），段落与卡片样式统一；仅存在自定义标签展示，但不影响一致性。; 术语和风格总体一致，但有小不一致：文中同时引用 reactjs.org 与 react.dev 两个不同站点链接；代码块头部注释在两版中格式略有差异。; 大部分术语和风格一致（如 Hooks、Component 等）；但有 1–2 处命名/格式差异（中英文混用、代码块元数据不统一），以及同一信息在不同段落出现不同表达。"
+      },
+      "purposeAlignment": {
+        "score": 4.4,
+        "reason": "Average from 13 documents: 与“快速上手”目标部分匹配（提供概念与后续链接），但未满足“30分钟内从零到可运行”的需求：缺少安装步骤、CLI 命令、示例项目和代码片段；若目标为参考手册亦不够全面。建议增加逐步安装与最小示例。; 部分符合“快速入门”目标（有直观示例与解释），但缺少安装/运行命令和项目初始化步骤，未完全满足从零到可运行的需求。; 非常符合“查找答案/参考”的目标：包含完整导出列表、按类别组织的 API 参考、示例和链接，便于查阅具体 API。"
+      },
+      "audienceAlignment": {
+        "score": 4.2,
+        "reason": "Average from 13 documents: 目标受众为集成/工程师，期望代码优先、可复制示例和配置说明，当前内容偏概念性且缺少代码片段与集成示例，不符合开发者即插即用需求。建议增加代码样例、package/依赖说明和常见集成示例。; 面向开发者的代码优先风格合适、示例可复制，但缺少集成/配置细节（如与常见构建工具或脚手架的对接示例）。; 面向开发者，代码优先、示例丰富，符合工程师集成需求；但模板噪声影响复制使用，且缺少迁移/对比片段（从其他框架或旧版本迁移的具体注意点）。"
+      },
+      "knowledgeLevelAlignment": {
+        "score": 3.8,
+        "reason": "Average from 13 documents: 读者已使用过类似工具，期望比较、迁移建议和差异化说明；文档停留在基础层面，缺乏“从 X 迁移到 React”的实用对比与注意事项。建议增加迁移指南与与其他框架的差异要点。; 面向“有类似工具经验、对该解决方案陌生”的读者时过于基础，缺少与其他框架的对比、迁移提示或常见坑说明，深度偏浅。; 文档深度适合已有相似经验的开发者查阅 API；但针对“来自类似工具/迁移”的读者缺少对比、迁移指南与高级实战细节（性能陷阱、实现原理等），不完全满足希望突出差异的需求。"
+      }
+    }
+  },
+  "summary": {
+    "structureScores": {
+      "purposeCoverage": 4,
+      "audienceCoverage": 5,
+      "coverageDepthAlignment": 3,
+      "average": 4
+    },
+    "documentScores": {
+      "readability": 4.8,
+      "coherence": 4.8,
+      "contentQuality": 3.9,
+      "translationQuality": 4.7,
+      "consistency": 4.2,
+      "purposeAlignment": 4.4,
+      "audienceAlignment": 4.2,
+      "knowledgeLevelAlignment": 3.8,
+      "average": 4.4
+    },
+    "overallScore": 4.2,
+    "issues": [
+      "Missing purposes: Complete specific tasks"
+    ]
+  }
+}
